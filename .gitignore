@@ -1,0 +1,9 @@
+fuel/app/logs/*/*/*
+fuel/app/cache/*/*
+fuel/core
+.idea
+fuel/app/vendor/autoload.php
+fuel/app/vendor/symfony
+fuel/app/vendor/composer
+fuel/app/vendor/google
+fuel/app/vendor/league
