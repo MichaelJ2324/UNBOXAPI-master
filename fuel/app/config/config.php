@@ -41,7 +41,7 @@ return array(
 	'encoding'  => 'UTF-8',
 	'server_gmt_offset'  => 0,
 	'default_timezone'   => 'UTC',
-	'log_threshold'    => Fuel::L_NONE,
+	'log_threshold'    => Fuel::L_ALL,
 	'log_path'         => APPPATH.'logs/',
 	'log_date_format'  => 'Y-m-d H:i:s',
 	'security' => array(
@@ -90,17 +90,20 @@ return array(
 	/**************************************************************************/
 	'always_load'  => array(
 		'packages'  => array(
-			'auth',
 			'orm',
 		),
 		'modules'  => array(
+			'Oauth',
             'Applications',
-            'APIs',
+            'Apis',
             'EntryPoints',
             'Parameters',
 			'ParameterTypes',
             'HttpMethods',
             'Logins',
+			'Users',
+			'Home',
+			'Versions',
             'Manager',
             'Tester'
         ),

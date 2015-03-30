@@ -9,7 +9,7 @@
 namespace Home;
 
 
-class Home extends \UNBOXAPI\Module{
+class Home extends \UNBOXAPI\Layout{
     protected static $_name = "Home";
     protected static $_link = "#home";
     protected static $_type = "Layout";

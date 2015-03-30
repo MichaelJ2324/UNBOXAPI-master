@@ -13,18 +13,14 @@ class EntryPoint extends \UNBOXAPI\Module{
     protected static $_name = "EntryPoints";
     protected static $_label = "Entry Point";
     protected static $_label_plural = "Entry Points";
-    protected static $_type = "Module";
     protected static $_enabled = true;
     protected static $_options = array(
-        'manager_default' => true
+        'manager_default' => true,
+        'versioning' => true
     );
-    private $model;
 
-    public $id;
-    public $name;
     public $description;
     public $url;
-
     public $method;
     public $method_name;
     public $api_versions = array();
@@ -51,23 +47,6 @@ class EntryPoint extends \UNBOXAPI\Module{
         }
     }
 
-    public static function create(){
-        $ep = Model\EntryPoints::forge(\Input::json());
-        $ep->save();
-        return $ep;
-    }
-    public static function update($id){
-        $ep = Model\EntryPoints::find($id);
-        $properties = array();
-        foreach(\Input::json() as $key=>$value){
-            if (!($key=="id"||$key=="date_created"||$key=="date_modified")) {
-                $properties[$key] = $value;
-            }
-        }
-        $ep->set($properties);
-        $ep->save();
-        return $ep;;
-    }
     public static function get($id=""){
         if ($id==""){
             $id='all';
@@ -77,10 +56,6 @@ class EntryPoint extends \UNBOXAPI\Module{
             $ep = Model\EntryPoints::find($id,array("related"=>array("httpMethod")));
         }
         return $ep;
-    }
-    public static function delete($id){
-        $ep = Model\EntryPoints::find($id);
-        return $ep->delete();
     }
 
     public static function related($id,$relationship){
@@ -105,10 +80,6 @@ class EntryPoint extends \UNBOXAPI\Module{
     public static function getParams($id){
         $ep = new EntryPoint($id);
         return $ep->params;
-    }
-    public static function filter(){
-        $model = new Model\EntryPoints();
-        return $model->filterEntryPoints(\Input::param());
     }
 
     private function retrieve_EntryPoint($id){

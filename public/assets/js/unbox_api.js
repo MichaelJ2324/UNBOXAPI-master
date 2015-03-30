@@ -11,21 +11,25 @@ UNBOX.Global = {
         count: 0,
         notice: null,
         start: function () {
-            var models = UNBOX.app.config.findWhere({
-                key: "bootstrapped_models"
-            });
-            models = models.get('value');
-            this.total = models.length;
-            for (var x = 0; x < models.length; x++) {
-                UNBOX.Collections.Utils.fetch({
-                    collection: UNBOX.app.collections[models[x]],
-                    success: function(){
-                        UNBOX.Global.Bootstrap.count++;
-                        if (UNBOX.Global.Bootstrap.count==UNBOX.Global.Bootstrap.total){
-                            UNBOX.Global.Bootstrap.done();
+            if (UNBOX.Global.Utils.loggedIn()) {
+                var models = UNBOX.app.config.findWhere({
+                    key: "bootstrapped_models"
+                });
+                models = models.get('value');
+                this.total = models.length;
+                for (var x = 0; x < models.length; x++) {
+                    UNBOX.Collections.Utils.fetch({
+                        collection: UNBOX.app.collections[models[x]],
+                        success: function () {
+                            UNBOX.Global.Bootstrap.count++;
+                            if (UNBOX.Global.Bootstrap.count == UNBOX.Global.Bootstrap.total) {
+                                UNBOX.Global.Bootstrap.done();
+                            }
                         }
-                    }
-                })
+                    })
+                }
+            }else{
+                UNBOX.Global.Bootstrap.done();
             }
         },
         done: function(){
@@ -66,7 +70,6 @@ UNBOX.Global = {
             }
         },
         log: function(response){
-            console.log(response);
             var notice = new UNBOX.Models.Notices;
             notice.set({
                 type: "warning",
@@ -76,21 +79,58 @@ UNBOX.Global = {
             });
             UNBOX.app.collections.notices.log(notice);
         },
+        notice: function(message,type){
+            var notice = new UNBOX.Models.Notices;
+            notice.set({
+                type: type,
+                level: "info",
+                show: true,
+                message: message
+            });
+            UNBOX.app.collections.notices.log(notice);
+        },
         loggedIn: function(){
-            if (UNBOX.app.user.get('id')!==null || UNBOX.app.user.get('id')!==""){
+            if (!(UNBOX.app.user.get('id')==null || UNBOX.app.user.get('id')=="") && (UNBOX.app.user.get('token')==null || UNBOX.app.user.get('token')=="")){
                 return true;
             }else{
                 return false;
             }
-        },
-        installed: function(){
-            var install = UNBOX.app.config.findWhere({
-                key: "install_locked"
-            });
-            if (install.get('value') == true){
-                return true
-            }else{
-                return false;
+        }
+    },
+    Login: {
+        Google: {
+            loginButton: function(authResult) {
+                if (typeof authResult == 'undefined') {
+                    var params = {
+                        'theme': 'light',
+                    };
+                    gapi.signin.render('gLogin', params);
+                }else {
+                    if (authResult['status']['signed_in']) {
+                        document.getElementById('gLoginWrapper').setAttribute('style', 'display: none');
+                        gapi.client.load('plus', 'v1',UNBOX.Global.Login.Google.apiClientLoaded);
+                    } else {
+                        console.log(authResult);
+                    }
+                }
+            },
+            apiClientLoaded: function () {
+                var request = gapi.client.plus.people.get({
+                    'userId': 'me'
+                });
+                request.execute(UNBOX.Global.Login.Google.handleProfile);
+            },
+            handleProfile: function (resp) {
+                console.log(resp);
+                console.log('Retrieved profile for:' + resp.displayName);
+            },
+            ReCaptcha: {
+                render: function(element){
+                    return grecaptcha.render(element,{
+                        'sitekey' : '6Ldh2QMTAAAAAIYd2mUJBSek7MaBWc3X8yYPv6bE',
+                        'theme' : 'light'
+                    });
+                }
             }
         }
     }
@@ -103,8 +143,8 @@ UNBOX.Router = Backbone.Router.extend({
         "manage/:module/:action": "quickRecord",
         "manage/:module/:action/:id": "quickRecord",
         "test": "tester",
-        "install": "installer",
-        "login": "login",
+        "login": "home",
+        "register": "register",
         '*path': 'defaultRoute'
     },
     initialize: function () {
@@ -117,9 +157,9 @@ UNBOX.Router = Backbone.Router.extend({
         UNBOX.app.view.about();
     },
     manager: function (module) {
-        if (UNBOX.Global.Utils.installed()) {
-            UNBOX.app.modules.setCurrent("Layout", "Manager");
-
+        if (UNBOX.Global.Utils.loggedIn()) {
+            UNBOX.app.layouts.setCurrent("Manager");
+            UNBOX.app.view.reset(false, true, true);
             //Panel 1
             var panel1 = UNBOX.app.collections.panels.findWhere({
                 number: 1
@@ -142,49 +182,48 @@ UNBOX.Router = Backbone.Router.extend({
                 content: new UNBOX.Views.Manager.ListView.Panel(options)
             });
             /*
-            UNBOX.app.views.manager.applicationSelect = new UNBOX.Views.Manager.ListView.ApplicationSelect({
-                el: $("#application"),
-                collection: UNBOX.app.collections.applications
-            });
-            UNBOX.app.views.manager.apiSelect = new UNBOX.Views.Manager.ListView.APISelect({
-                el: $("#api"),
-                collection: UNBOX.app.collections.apis
-            });
-            UNBOX.app.views.manager.httpMethodSelect = new UNBOX.Views.Manager.ListView.HttpMethodSelect({
-                el: $("#httpMethod"),
-                collection: UNBOX.app.collections.httpMethods
-            });
-            UNBOX.app.views.manager.listView = new UNBOX.Views.Manager.ListView.List({
-                el: $("#list"),
-                collection: UNBOX.app.collections.entryPoints,
-                model: UNBOX.app.models.entryPoint
-            });
-            //Setup cascading dropdowns, and linked models
-            UNBOX.app.views.manager.applicationSelect.apiSelect = UNBOX.app.views.manager.apiSelect;
-            UNBOX.app.views.manager.applicationSelect.entryPointList = UNBOX.app.views.manager.entryPointList;
-            UNBOX.app.views.manager.apiSelect.httpMethodSelect = UNBOX.app.views.manager.httpMethodSelect;
-            UNBOX.app.views.manager.apiSelect.entryPointList = UNBOX.app.views.manager.entryPointList;
-            UNBOX.app.views.manager.httpMethodSelect.entryPointList = UNBOX.app.views.manager.entryPointList;
-            UNBOX.app.views.output.listView = UNBOX.app.views.manager.entryPointList;
-            */
-
-        } else {
-            UNBOX.app.router.navigate("install", {trigger: true});
+             UNBOX.app.views.manager.applicationSelect = new UNBOX.Views.Manager.ListView.ApplicationSelect({
+             el: $("#application"),
+             collection: UNBOX.app.collections.applications
+             });
+             UNBOX.app.views.manager.apiSelect = new UNBOX.Views.Manager.ListView.APISelect({
+             el: $("#api"),
+             collection: UNBOX.app.collections.apis
+             });
+             UNBOX.app.views.manager.httpMethodSelect = new UNBOX.Views.Manager.ListView.HttpMethodSelect({
+             el: $("#httpMethod"),
+             collection: UNBOX.app.collections.httpMethods
+             });
+             UNBOX.app.views.manager.listView = new UNBOX.Views.Manager.ListView.List({
+             el: $("#list"),
+             collection: UNBOX.app.collections.entryPoints,
+             model: UNBOX.app.models.entryPoint
+             });
+             //Setup cascading dropdowns, and linked models
+             UNBOX.app.views.manager.applicationSelect.apiSelect = UNBOX.app.views.manager.apiSelect;
+             UNBOX.app.views.manager.applicationSelect.entryPointList = UNBOX.app.views.manager.entryPointList;
+             UNBOX.app.views.manager.apiSelect.httpMethodSelect = UNBOX.app.views.manager.httpMethodSelect;
+             UNBOX.app.views.manager.apiSelect.entryPointList = UNBOX.app.views.manager.entryPointList;
+             UNBOX.app.views.manager.httpMethodSelect.entryPointList = UNBOX.app.views.manager.entryPointList;
+             UNBOX.app.views.output.listView = UNBOX.app.views.manager.entryPointList;
+             */
+        }else{
+            UNBOX.app.router.navigate("login",{trigger: true});
         }
     },
     quickRecord: function(module,action,id){
-        if (UNBOX.Global.Utils.installed()) {
+        if (UNBOX.Global.Utils.loggedIn()) {
             if (UNBOX.app.models.currentLayout.get("name") !== "Manager") {
                 this.manager(module);
             }
-            if (!(module=="" || typeof module == 'undefined' || module==null)){
-                if (UNBOX.app.models.currentModule.get("name")!==module){
-                    UNBOX.app.modules.setCurrent("Module",module);
+            if (!(module == "" || typeof module == 'undefined' || module == null)) {
+                if (UNBOX.app.models.currentModule.get("name") !== module) {
+                    UNBOX.app.modules.setCurrent(module);
                 }
-                if (!(action=="" || typeof action == 'undefined' || action==null)){
-                    if (action=="create"||action=="view"){
-                        if (typeof UNBOX.manager.models.current == 'Object'){
-                            if (model==UNBOX.app.models.currentModule) {
+                if (!(action == "" || typeof action == 'undefined' || action == null)) {
+                    if (action == "create" || action == "view") {
+                        if (typeof UNBOX.manager.models.current == 'Object') {
+                            if (model == UNBOX.app.models.currentModule) {
                                 if (!(typeof id == 'undefined' || id == "" || id == null)) {
                                     if (id !== UNBOX.manager.models.current.get("id")) {
                                         UNBOX.manager.models.current.clear();
@@ -193,10 +232,10 @@ UNBOX.Router = Backbone.Router.extend({
                                 } else {
                                     UNBOX.manager.models.current.clear();
                                 }
-                            }else{
+                            } else {
                                 UNBOX.manager.models.current = new UNBOX.Models[module];
                             }
-                        }else{
+                        } else {
                             UNBOX.manager.models.current = new UNBOX.Models[module];
                             if (id !== UNBOX.manager.models.current.get("id")) {
                                 UNBOX.manager.models.current.set({id: id});
@@ -214,22 +253,23 @@ UNBOX.Router = Backbone.Router.extend({
                             content: new UNBOX.Views.Manager.QuickRecord(options)
                         });
                         panel2.trigger("open");
-                    }else if (action=="list"){
+                    } else if (action == "list") {
 
-                    }else if (action=="import") {
+                    } else if (action == "import") {
 
-                    }else{
+                    } else {
                         console.log("Invalid Action");
                     }
                 }
             }
-        } else {
-            UNBOX.app.router.navigate("install", {trigger: true});
+        }else{
+            UNBOX.app.router.navigate("login",{trigger: true});
         }
     },
     tester: function () {
-        if (UNBOX.Global.Utils.installed()) {
-            UNBOX.app.modules.setCurrent("Layout", "Tester");
+        if (UNBOX.Global.Utils.loggedIn()) {
+            UNBOX.app.layouts.setCurrent("Tester");
+            UNBOX.app.view.reset(false, true, true);
 
             //Setup UI
             var panel1 = UNBOX.app.collections.panels.findWhere({
@@ -290,38 +330,59 @@ UNBOX.Router = Backbone.Router.extend({
             UNBOX.app.models.mainPanel.set({
                 content: new UNBOX.Views.Tester.Output.Panel(options)
             });
-        } else {
-            UNBOX.app.router.navigate("install", {trigger: true});
+        }else{
+            UNBOX.app.router.navigate("login",{trigger: true});
         }
     },
-    installer: function () {
-        console.log("Install Application");
-    },
     login: function(){
-        if (UNBOX.Global.Utils.installed()) {
-
-        }else{
-            UNBOX.app.router.navigate("install", {trigger: true});
+        if (UNBOX.app.models.currentLayout.get("name") !== "Home") {
+            this.home();
+        }
+        if (UNBOX.Global.Utils.loggedIn()==false){
+            var panel1 = UNBOX.app.collections.panels.findWhere({
+                number: 1
+            });
+            var options = {
+                model: UNBOX.app.user,
+                panel: panel1
+            };
+            panel1.set({
+                content: new UNBOX.Views.Home.Login(options)
+            });
+            panel1.trigger("open");
         }
     },
     home: function(){
-        if (UNBOX.Global.Utils.installed()) {
-            if (UNBOX.Global.Utils.loggedIn()==false){
-                this.login();
-            }else{
-                this.profile();
-            }
-
+        UNBOX.app.layouts.setCurrent("Home");
+        UNBOX.app.view.reset(false,true,true);
+        if (UNBOX.Global.Utils.loggedIn()==false){
+            UNBOX.app.router.navigate("login");
+            this.login();
         }else{
-            UNBOX.app.router.navigate("install", {trigger: true});
+            this.profile();
+        }
+    },
+    register: function(){
+        UNBOX.app.layouts.setCurrent("Home");
+        UNBOX.app.view.reset(false,true,true);
+        if (UNBOX.Global.Utils.loggedIn()==false){
+            var panel1 = UNBOX.app.collections.panels.findWhere({
+                number: 1
+            });
+            var options = {
+                model: UNBOX.app.user,
+                panel: panel1
+            };
+            panel1.set({
+                content: new UNBOX.Views.Home.Register(options)
+            });
+            panel1.trigger("open");
+        }else{
+            this.profile();
         }
     },
     profile: function(){
-        if (UNBOX.Global.Utils.installed()) {
 
-        }else{
-            UNBOX.app.router.navigate("install", {trigger: true});
-        }
     },
     defaultRoute: function () {
         this.home();
@@ -454,14 +515,13 @@ UNBOX.Views = {
         initialize: function(options) {
             this.options = options || {};
             this.modules = this.options.modules || null;
+            this.layouts = this.options.layouts || null;
             this.config = this.options.config || null;
             this.notices = this.options.notices || null;
             this.layout = this.options.layout || null;
             this.module = this.options.module || null;
 
             _.bindAll(this,"start","reset");
-            console.log(this.layout);
-            this.layout.on("change",this.reset);
 
             //Dom elements
             this.$panel1 = $("#panel1");
@@ -474,7 +534,7 @@ UNBOX.Views = {
             //build nav
             this.nav = new UNBOX.Views.NavBar({
                 el: this.$navBar,
-                collection: this.modules
+                collection: this.layouts
             });
             //build notice
             this.notice = new UNBOX.Views.Notice({
@@ -528,11 +588,10 @@ UNBOX.Views = {
         register: function(){
 
         },
-        reset: function(){
-            console.log("Reset UI");
-            this.panel1.reset();
-            this.panel2.reset();
-            this.panel3.reset();
+        reset: function(panel1,panel2,panel3){
+            this.panel1.reset(panel1);
+            this.panel2.reset(panel2);
+            this.panel3.reset(panel3);
         }
     }),
     NavBar: Backbone.View.extend({
@@ -547,14 +606,12 @@ UNBOX.Views = {
         render: function(){
             this.model = this.collection.findWhere({
                 current: true,
-                enabled: true,
-                type: "Layout"
+                enabled: true
             });
             this.html = _.template(this.template,{
                 current: this.model,
                 modules: this.collection.where({
-                    enabled: true,
-                    type: "Layout"
+                    enabled: true
                 }),
                 links: this.model.get("links")
             });
@@ -688,9 +745,10 @@ UNBOX.Views = {
             else if (state=="close"){ state = "left"; }
             return "<span class='glyphicon glyphicon-chevron-"+state+"'></span><span class='glyphicon glyphicon-chevron-"+state+"'></span>";
         },
-        reset: function(){
+        reset: function(hide){
+            hide = hide||false;
             this.render();
-            this.hidePanel();
+            if (hide==true) this.hidePanel();
         }
     }),
     Notice: Backbone.View.extend({
@@ -731,6 +789,120 @@ UNBOX.Views = {
         denotify: function(model){
             $("#notice_"+model.cid).remove();
         }
+    })
+}
+UNBOX.Views.Home = {
+    Login: Backbone.View.extend({
+        events: {
+            "click #login": "login",
+            "click #register": "register",
+            "focusout input": "updateModel"
+        },
+        initialize: function(options) {
+            this.options = options || {};
+            this.panel = this.options.panel || {};
+
+            this.model = this.model || new UNBOX.Models.User;
+
+            this.username = null;
+            this.password = null;
+
+            _.bindAll(this,"login","updateModel");
+        },
+        render: function() {
+            var template = UNBOX.Global.Utils.getTemplate("Login");
+            this.template = _.template(template);
+            this.$el.html(this.template);
+            this.setup();
+
+            return this;
+        },
+        setup: function(){
+            //setup Google+ button
+            UNBOX.Global.Login.Google.loginButton();
+        },
+        login: function(){
+            this.username = this.model.get('username');
+            this.password = this.model.get('password');
+            $.ajax({
+                url: 'user/login',
+                type: "POST",
+                data: {
+                    username: this.username,
+                    password: this.password
+                },
+                success: function(data){
+                    console.log(data);
+                    UNBOX.Global.Utils.notice("Welcome!","success");
+                },
+                dataType: 'json'
+            });
+        },
+        register: function(){
+            UNBOX.app.router.navigate("register", {trigger: true});
+        },
+        updateModel: function(e) {
+            var changed = e.currentTarget;
+            var value = $(e.currentTarget).val();
+            console.log(value);
+            if (changed.name =='password'){
+                value = btoa(value);
+            }
+            var obj = {};
+            obj[changed.name] = value;
+            this.model.set(obj);
+        }
+    }),
+    Register: Backbone.View.extend({
+        events: {
+            "click #Register": "submit",
+            "focusout input": "updateModel"
+        },
+        initialize: function(options) {
+            this.options = options || {};
+            this.panel = this.options.panel || {};
+            this.captcha = null;
+
+            _.bindAll(this,"submit","updateModel");
+        },
+        render: function() {
+            var template = UNBOX.Global.Utils.getTemplate("Register");
+            this.template = _.template(template);
+            this.$el.html(this.template);
+            this.setup();
+
+            return this;
+        },
+        setup: function(){
+            this.captcha = UNBOX.Global.Login.Google.ReCaptcha.render('captcha');
+        },
+        submit: function(){
+            this.model.url = this.model.urlRoot+"register";
+            this.model.set('captcha',grecaptcha.getResponse(this.captcha));
+            UNBOX.Models.Utils.save({
+                model: this.model,
+                success: function(model,response,options){
+                    UNBOX.Global.Utils.notice("User Created. Please login to access system.","success");
+                    UNBOX.app.router.navigate("login",{trigger: true});
+                }
+            });
+        },
+        updateModel: function(e) {
+            var changed = e.currentTarget;
+            var value = $(e.currentTarget).val();
+            if (changed.name =='password'){
+                value = btoa(value);
+            }
+            var obj = {};
+            obj[changed.name] = value;
+            this.model.set(obj);
+        }
+    }),
+    Main: Backbone.View.extend({
+
+    }),
+    Profile: Backbone.View.extend({
+
     })
 }
 UNBOX.Views.Tester = {
@@ -1461,7 +1633,6 @@ UNBOX.Views.Manager = {
             var template = UNBOX.Global.Utils.getTemplate("Actions");
             this.template = _.template(template,{
                 modules: this.collection.where({
-                    type: "Module",
                     enabled: true
                 }),
                 default_module: this.module
@@ -1471,7 +1642,7 @@ UNBOX.Views.Manager = {
         action: function(e){
             var module = $(e.currentTarget).data('module');
             var action = $(e.currentTarget).data('action');
-            UNBOX.app.modules.setCurrent("Module",module);
+            UNBOX.app.modules.setCurrent(module);
             UNBOX.app.router.navigate("manage/"+module+"/"+action,{trigger: true});
         }
     }),
@@ -2068,11 +2239,30 @@ UNBOX.Models = {
         urlRoot: UNBOX.Global.ajaxURL+"metadata/",
         default:{
             name: "",
-            type: "",
-            icon: "",
+            label: null,
+            label_plural: null,
             enabled: true,
             current: false,
             fields: null,
+            labels: {}
+        },
+        getValue: function(){
+            return this.get('name');
+        }
+    }),
+    Layouts: Backbone.Model.extend({
+        initialize: function(){
+            _.bindAll(this, 'getValue');
+        },
+        urlRoot: UNBOX.Global.ajaxURL+"metadata/",
+        default:{
+            name: "",
+            label: null,
+            label_plural: null,
+            icon: "",
+            enabled: true,
+            current: false,
+            link: null,
             links: null,
             labels: {}
         },
@@ -2090,6 +2280,24 @@ UNBOX.Models = {
         },
         getValue: function(){
             return this.get('value');
+        }
+    }),
+    User: Backbone.Model.extend({
+        initialize: function(){
+            _.bindAll(this, 'getValue');
+        },
+        urlRoot: "user/",
+        default: {
+            token: null,
+            name: null,
+            username: null,
+            first_name: null,
+            last_name: null,
+            email: null,
+            password: null
+        },
+        getValue: function(){
+            return this.get('name');
         }
     })
 }
@@ -2259,6 +2467,70 @@ UNBOX.Collections = {
             }
         }
     }),
+    Layouts: Backbone.Collection.extend({
+        initialize: function(options){
+            this.options = options || {};
+            this.metadata = typeof this.options.metadata !== 'undefined' ? this.options.metadata : new UNBOX.Collections.MetaData;
+            _.bindAll(this,"update","setCurrent");
+            this.metadata.bind("fetched",this.update)
+        },
+        model: UNBOX.Models.Layouts,
+        update: function(layout,cached){
+            layout = typeof layout !== "undefined" ? layout : "all";
+            cached = typeof cached !== "undefined" ? cached : true;
+            if (cached==true){
+                var layouts = this.metadata.findWhere({key:"layouts"});
+                if (layout=="all") {
+                    this.reset(layouts.get('value'));
+                }else{
+                    var layoutArray = layouts.get('value');
+                    for (var x = 0; x < layoutArray.length; x++) {
+                        if (layout==layoutArray[x].name) {
+                            var l = this.findWhere({
+                                name: layout
+                            });
+                            l.set({
+                                name: moduleArray[x].name,
+                                label: moduleArray[x].label,
+                                label_plural: moduleArray[x].label_plural,
+                                link: moduleArray[x].link,
+                                icon: moduleArray[x].icon,
+                                enabled: moduleArray[x].enabled,
+                                links: moduleArray[x].links,
+                                templates: moduleArray[x].templates
+                            });
+                            break;
+                        }
+                    }
+                }
+            }else{
+                if (layout=="all") {
+                    this.fetch();
+                }else{
+                    var l = this.findWhere({
+                        name: layout
+                    });
+                    l.url = l.urlRoot+"/"+layout;
+                    l.fetch();
+                }
+            }
+        },
+        setCurrent: function(layout){
+            UNBOX.app.models.currentLayout.set({
+                    current: false
+                },
+                {
+                    silent: true
+                });
+            var model = this.findWhere({ name: layout });
+            model.set({
+                current: true
+            });
+            UNBOX.app.models.currentLayout.set(
+                model.toJSON()
+            );
+        }
+    }),
     Modules: Backbone.Collection.extend({
         initialize: function(options){
             this.options = options || {};
@@ -2283,13 +2555,12 @@ UNBOX.Collections = {
                             });
                             mod.set({
                                 name: moduleArray[x].name,
-                                link: moduleArray[x].link,
-                                type: moduleArray[x].type,
-                                icon: moduleArray[x].icon,
+                                label: moduleArray[x].label,
+                                label_plural: moduleArray[x].label_plural,
                                 enabled: moduleArray[x].enabled,
-                                links: moduleArray[x].links,
                                 fields: moduleArray[x].fields,
-                                templates: moduleArray[x].templates
+                                relationships: moduleArray[x].relationships,
+                                options: moduleArray[x].options
                             });
                             break;
                         }
@@ -2307,36 +2578,21 @@ UNBOX.Collections = {
                 }
             }
         },
-        setCurrent: function(type,module){
-            if (type=="Layout") {
-                UNBOX.app.models.currentLayout.set({
+        setCurrent: function(module) {
+            UNBOX.app.models.currentModule.set({
                     current: false
                 },
                 {
                     silent: true
-                });
-                var model = this.findWhere({ type: type, name: module });
-                model.set({
-                    current: true
-                });
-                UNBOX.app.models.currentLayout.set(
-                    model.toJSON()
-                );
-            }else if (type=="Module"){
-                UNBOX.app.models.currentModule.set({
-                    current: false
-                },
-                {
-                    silent: true
-                });
-                var model = this.findWhere({ type: type, name: module });
-                model.set({
-                    current: true
-                });
-                UNBOX.app.models.currentModule.set(
-                    model.toJSON()
-                );
-            }
+                }
+            );
+            var model = this.findWhere({ name: module });
+            model.set({
+                current: true
+            });
+            UNBOX.app.models.currentModule.set(
+                model.toJSON()
+            );
         }
     }),
     Config: Backbone.Collection.extend({
@@ -2372,10 +2628,11 @@ UNBOX.app = {
     metadata: new UNBOX.Collections.MetaData,
     config: null,
     modules: null,
-    user: null,
+    layouts: null,
+    user: new UNBOX.Models.User,
     models: {
         mainPanel: null,
-        currentLayout: new UNBOX.Models.Modules,
+        currentLayout: new UNBOX.Models.Layouts,
         currentModule: new UNBOX.Models.Modules
     },
     collections: {
@@ -2424,12 +2681,16 @@ UNBOX.app.config = new UNBOX.Collections.Config({
 UNBOX.app.modules = new UNBOX.Collections.Modules({
     metadata: UNBOX.app.metadata
 });
+UNBOX.app.layouts = new UNBOX.Collections.Layouts({
+    metadata: UNBOX.app.metadata
+});
 UNBOX.app.view = new UNBOX.Views.AppView({
     el: $("body"),
     model: UNBOX.app.models.mainPanel,
     collection: UNBOX.app.collections.panels,
     config: UNBOX.app.config,
     modules: UNBOX.app.modules,
+    layouts: UNBOX.app.layouts,
     module: UNBOX.app.models.currentModule,
     layout: UNBOX.app.models.currentLayout,
     notices: UNBOX.app.collections.notices
@@ -2442,8 +2703,12 @@ UNBOX.Collections.Utils.fetch({
         UNBOX.Global.Bootstrap.start();
     }
 });
-
-
+function googleLoginWrapper(authResult){
+    UNBOX.Global.Login.Google.loginButton(authResult);
+}
+function recaptchaCallback(){
+    console.log("Recaptcha Ready");
+}
 
 
 

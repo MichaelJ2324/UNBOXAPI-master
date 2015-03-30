@@ -1,16 +1,41 @@
 <?php
-/**
- * The test database settings. These get merged with the global settings.
- *
- * This environment is primarily used by unit tests, to run on a controlled environment.
- */
-
 return array(
-	'default' => array(
-		'connection'  => array(
-			'dsn'        => 'mysql:host=localhost;dbname=fuel_test',
-			'username'   => 'fuel_app',
-			'password'   => 'super_secret_password',
+	'active' => 'default',
+	'default' => 
+	array(
+		'type' => 'mysqli',
+		'connection' => 
+		array(
+			'persistent' => false,
+			'hostname' => 'localhost',
+			'port' => '3306',
+			'database' => 'UNBOXAPIV2',
+			'username' => 'root',
+			'password' => 'password',
 		),
+		'identifier' => '`',
+		'table_prefix' => '',
+		'charset' => 'utf8',
+		'enable_cache' => false,
+		'profiling' => false,
+		'readonly' => false,
+	),
+	'dbUtil' => 
+	array(
+		'type' => 'mysqli',
+		'connection' => 
+		array(
+			'persistent' => false,
+			'hostname' => 'localhost',
+			'port' => '3306',
+			'username' => 'root',
+			'password' => 'password',
+		),
+		'identifier' => '`',
+		'table_prefix' => '',
+		'charset' => 'utf8',
+		'enable_cache' => false,
+		'profiling' => false,
+		'readonly' => false,
 	),
 );

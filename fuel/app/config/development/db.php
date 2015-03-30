@@ -1,24 +1,41 @@
 <?php
-/**
- * The development database settings. These get merged with the global settings.
- */
-
 return array(
-	'default' => array(
-		'type'        => 'mysqli',
-		'connection'  => array(
-			'hostname'       => 'localhost',
-			'port'           => '3306',
-			'database'       => 'UNBOXAPI',
-			'username'       => 'root',
-			'password'       => 'password',
+	'active' => 'default',
+	'default' => 
+	array(
+		'type' => 'mysqli',
+		'connection' => 
+		array(
 			'persistent' => false,
+			'hostname' => 'localhost',
+			'port' => '3306',
+			'database' => 'UNBOXAPIV2',
+			'username' => 'root',
+			'password' => 'password',
 		),
-		'identifier'   => '`',
+		'identifier' => '`',
 		'table_prefix' => '',
-		'charset'      => 'utf8',
+		'charset' => 'utf8',
 		'enable_cache' => false,
-		'profiling'    => false,
-		'readonly'     => false,
-	)
+		'profiling' => false,
+		'readonly' => false,
+	),
+	'dbUtil' => 
+	array(
+		'type' => 'mysqli',
+		'connection' => 
+		array(
+			'persistent' => false,
+			'hostname' => 'localhost',
+			'port' => '3306',
+			'username' => 'root',
+			'password' => 'password',
+		),
+		'identifier' => '`',
+		'table_prefix' => '',
+		'charset' => 'utf8',
+		'enable_cache' => false,
+		'profiling' => false,
+		'readonly' => false,
+	),
 );

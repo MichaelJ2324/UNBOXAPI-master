@@ -9,11 +9,18 @@
     <?php echo Asset::css('select2.css'); ?>
     <?php echo Asset::css('select2-bootstrap.css'); ?>
     <?php echo Asset::css('unbox_api.css'); ?>
+
+    <meta name="google-signin-clientid" content="105682255558-0660ol2o50kbflotg0t6dnejpp3cd922.apps.googleusercontent.com" />
+    <meta name="google-signin-scope" content="https://www.googleapis.com/auth/plus.login" />
+    <meta name="google-signin-requestvisibleactions" content="http://schema.org/AddAction" />
+    <meta name="google-signin-cookiepolicy" content="single_host_origin" />
+    <meta name="google-signin-callback" content="googleLoginWrapper" />
     <link rel="icon"
           type="image/png"
-          href="<?php echo Uri::base(false).Asset::find_file('icon-small.png', 'img'); ?>">
+          href="<?php echo Uri::base(false).Asset::find_file('logo_dark_ico.png', 'img'); ?>">
     <style>
     </style>
+    <script src="https://www.google.com/recaptcha/api.js?&render=explicit" async defer></script>
 </head>
 <body>
 <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -38,7 +45,7 @@
                 <span class="navbar-brand pull-left logo" style="color: #ffffff;padding: 10px 15px 0px 15px;">
                     UNBOX
                     <span class='header-icon'>
-                        <?php echo Asset::img("icon-white-small.png"); ?>
+                        <?php echo Asset::img("logo_light_small.png"); ?>
                     </span>
                     <span style="color:#985A55;"><b>API</b></span>
                 </span>
@@ -147,6 +154,7 @@
 <?php echo Asset::js('bootstrap.min.js'); ?>
 <?php echo Asset::js('bootstrap-datepicker.js'); ?>
 <?php echo Asset::js('select2.min.js'); ?>
+<script src="https://plus.google.com/js/client:platform.js" async defer></script>
 <?php echo Asset::js('unbox_api.js'); ?>
 
 </body>

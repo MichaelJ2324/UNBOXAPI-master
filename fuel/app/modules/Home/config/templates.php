@@ -1,21 +1,62 @@
 <?php
 return array(
     'Login' => "
-        <form class='form-signin'>
-            <h2 class='form-signin-heading'>Login</h2>
-            <label for='inputEmail' class='sr-only'>Email address</label>
-            <input type='email' id='inputEmail' class='form-control' placeholder='Email address' required='' autofocus=''>
-            <label for='inputPassword' class='sr-only'>Password</label>
-            <input type='password' id='inputPassword' class='form-control' placeholder='Password' required=''>
-            <div class='checkbox'>
-              <label>
-                <input type='checkbox' value='remember-me'> Remember Me
-              </label>
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                <div class='row' style='text-align: center;'><h4>Login</h4></div>
             </div>
-            <button class='btn btn-lg btn-primary btn-block' type='submit'>Login</button>
-            <button class='btn btn-lg btn-default btn-block' type='submit'>Register</button>
-      </form>
-    "
+            <div class='panel-body'>
+                <form class='form-login'>
+                    <label for='username'>Username</label>
+                    <input type='text' id='username' name='username' class='form-control' placeholder='Username' required='true' autofocus='true' value=''>
+                    <label for='password'>Password</label>
+                    <input type='password' id='password' name='password' class='form-control' placeholder='Password' required='true'>
+                    <div class='checkbox'>
+                      <label>
+                        <input type='checkbox' value='remember' id='remember' name='remember'> Remember Me
+                      </label>
+                    </div>
+                    <div class='col-md-4'>
+                        <button class='btn btn-primary btn-block' type='button' id='login'>Login</button>
+                    </div>
+                    <div class='col-md-4'>
+                        <button class='btn btn-default btn-block' type='button' id='register'>Register</button>
+                    </div>
+                    <div class='col-md-4'>
+                        <div id='gLoginWrapper'>
+                            <div id='gLogin' class=''></div>
+                        </div>
+                    </div>
+              </form>
+          </div>
+      </div>
+    ",
+    'Register' => "
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                <div class='row' style='text-align: center;'><h4>Register</h4></div>
+            </div>
+            <div class='panel-body'>
+                <div class='col-lg-12'>
+                    <form class='form-register'>
+                        <label for='first_name'>First Name</label>
+                        <input type='text' id='first_name' name='first_name' class='form-control' placeholder='First Name' required='true' autofocus='true'>
+                        <label for='last_name'>Last Name</label>
+                        <input type='text' id='last_name' name='last_name' class='form-control' placeholder='Last Name' required='true' autofocus='true'>
+                        <label for='email'>Email</label>
+                        <input type='text' id='email' name='email' class='form-control' placeholder='email@example.com' required='true' autofocus='true'>
+                        <label for='username'>Username</label>
+                        <input type='text' id='username' name='username' class='form-control' placeholder='Username' required='true' autofocus='true'>
+                        <label for='password'>Password</label>
+                        <input type='password' id='password' name='password' class='form-control' placeholder='Password' required='true'>
+                        <div>
+                            <div id='captcha'></div>
+                        </div>
+                        <button class='btn btn-primary' type='button' id='Register'>Submit</button>
+                  </form>
+              </div>
+          </div>
+      </div>"
 
 );
 

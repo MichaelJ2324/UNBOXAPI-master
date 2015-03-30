@@ -7,37 +7,14 @@
  */
 namespace EntryPoints\Model;
 
-class EntryPoints extends \Model\Unbox{
+class EntryPoints extends \Model\Module{
 
     protected static $_table_name = 'entry_points';
-    protected static $_properties = array(
-        'id' => array(
-            'data_type' => 'int',
-            'label' => 'EntryPoint ID',
-            'null' => false,
-            'auto_inc' => true
-        ),
-        'name' => array(
-            'data_type' => 'varchar',
-            'label' => 'Name',
-            'null' => false,
-            'auto_inc' => false,
-            'validation' => array(
-                'required' => true,
-                'min_length' => array(1),
-                'max_length' => array(70)
-            ),
-            'form' => array(
-                'name' => 'name',
-                'type' => 'text'
-            ),
-            'filter' => true
-        ),
+    protected static $_fields = array(
         'method' => array(
             'data_type' => 'tinyint',
             'label' => 'HTTP Method ID',
             'null' => false,
-            'auto_inc' => false,
             'validation' => array(
                 'required' => true
             ),
@@ -54,10 +31,9 @@ class EntryPoints extends \Model\Unbox{
             'data_type' => 'varchar',
             'label' => 'URL',
             'null' => false,
-            'auto_inc' => false,
             'validation' => array(
                 'required',
-                'max_length' => array(100)
+                'max_length' => 250
             ),
             'form' => array(
                 'type' => 'text',
@@ -68,154 +44,87 @@ class EntryPoints extends \Model\Unbox{
             'data_type' => 'varchar',
             'label' => 'Description',
             'null' => true,
-            'auto_inc' => false,
             'validation' => array(
-                'required' => true,
-                'max_length' => array(500)
+                'max_length' => 2048
             ),
             'form' => array(
                 'type' => 'textarea'
             ),
         ),
-        'version' => array(
-            'data_type' => 'smallint',
-            'label' => 'Version',
-            'default'=> 0,
-            'null' => false,
-            'auto_inc' => false,
+        'version_id' => array(
+            'data_type' => 'varchar',
+            'label' => 'Version ID',
             'validation' => array(
-                'required' => true
-            ),
-            'form' => false,
-        ),
-        'deleted' => array(
-            'data_type' => 'tinyint',
-            'label' => 'Description',
-            'default' => 0,
-            'auto_inc' => false,
-            'validation' => array(
-                'required' => true,
-                'max_length' => array(500)
+                'max_length' => 50
             ),
             'form' => false,
         ),
         'deprecated' => array(
             'data_type' => 'tinyint',
-            'label' => 'Description',
+            'label' => 'Deprecated',
             'default' => 0,
-            'auto_inc' => false,
             'validation' => array(
-                'required' => true,
-                'max_length' => array(500)
+                'max_length' => 0
             ),
             'form' => false,
         ),
-        'date_created' => array(
-            'data_type' => 'datetime',
-            'label' => 'Date Created',
-            'default' => '',
-            'null' => false,
-            'auto_inc' => false,
-            'validation' => array(
-                'required' => true
+    );
+    protected static $_relationships = array(
+        'has_one' => array(
+            'httpMethod' => array(
+                'key_from' => 'method',
+                'model_to' => 'HttpMethods\\Model\\HttpMethods',
+                'key_to' => 'id',
+                'cascade_save' => true,
+                'cascade_delete' => false,
             ),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
-            ),
-        ),
-        'date_modified' => array(
-            'data_type' => 'datetime',
-            'label' => 'Date Created',
-            'default' => '',
-            'null' => false,
-            'auto_inc' => false,
-            'validation' => array(
-                'required' => true
-            ),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
+            'version' => array(
+                'key_from' => 'version_id',
+                'model_to' => 'Versions\\Model\\EntryPoints',
+                'key_to' => 'id',
+                'cascade_save' => true,
+                'cascade_delete' => false,
             ),
         ),
-    );
-    protected static $_has_one = array(
-        'httpMethod' => array(
-            'key_from' => 'method',
-            'model_to' => 'HttpMethods\\Model\\HttpMethods',
-            'key_to' => 'id',
-            'cascade_save' => true,
-            'cascade_delete' => false,
-        ),
-        'past_version' => array(
-            'key_from' => 'id',
-            'model_to' => 'EntryPoints\\Model\\Versions',
-            'key_to' => 'past_entryPoint_id',
-            'cascade_save' => true,
-            'cascade_delete' => false,
-        ),
-        'new_version' => array(
-            'key_from' => 'id',
-            'model_to' => 'EntryPoints\\Model\\Versions',
-            'key_to' => 'new_entryPoint_id',
-            'cascade_save' => true,
-            'cascade_delete' => false,
-        ),
-    );
-    protected static $_has_many = array(
-        'login_entryPoint' => array(
-            'key_from' => 'id',
-            'model_to' => 'Logins\\Model\\Logins',
-            'key_to' => 'login_entryPoint_id',
-            'cascade_save' => true,
-            'cascade_delete' => false,
-        ),
-        'logout_entryPoint' => array(
-            'key_from' => 'id',
-            'model_to' => 'Logins\\Model\\Logins',
-            'key_to' => 'logout_entryPoint_id',
-            'cascade_save' => true,
-            'cascade_delete' => false,
-        ),
-    );
-    protected static $_many_many = array(
-        'apis' => array(
-            'key_from' => 'id',
-            'key_through_from' => 'entryPoint_id',
-            'table_through' => 'api_entryPoints',
-            'key_through_to' => 'api_id',
-            'model_to' => 'APIs\\Model\\APIs',
-            'key_to' => 'id',
-            'cascade_save' => true,
-            'cascade_delete' => false,
-        ),
-        'parameters' => array(
-            'key_from' => 'id',
-            'key_through_from' => 'entryPoint_id',
-            'table_through' => 'entryPoint_parameters',
-            'key_through_to' => 'parameter_id',
-            'model_to' => 'Parameters\\Model\\Parameters',
-            'key_to' => 'id',
-            'cascade_save' => true,
-            'cascade_delete' => false,
-        ),
-    );
-    protected static $_observers = array(
-        'Orm\\Observer_CreatedAt' => array(
-            'events' => array('before_insert'),
-            'mysql_timestamp' => true,
-            'property' => 'date_created',
-            'overwrite' => false,
-        ),
-        'Orm\\Observer_UpdatedAt' => array(
-            'events' => array('before_save'),
-            'mysql_timestamp' => true,
-            'property' => 'date_modified',
-            'relations' => array(
+        'has_many' => array(
+            'login_entryPoint' => array(
+                'key_from' => 'id',
+                'model_to' => 'Logins\\Model\\Logins',
+                'key_to' => 'login_entryPoint_id',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            ),
+            'logout_entryPoint' => array(
+                'key_from' => 'id',
+                'model_to' => 'Logins\\Model\\Logins',
+                'key_to' => 'logout_entryPoint_id',
+                'cascade_save' => true,
+                'cascade_delete' => false,
             ),
         ),
+        'many_many' => array(
+            'apis' => array(
+                'key_from' => 'id',
+                'key_through_from' => 'entryPoint_id',
+                'table_through' => 'api_entryPoints',
+                'key_through_to' => 'api_id',
+                'model_to' => 'Apis\\Model\\Apis',
+                'key_to' => 'id',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            ),
+            'parameters' => array(
+                'key_from' => 'id',
+                'key_through_from' => 'entryPoint_id',
+                'table_through' => 'entryPoint_parameters',
+                'key_through_to' => 'parameter_id',
+                'model_to' => 'Parameters\\Model\\Parameters',
+                'key_to' => 'id',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            ),
+        )
     );
-
 
     public function filterEntryPoints($data=""){
         $query = \DB::select('EP.id','EP.name','EP.url','EP.method',array('HM.method','method_name'),'EP.description',array(\DB::expr("CONCAT(EP.name,' [',EP.url,']')"),"value"))->from(array('applications','A'));

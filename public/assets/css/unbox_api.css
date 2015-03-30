@@ -347,3 +347,6 @@ button.notice-close{
 .notice-text{
     padding-left: 5px;
 }
+.panel{
+    border-radius: 0px;
+}
