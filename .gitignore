@@ -2,6 +2,7 @@ fuel/app/logs/*/*/*
 fuel/app/cache/*/*
 fuel/core
 .idea
+.idea/*
 fuel/app/vendor/autoload.php
 fuel/app/vendor/symfony
 fuel/app/vendor/composer
