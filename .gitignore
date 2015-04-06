@@ -2,10 +2,11 @@ fuel/app/logs/*/*/*
 fuel/app/cache/*/*
 fuel/core
 .idea
-.idea/*
+.idea/workspace.xml
+.idea/UNBOXAPI-master.iml
 fuel/app/vendor/autoload.php
 fuel/app/vendor/symfony
 fuel/app/vendor/composer
 fuel/app/vendor/google
 fuel/app/vendor/league
-fuel/vendor
+fuel/vendor/*/*/*/*/*/
