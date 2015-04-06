@@ -9,8 +9,8 @@
 namespace Logins;
 
 class Login extends \UNBOXAPI\Module{
+
     protected static $_name = "Logins";
-    protected static $_type = "Module";
     protected static $_enabled = true;
 
     public $deprecated;

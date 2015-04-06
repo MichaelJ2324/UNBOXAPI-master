@@ -14,9 +14,6 @@ class Parameter extends \UNBOXAPI\Module{
     protected static $_label = "Parameter";
     protected static $_label_plural = "Parameters";
     protected static $_enabled = true;
-    protected static $_options = array(
-        'versioning' => true
-    );
 
     public $data_type;
     public $api_type;

@@ -12,6 +12,7 @@ namespace Users\Model;
 class Users extends \Model\Oauth{
 
     protected static $_table_name = 'users';
+    protected static $_to_array_exclude = array('password');
     protected static $_fields = array(
         'first_name' => array(
             'data_type' => 'varchar',

@@ -17,11 +17,8 @@ class Layout {
     protected static $_icon = "";
     protected static $_enabled = false;
     protected static $_links = array();
-    protected static $_templates = array();
-    protected static $_options = array(
-        'bootstrap' => array()
-    );
-    protected static $_option_overrides = array();
+    protected static $_templates;
+    protected static $_config;
 
     public static function metadata(){
         return array(
@@ -33,15 +30,16 @@ class Layout {
             'enabled' => static::$_enabled,
             'links' => static::$_links,
             'templates' => static::templates(),
-            'options' => static::options()
+            'config' => static::config()
         );
     }
-    protected static function options(){
-        static::$_options = array_merge(self::$_options,static::$_option_overrides);
-        return static::$_options;
+    protected static function config(){
+        static::$_config = \Config::load(static::$_name."::module");
+        return static::$_config;
     }
     protected static function templates(){
         $module = static::$_name;
-        return \Config::load("$module::templates");
+        static::$_templates = \Config::load("$module::templates");
+        return static::$_templates;
     }
 }

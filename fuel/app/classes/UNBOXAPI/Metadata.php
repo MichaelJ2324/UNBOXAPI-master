@@ -16,7 +16,7 @@ class Metadata {
         'Users'
     );
 
-    public static function get_metaData(){
+    public static function get_metaData($loggedIn){
         $metadata = array(
             array(
                 'key' => 'config',
@@ -46,9 +46,21 @@ class Metadata {
                 $Class = "\\$module\\$class";
                 $moduleMeta = $Class::metadata();
                 if (get_parent_class($Class) == 'UNBOXAPI\Module') {
-                    if ($moduleMeta['enabled'] == true) $metadata[1]['value'][] = $moduleMeta;
+                    if ($moduleMeta['enabled'] == true) {
+                        if ($moduleMeta['config']['login']===true && $loggedIn===true){
+                            $metadata[1]['value'][] = $moduleMeta;
+                        }else if ($moduleMeta['config']['login']===false && $loggedIn===false){
+                            $metadata[1]['value'][] = $moduleMeta;
+                        }
+                    }
                 } else if (get_parent_class($Class) == 'UNBOXAPI\Layout') {
-                    $metadata[2]['value'][] = $moduleMeta;
+                    if ($moduleMeta['enabled'] == true) {
+                        if ($moduleMeta['config']['login']===true && $loggedIn===true){
+                            $metadata[2]['value'][] = $moduleMeta;
+                        }else if ($moduleMeta['config']['login']===false && $loggedIn===false){
+                            $metadata[2]['value'][] = $moduleMeta;
+                        }
+                    }
                 }
                 unset($object);
             }

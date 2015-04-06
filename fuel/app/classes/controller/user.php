@@ -26,12 +26,12 @@ class User extends \Controller_Rest{
     public function post_login(){
         try {
             $_POST['grant_type'] = 'password';
-            $_POST['client_id'] = 'unboxapi.com';
-            $_POST['client_secret'] = 'secret';
+            $_POST['client_id'] = \Config::get('unbox.client.id');
+            $_POST['client_secret'] = \Config::get('unbox.client.secret');
 
             if (isset($_POST['username'])&&isset($_POST['password'])){
                 $this->oauth_server->setupGrant('password');
-                $this->oauth_server->setupGrant('refresh_token');
+                $this->oauth_server->setupGrant('refreshToken');
                 $response = $this->oauth_server->getAccessToken();
             }else{
                 throw new \Exception("Username and password must be provided");
@@ -91,5 +91,11 @@ class User extends \Controller_Rest{
                 400
             );
         }
+    }
+    public function post_refresh(){
+
+    }
+    public function post_authorization(){
+
     }
 }

@@ -56,8 +56,27 @@ return array(
                   </form>
               </div>
           </div>
-      </div>"
+      </div>",
+    "Profile" => "
+        <div class='profile-overview'>
+            <div class='ep-logo circle'>
+                <span class='ep-logo-text'>
+                    Pr
+                </span>
+            </div>
+            <div class='profile-main-detail' id='profile_main'>
 
+            </div>
+            <div class='profile-settings'>
+
+            </div>
+        </div>
+    ",
+    //TODO::Add Handlebar templates for Profile data
+    "ProfileMain" => "",
+    "ProfileSettings" => "",
+    //TODO::Add Activity Stream template for Home Page main stuff
+    "RecentActivity" => ""
 );
 
 ?>

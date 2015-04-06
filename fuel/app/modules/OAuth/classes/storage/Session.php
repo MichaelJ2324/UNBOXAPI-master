@@ -96,6 +96,7 @@ class Session extends AbstractStorage implements SessionInterface
                 'client_id'   =>    $clientId,
             )
         );
+        $session->save();
         return $session->id;
     }
 

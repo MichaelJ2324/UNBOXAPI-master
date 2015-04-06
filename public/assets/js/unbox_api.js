@@ -90,27 +90,29 @@ UNBOX.Global = {
             UNBOX.app.collections.notices.log(notice);
         },
         loggedIn: function(){
-            if (!(UNBOX.app.user.get('id')==null || UNBOX.app.user.get('id')=="") && (UNBOX.app.user.get('token')==null || UNBOX.app.user.get('token')=="")){
+            var access_token = UNBOX.app.user.getToken();
+            if (!(access_token == null || typeof access_token == 'undefined')) {
                 return true;
-            }else{
-                return false;
             }
+            return false;
         }
     },
     Login: {
         Google: {
             loginButton: function(authResult) {
-                if (typeof authResult == 'undefined') {
-                    var params = {
-                        'theme': 'light',
-                    };
-                    gapi.signin.render('gLogin', params);
-                }else {
-                    if (authResult['status']['signed_in']) {
-                        document.getElementById('gLoginWrapper').setAttribute('style', 'display: none');
-                        gapi.client.load('plus', 'v1',UNBOX.Global.Login.Google.apiClientLoaded);
+                if (typeof gapi !== 'undefined') {
+                    if (typeof authResult == 'undefined') {
+                        var params = {
+                            'theme': 'light',
+                        };
+                        gapi.signin.render('gLogin', params);
                     } else {
-                        console.log(authResult);
+                        if (authResult['status']['signed_in']) {
+                            document.getElementById('gLoginWrapper').setAttribute('style', 'display: none');
+                            gapi.client.load('plus', 'v1', UNBOX.Global.Login.Google.apiClientLoaded);
+                        } else {
+                            console.log(authResult);
+                        }
                     }
                 }
             },
@@ -125,11 +127,13 @@ UNBOX.Global = {
                 console.log('Retrieved profile for:' + resp.displayName);
             },
             ReCaptcha: {
-                render: function(element){
-                    return grecaptcha.render(element,{
-                        'sitekey' : '6Ldh2QMTAAAAAIYd2mUJBSek7MaBWc3X8yYPv6bE',
-                        'theme' : 'light'
-                    });
+                render: function(element) {
+                    if (typeof grecaptcha !== 'undefined') {
+                        return grecaptcha.render(element, {
+                            'sitekey': '6Ldh2QMTAAAAAIYd2mUJBSek7MaBWc3X8yYPv6bE',
+                            'theme': 'light'
+                        });
+                    }
                 }
             }
         }
@@ -822,21 +826,7 @@ UNBOX.Views.Home = {
             UNBOX.Global.Login.Google.loginButton();
         },
         login: function(){
-            this.username = this.model.get('username');
-            this.password = this.model.get('password');
-            $.ajax({
-                url: 'user/login',
-                type: "POST",
-                data: {
-                    username: this.username,
-                    password: this.password
-                },
-                success: function(data){
-                    console.log(data);
-                    UNBOX.Global.Utils.notice("Welcome!","success");
-                },
-                dataType: 'json'
-            });
+            UNBOX.app.user.login();
         },
         register: function(){
             UNBOX.app.router.navigate("register", {trigger: true});
@@ -844,7 +834,6 @@ UNBOX.Views.Home = {
         updateModel: function(e) {
             var changed = e.currentTarget;
             var value = $(e.currentTarget).val();
-            console.log(value);
             if (changed.name =='password'){
                 value = btoa(value);
             }
@@ -878,7 +867,9 @@ UNBOX.Views.Home = {
         },
         submit: function(){
             this.model.url = this.model.urlRoot+"register";
-            this.model.set('captcha',grecaptcha.getResponse(this.captcha));
+            if (typeof grecaptcha !== 'undefined') {
+                this.model.set('captcha', grecaptcha.getResponse(this.captcha));
+            }
             UNBOX.Models.Utils.save({
                 model: this.model,
                 success: function(model,response,options){
@@ -1586,7 +1577,6 @@ UNBOX.Views.Tester = {
             this.collection.trigger("testerSetup");
         },
         testButtonState: function() {
-            console.log(this.model);
             if (!(this.model.get("access_token")==null||typeof this.model.get("access_token")=='undefined')) {
                 $("#sendAPI").removeAttr("disabled");
             }else{
@@ -2285,6 +2275,7 @@ UNBOX.Models = {
     User: Backbone.Model.extend({
         initialize: function(){
             _.bindAll(this, 'getValue');
+            this.resetToken();
         },
         urlRoot: "user/",
         default: {
@@ -2298,6 +2289,56 @@ UNBOX.Models = {
         },
         getValue: function(){
             return this.get('name');
+        },
+        login: function(){
+            var loading = UNBOX.Global.Utils.Loading.start("Logging In");
+            this.resetToken();
+            $.ajax({
+                url: 'user/login',
+                type: "POST",
+                context: this,
+                data: {
+                    username: this.get('username'),
+                    password: this.get('password')
+                },
+                success: function(data){
+                    token = this.resetToken(data);
+                    this.set({
+                        token: token,
+                        password: null
+                    });
+                    $.ajaxSetup({
+                        headers: { 'Authorization' :'Bearer '+UNBOX.app.user.getToken() }
+                    });
+                    UNBOX.app.router.navigate("home",{trigger: true});
+                },
+                error: function(data){
+                    UNBOX.Global.Utils.log(data);
+                },
+                dataType: 'json'
+            }).done(function() {
+                UNBOX.Global.Utils.Loading.done(loading);
+            });
+        },
+        logout: function() {
+            this.reset();
+            $.ajaxSetup({
+                headers: {}
+            });
+        },
+        resetToken: function(data){
+            var token = new UNBOX.Models.Tokens;
+            if (typeof data !=='undefined'){
+                token.set(data);
+            }
+            this.set({
+                token: token
+            });
+            return this.get('token');
+        },
+        getToken: function(){
+            var token = this.get('token');
+            return token.get('access_token');
         }
     })
 }
@@ -2705,9 +2746,6 @@ UNBOX.Collections.Utils.fetch({
 });
 function googleLoginWrapper(authResult){
     UNBOX.Global.Login.Google.loginButton(authResult);
-}
-function recaptchaCallback(){
-    console.log("Recaptcha Ready");
 }
 
 

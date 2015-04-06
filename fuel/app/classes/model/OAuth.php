@@ -13,7 +13,7 @@ class Oauth extends \Orm\Model{
 
     protected static $_connection = 'default';
     protected static $_table_name;
-    protected static $_primary_keys = array('id');
+    protected static $_primary_key = array('id');
     //fields array is an override array for properties
     protected static $_fields = array(
         'id' => array(

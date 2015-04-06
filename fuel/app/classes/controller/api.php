@@ -14,6 +14,7 @@ class Api extends \Controller_Rest{
             $this->logged_in = $this->oauth_server->validToken();
             return $this->logged_in;
         }catch(\Exception $ex){
+            \Log::debug("Exception:".$ex->getMessage());
             $this->logged_in = false;
             return false;
         }
@@ -74,7 +75,7 @@ class Api extends \Controller_Rest{
         try {
             $response = "";
             if ($module == "" || !isset($module)) {
-                $response = \UNBOXAPI\Metadata::get_metaData();
+                $response = \UNBOXAPI\Metadata::get_metaData($this->logged_in);
             } else {
                 if (\Module::exists($module)!==false){
                     if (substr($module, -1) === "s"){

@@ -14,7 +14,6 @@ class ParameterType extends \UNBOXAPI\Module{
     protected static $_name = "ParameterTypes";
     protected static $_label = "Parameter Type";
     protected static $_label_plural = "Parameter Types";
-    protected static $_enabled = true;
 
     private $defaults = array();
     private $data_types = array();

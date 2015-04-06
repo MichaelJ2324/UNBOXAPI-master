@@ -2,7 +2,5 @@
 return array(
     'login' => true,
     'versioning' => false,
-    'seed_models' => array(
-        'HttpMethods'
-    )
+    'seed_models' => array()
 );

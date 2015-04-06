@@ -13,13 +13,16 @@ class RefreshToken extends AbstractStorage implements RefreshTokenInterface
      */
     public function get($token)
     {
-        $refresh_token = \Oauth\Model\RefreshTokens::find($token);
+        $refresh_token = \Oauth\Model\RefreshTokens::query()->where('refresh_token',$token)->related(array('accessToken'))->get_one();
+        if (property_exists($refresh_token,'accessToken')){
+            $AccessToken = $refresh_token->accessToken;
+        }
 
         if (count($refresh_token) === 1) {
             $token = (new RefreshTokenEntity($this->server))
                         ->setId($refresh_token->refresh_token)
                         ->setExpireTime($refresh_token->expire_time)
-                        ->setAccessTokenId($refresh_token->access_token);
+                        ->setAccessTokenId($AccessToken->access_token);
 
             return $token;
         }
@@ -32,10 +35,12 @@ class RefreshToken extends AbstractStorage implements RefreshTokenInterface
      */
     public function create($token, $expireTime, $accessToken)
     {
+        $AccessToken = \Oauth\Model\AccessTokens::query()->where('access_token',$accessToken)->get_one();
+
         $refresh_token = \Oauth\Model\RefreshTokens::forge(
             array(
                 'refresh_token'     =>  $token,
-                'access_token'    =>  $accessToken,
+                'access_token_id'    =>  $AccessToken->id,
                 'expire_time'   =>  $expireTime,
             )
         );
@@ -47,7 +52,7 @@ class RefreshToken extends AbstractStorage implements RefreshTokenInterface
      */
     public function delete(RefreshTokenEntity $token)
     {
-        $refresh_token = \Oauth\Model\RefreshTokens::find($token->getId());
+        $refresh_token = \Oauth\Model\RefreshTokens::query()->where('refresh_token',$token->getId())->get_one();
         $refresh_token->delete();
     }
 }

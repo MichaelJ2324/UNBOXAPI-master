@@ -70,6 +70,9 @@ class Installer {
             print("Installing Module Tables...");
             if ($this->install_tables()){
                 print(" SUCCESS!\n");
+                print("Configuring instance...");
+                $this->setup_config();
+                print("Done \n");
                 print("Locking Configuration...");
                 $this->lockInstaller();
                 print("Done \n");
@@ -90,6 +93,13 @@ class Installer {
         }
         \Cache::set($this->cacheFile.".name",$database);
         return true;
+    }
+    private function setup_config(){
+        $unboxConfig = \Config::get('unbox');
+        //TODO::Client ID and Secret generation during Installation. Currently using md5'd GUIDS.
+        $unboxConfig['client']['id'] = md5(\UNBOXAPI\Data\Util\Guid::make());
+        $unboxConfig['client']['secret'] = md5(\UNBOXAPI\Data\Util\Guid::make());
+        \Config::save('unbox.php',$unboxConfig);
     }
     private function setDatabaseConfig($dbConfig){
         $currentConfig = $this->base_db_config;
@@ -252,21 +262,23 @@ class Installer {
         try{
             $tables = \Cache::get("database.tables");
             foreach($tables as $tableName => $TableObject){
-                if (count($TableObject->foreignKeys)>0) {
-                    print("Adding foreign keys for $tableName...");
-                    $addedCount=0;
-                    foreach($TableObject->foreignKeys as $foreignKey=>$definition){
-                        if ($definition['added']!==true){
-                            if (!(Data\DB\Table::addForeignKey($tableName, $definition))) {
-                                print \Cli::color("Failed to add foreign key: {$definition['key']} on $tableName. Review Log for further details. Last error:".\DB::error_info() ."\n","red");
-                            }else{
-                                $tables[$tableName]->foreignKeys[$foreignKey]['added'] = true;
-                                $addedCount++;
-                                \Cache::set("database.tables",$tables);
+                if (is_object($TableObject)) {
+                    if (count($TableObject->foreignKeys) > 0) {
+                        print("Adding foreign keys for $tableName...");
+                        $addedCount = 0;
+                        foreach ($TableObject->foreignKeys as $foreignKey => $definition) {
+                            if ($definition['added'] !== true) {
+                                if (!(Data\DB\Table::addForeignKey($tableName, $definition))) {
+                                    print \Cli::color("Failed to add foreign key: {$definition['key']} on $tableName. Review Log for further details. Last error:" . \DB::error_info() . "\n", "red");
+                                } else {
+                                    $tables[$tableName]->foreignKeys[$foreignKey]['added'] = true;
+                                    $addedCount++;
+                                    \Cache::set("database.tables", $tables);
+                                }
                             }
                         }
+                        print(" $addedCount Keys added\n");
                     }
-                    print(" $addedCount Keys added\n");
                 }
             }
             print \Cli::color("All Foreign Keys added!\n","green");
@@ -277,10 +289,50 @@ class Installer {
     }
     public static function installSeedData($examples = false){
         try{
-            //TODO: Seed data task
-            //TODO: Add Oauth (client ID and client secret) info to Config file
-
+            $modules = \Module::loaded();
+            foreach ($modules as $module=>$path){
+                if (substr($module, -1) === "s"){
+                    $class = substr($module,0,-1);
+                }else{
+                    $class = $module;
+                }
+                $Class = "\\$module\\$class";
+                if (get_parent_class($Class) !== 'UNBOXAPI\Layout') {
+                    $ModelNS = "\\$module\\Seed\\";
+                    $seedModels = $Class::seeds();
+                    foreach ($seedModels as $modelName) {
+                        print("Seeding $modelName in Module $module\n");
+                        $SeedModel = $ModelNS . $modelName;
+                        $SeedModel::run();
+                    }
+                }
+            }
             print \Cli::color("All seed data entered!\n","green");
+        }catch(\Exception $ex){
+            print \Cli::color("Exception: (".$ex->getCode().") ".$ex->getMessage(),"red");
+            return false;
+        }
+    }
+    public static function seedModule($module,$model){
+        try{
+            if (substr($module, -1) === "s"){
+                $class = substr($module,0,-1);
+            }else{
+                $class = $module;
+            }
+            $Class = "\\$module\\$class";
+            $ModelNS = "\\$module\\Seed\\";
+            $seedModels = $Class::seeds();
+            if (in_array($model,$seedModels)) {
+                foreach ($seedModels as $modelName) {
+                    print("Seeding $modelName in Module $module\n");
+                    $SeedModel = $ModelNS . $modelName;
+                    $SeedModel::run();
+                }
+                print \Cli::color("All seed data entered!\n", "green");
+            }else{
+                print \Clie::color("Model has not seeder defined.\n","red");
+            }
         }catch(\Exception $ex){
             print \Cli::color("Exception: (".$ex->getCode().") ".$ex->getMessage(),"red");
             return false;

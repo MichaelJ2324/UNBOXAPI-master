@@ -16,9 +16,6 @@ class Application extends \UNBOXAPI\Module{
     protected static $_label = "Application";
     protected static $_label_plural = "Applications";
     protected static $_enabled = true;
-    protected static $_options = array(
-        'versioning' => true
-    );
 
     public $version_id;
     public $description;

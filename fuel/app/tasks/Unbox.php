@@ -20,4 +20,16 @@ class Unbox
             \UNBOXAPI\Installer::installForeignKeys();
         }
     }
+    public static function seed($examples=false){
+        $installConfig = \Config::load('install');
+        if ($installConfig['locked']==true){
+            print \Cli::color("Seeding Database.\n","blue");
+            if ($examples) print "Adding example seed data.\n";
+            \UNBOXAPI\Installer::installSeedData($examples);
+        }
+    }
+    public static function seedModel($module,$model){
+        print \Cli::color("Seeding $module.\n","blue");
+        \UNBOXAPI\Installer::seedModule($module,$model);
+    }
 }

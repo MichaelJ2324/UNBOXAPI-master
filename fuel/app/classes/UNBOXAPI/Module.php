@@ -14,9 +14,8 @@ class Module {
     protected static $_label = "";
     protected static $_label_plural = "";
     protected static $_enabled = false;
-    protected static $_options = array(
-        'versioning' => false
-    );
+    protected static $_config;
+    //TODO::Add static $_labels and label configuration to Modules
 
     public $id;
     public $name;
@@ -69,8 +68,16 @@ class Module {
             'enabled' => static::$_enabled,
             'fields' => static::fields(),
             'relationships' => static::relationships(),
-            'options' => static::options()
+            'config' => static::config()
         );
+    }
+    public static function seeds()
+    {
+        $config = static::config();
+        if (isset($config['seed_models'])) {
+            return $config['seed_models'];
+        }
+        return false;
     }
     public static function fields(){
         $model = static::model();
@@ -84,8 +91,9 @@ class Module {
         $module = static::$_name;
         return "$module\\Model\\$module";
     }
-    public static function options(){
-        return static::$_options;
+    public static function config(){
+        static::$_config = \Config::load(static::$_name."::module");
+        return static::$_config;
     }
     protected static function formatResult($model){
         $rows = array();

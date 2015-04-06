@@ -11,6 +11,15 @@ namespace Oauth;
 
 class Oauth {
 
+    protected static $_seed_models = array(
+        'Clients',
+        'Scopes',
+        'Sessions'
+    );
+    public static function seeds(){
+        return static::$_seed_models;
+    }
+
     protected $authorization_server;
     protected $resource_server;
 
@@ -117,6 +126,13 @@ class Oauth {
         return $this->authorization_server->issueAccessToken();
     }
     public function validToken(){
+        \Log::info("Checking Access Token.");
+        $token = \Input::headers('Authorization');
+        if (strpos($token,"Bearer ")!==false){
+            $token = str_replace("Bearer ","",$token);
+            \Log::info("token:".$token);
+            return $this->resource_server->isValidRequest(true,$token);
+        }
         return $this->resource_server->isValidRequest();
     }
 }
