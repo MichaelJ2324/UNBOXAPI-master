@@ -82,6 +82,7 @@ class Request {
         curl_setopt($curl_request, CURLOPT_FOLLOWLOCATION, 0);
 
         if (!empty($this->token)){
+            //TODO::Need a dynamic way to add Tokens to requests
             $token = array('Content-Type: application/json',"OAuth-Token: {$this->token}");
             curl_setopt($curl_request, CURLOPT_HTTPHEADER, $token);
         }

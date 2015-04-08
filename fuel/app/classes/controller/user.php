@@ -25,6 +25,7 @@ class User extends \Controller_Rest{
 
     public function post_login(){
         try {
+            //TODO::Move grant, client id and client secret to OAuth\Client object
             $_POST['grant_type'] = 'password';
             $_POST['client_id'] = \Config::get('unbox.client.id');
             $_POST['client_secret'] = \Config::get('unbox.client.secret');
@@ -32,7 +33,9 @@ class User extends \Controller_Rest{
             if (isset($_POST['username'])&&isset($_POST['password'])){
                 $this->oauth_server->setupGrant('password');
                 $this->oauth_server->setupGrant('refreshToken');
+                //TODO:Return encrypted cookie
                 $response = $this->oauth_server->getAccessToken();
+
             }else{
                 throw new \Exception("Username and password must be provided");
             }
@@ -48,6 +51,9 @@ class User extends \Controller_Rest{
                 401
             );
         }
+    }
+    public function post_token(){
+        //TODO: Actual OAuth token request goes here
     }
     public function post_register($id="",$action="",$related_module="",$related_id=""){
         try
@@ -97,5 +103,25 @@ class User extends \Controller_Rest{
     }
     public function post_authorization(){
 
+    }
+    public function get_me(){
+        try {
+            if ($this->oauth_server->validToken()){
+                $resourceServer = $this->oauth_server->getResourceServer();
+                $userId = $resourceServer->getAccessToken()->getSession()->getOwnerId();
+                $response = \Users\User::me($userId);
+                return $this->response(
+                    $response
+                );
+            }
+        } catch (\Exception $e) {
+            return $this->response(
+                array(
+                    'err' => 'true',
+                    'msg' => "Exception: " . $e->getMessage() . "\n",
+                ),
+                403
+            );
+        }
     }
 }

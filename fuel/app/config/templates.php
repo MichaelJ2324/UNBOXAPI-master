@@ -34,11 +34,12 @@ return array(
                     name='<%= _.escape(field['name']) %>'
                     <%= _.escape(field['disabled']) %>><%= _.escape(field['value']) %></textarea>",
     'navBtns' => "
-        <li id='homeLi' class='dropdown active'>
+            <li id='homeLi' class='dropdown active'>
             <a href='<%= current.get('link') %>' style='float: left;'>
-                <%= current.get('icon') %>
-                <%= current.escape('name') %>
+            <%= current.get('icon') %>
+            <%= current.escape('name') %>
             </a>
+            <% if (modules.length>1){ %>
             <a href='#' class='dropdown-toggle' data-toggle='dropdown' style='float: right; padding-left: 0px;'>
                 <span class='caret'></span>
             </a>
@@ -50,10 +51,13 @@ return array(
                 <%      }
                 }) %>
             </ul>
+            <% } %>
             </li>
             <% _.each(links,function(link){ %>
-            <li><a href='<%= link.link %>'><%= link.icon %><%= _.escape(link.name) %></a></li>
-        <% }) %>",
+            <li>
+                <a href='<%= link.link %>'><%= link.icon %><%= _.escape(link.name) %></a>
+            </li>
+            <% }) %>",
     "panel" => "
             <a href='#' data-panel='<%= num %>' class='un-panel-toggle un-open-panel opaque un-color<%= num %>' id='panel<%= num %>_toggle'>
                 <span class='glyphicon glyphicon-chevron-right'></span>

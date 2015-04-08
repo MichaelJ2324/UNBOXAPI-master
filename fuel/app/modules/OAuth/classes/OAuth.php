@@ -131,6 +131,7 @@ class Oauth {
         if (strpos($token,"Bearer ")!==false){
             $token = str_replace("Bearer ","",$token);
             \Log::info("token:".$token);
+            //TODO: League's Symphony Request object does not recognize Authorization header, so I force their check to use my token that Fuel recognizes in header. Figure out wtf is up with that
             return $this->resource_server->isValidRequest(true,$token);
         }
         return $this->resource_server->isValidRequest();

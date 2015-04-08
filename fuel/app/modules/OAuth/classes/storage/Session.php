@@ -21,7 +21,7 @@ class Session extends AbstractStorage implements SessionInterface
                 'related' => array(
                     'accessToken' => array(
                         'where'=> array(
-                            'access_token',$accessToken->getId()
+                            array('access_token',$accessToken->getId())
                         )
                     )
                 )

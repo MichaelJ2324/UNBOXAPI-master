@@ -46,30 +46,6 @@ class Api extends \Controller_Rest{
      * @return mixed
      */
 
-    public function get_me(){
-        try {
-            $username = \Input::json('user_name');
-            $password = \Input::json('password');
-            if (isset($username)&&isset($password)){
-                return \Users::OAuth($username,$password);
-            }else{
-                return $this->response(
-                    array(
-                        'err' => 'true',
-                        'msg' => "Username and password must be provided.",
-                    )
-                );
-            }
-        } catch (\Exception $e) {
-            return $this->response(
-                array(
-                    'err' => 'true',
-                    'msg' => "Caught exception: " . $e->getMessage() . "\n",
-                )
-            );
-        }
-    }
-
     public function get_metadata($module="")
     {
         try {
