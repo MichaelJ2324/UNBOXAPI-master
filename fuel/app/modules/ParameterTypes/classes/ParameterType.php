@@ -14,8 +14,6 @@ class ParameterType extends \UNBOXAPI\Module{
     protected static $_name = "ParameterTypes";
     protected static $_label = "Parameter Type";
     protected static $_label_plural = "Parameter Types";
-    protected static $_type = "Module";
-    protected static $_enabled = true;
 
     private $defaults = array();
     private $data_types = array();
@@ -26,26 +24,22 @@ class ParameterType extends \UNBOXAPI\Module{
         2 => 'api'
     );
 
-    public $id;
-    public $name;
     public $type;
     public $template;
 
 
-    function __construct($type){
-
-        $this->defaults = $this->getDefaults();
-        $this->loadDataTypes();
-        $this->loadApiTypes();
-        $this->loadTemplates();
-        $this->set_type($type);
+    function __construct($type=""){
+        if ($type!=="") {
+            $this->defaults = $this->getDefaults();
+            $this->loadDataTypes();
+            $this->loadApiTypes();
+            $this->loadTemplates();
+            $this->set_type($type);
+        }
     }
     public static function get($type=""){
         $pt = Model\ParameterTypes::findType($type);
         return static::formatResult($pt);
-    }
-    public static function filter(){
-
     }
 
     private function getDefaults(){

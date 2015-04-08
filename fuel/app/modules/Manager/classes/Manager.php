@@ -9,7 +9,7 @@
 namespace Manager;
 
 
-class Manager extends \UNBOXAPI\Module{
+class Manager extends \UNBOXAPI\Layout{
     protected static $_name = "Manager";
     protected static $_link = "#manage";
     protected static $_type = "Layout";

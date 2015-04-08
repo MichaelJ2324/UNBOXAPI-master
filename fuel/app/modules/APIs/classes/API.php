@@ -10,18 +10,15 @@ namespace APIs;
 
 class API extends \UNBOXAPI\Module{
 
-    protected static $_name = "APIs";
+    protected static $_name = "Apis";
     protected static $_label = "API";
-    protected static $_label_plural = "APIs";
-    protected static $_type = "Module";
+    protected static $_label_plural = "Apis";
     protected static $_enabled = true;
 
-    public $id;
-    public $name;
     public $version;
     public $web_address;
     public $login_required;
-    private $model;
+
     private $response;
     private $request;
 
@@ -33,34 +30,6 @@ class API extends \UNBOXAPI\Module{
                 return false;
             }
         }
-    }
-
-    public static function create(){
-        $api = Model\APIs::forge(\Input::json());
-        $api->save();
-        return $api;
-    }
-    public static function update($id){
-        $api = Model\APIs::find($id);
-        $properties = array();
-        foreach(\Input::json() as $key=>$value){
-            if (!($key=="id"||$key=="date_created"||$key=="date_modified")) {
-                $properties[$key] = $value;
-            }
-        }
-        $api->set($properties);
-        $api->save();
-        return $api;
-    }
-    public static function get($id=""){
-        if ($id==""){
-            $id='all';
-            $api = Model\APIs::find($id);
-            $api = static::formatResult($api);
-        }else{
-            $api = Model\APIs::find($id);
-        }
-        return $api;
     }
 
     public static function methods($id=""){

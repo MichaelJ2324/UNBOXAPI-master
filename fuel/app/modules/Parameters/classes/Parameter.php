@@ -13,14 +13,10 @@ class Parameter extends \UNBOXAPI\Module{
     protected static $_name = "Parameters";
     protected static $_label = "Parameter";
     protected static $_label_plural = "Parameters";
-    protected static $_type = "Module";
     protected static $_enabled = true;
 
-    public $id;
-    public $type;
+    public $data_type;
     public $api_type;
-    private $model;
-    public $name;
     public $description;
     public $html;
     public $required;
@@ -39,40 +35,6 @@ class Parameter extends \UNBOXAPI\Module{
         }
     }
 
-    public static function create(){
-        $param = Model\Parameters::forge(\Input::json());
-        $param->save();
-        return $param;
-    }
-    public static function update($id){
-        $param = Model\Parameters::find($id);
-        $properties = array();
-        foreach(\Input::json() as $key=>$value){
-            if (!($key=="id"||$key=="date_created"||$key=="date_modified")) {
-                $properties[$key] = $value;
-            }
-        }
-        $param->set($properties);
-        $param->save();
-        return $param;;
-    }
-    public static function get($id=""){
-        if ($id==""){
-            $id='all';
-            $param = Model\Parameters::find($id,array('related'=>array('data_type','api_type')));
-            $param = static::formatResult($param);
-        }else{
-            $param = Model\Parameters::find($id,array('related'=>array('data_type','api_type')));
-        }
-        return $param;
-    }
-    public static function delete($id){
-
-    }
-    public static function related($id,$relationship){
-        $relatedRecords = Model\Parameters::find($id,array('related'=>array($relationship)));
-        return static::formatResult($relationship);
-    }
     private function retrieve_Param($entryPoint,$param_id){
         $param = $this->model->getEntryPointParam($param_id,$entryPoint);
         if (count($param)==1){
@@ -85,7 +47,7 @@ class Parameter extends \UNBOXAPI\Module{
                 $this->login_pane = $row['login_pane'];
                 $this->url = ($row['url_param']==1?true:false);
                 $type = new ParamType($row['data_type'],$row['api_type']);
-                $this->type = $type->type;
+                $this->data_type = $type->type;
                 $this->api_type = $type->api_type;
                 $this->set_html($type);
             }

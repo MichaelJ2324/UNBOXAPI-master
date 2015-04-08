@@ -9,7 +9,7 @@
 namespace Tester;
 
 
-class Tester extends \UNBOXAPI\Module{
+class Tester extends \UNBOXAPI\Layout{
 
     protected static $_name = "Tester";
     protected static $_link = "#test";

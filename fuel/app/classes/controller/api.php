@@ -2,10 +2,40 @@
 
 namespace Controller;
 
-use EntryPoints\Model\EntryPoints;
-use Oil\Exception;
 
 class Api extends \Controller_Rest{
+
+    public $oauth_server;
+
+    private $logged_in = false;
+
+    private function loggedIn(){
+        try{
+            $this->logged_in = $this->oauth_server->validToken();
+            return $this->logged_in;
+        }catch(\Exception $ex){
+            \Log::debug("Exception:".$ex->getMessage());
+            $this->logged_in = false;
+            return false;
+        }
+    }
+
+    public function router($resource, $arguments) {
+        try{
+            $this->oauth_server = \Oauth\Oauth::getInstance();
+            if (!$this->loggedIn()&&$resource!=="metadata")
+            {
+                $response = \Response::forge(\Format::forge(array('Error' => 'Invalid Access Token'))->to_json(), 401)->set_header('Content-Type', 'application.json');
+                return $response;
+            }
+            parent::router($resource, $arguments);
+        }catch(\Exception $ex){
+            $response = \Response::forge(\Format::forge(array('Error' => $ex->getMessage()))->to_json(), 500)->set_header('Content-Type', 'application.json');
+            return $response;
+        }
+    }
+
+
     /******************************************
      *
      * ENTRY POINTS for System Stuff
@@ -15,12 +45,37 @@ class Api extends \Controller_Rest{
      * @param string $module
      * @return mixed
      */
+
+    public function get_me(){
+        try {
+            $username = \Input::json('user_name');
+            $password = \Input::json('password');
+            if (isset($username)&&isset($password)){
+                return \Users::OAuth($username,$password);
+            }else{
+                return $this->response(
+                    array(
+                        'err' => 'true',
+                        'msg' => "Username and password must be provided.",
+                    )
+                );
+            }
+        } catch (\Exception $e) {
+            return $this->response(
+                array(
+                    'err' => 'true',
+                    'msg' => "Caught exception: " . $e->getMessage() . "\n",
+                )
+            );
+        }
+    }
+
     public function get_metadata($module="")
     {
         try {
             $response = "";
             if ($module == "" || !isset($module)) {
-                $response = \UNBOXAPI\Unbox::get_metaData();
+                $response = \UNBOXAPI\Metadata::get_metaData($this->logged_in);
             } else {
                 if (\Module::exists($module)!==false){
                     if (substr($module, -1) === "s"){
@@ -29,10 +84,10 @@ class Api extends \Controller_Rest{
                         $class = $module;
                     }
                     $Class = "\\$module\\$class";
-                    $response = $Class::get_metaData();
+                    $response = $Class::metadata();
                 }else{
                     if ($module=='Config'){
-                        $response = \UNBOXAPI\Unbox::get_config();
+                        $response = \UNBOXAPI\Metadata::get_config();
                     }else{
                         throw new \Exception("Module does not exist",500);
                     }
@@ -172,7 +227,7 @@ class Api extends \Controller_Rest{
     }
     /******************************************
      *
-     * ENTRY POINTS for APIs
+     * ENTRY POINTS for Apis
      *
      ******************************************/
     public function get_apis($id="",$related="",$filter=""){
@@ -602,5 +657,63 @@ class Api extends \Controller_Rest{
             'msg' => "Modal $window Loaded.",
             'data' => $data
         );
+    }
+
+    /*****************************************
+     *
+     * ENTRYPOINTS for Users
+     *
+     ****************************************/
+    public function get_users($id="",$action="",$relationship="",$related_id=""){
+        try
+        {
+            $response = "";
+            if ($action==""||!isset($action)){
+                $response = \Users\User::get($id);
+            }else{
+                switch ($action){
+                    case 'link':
+                        $response = \Users\User::related($id,$relationship);
+                        break;
+                }
+            }
+            return $this->response(
+                $response
+            );
+        }
+        catch (\Exception $e) {
+            return $this->response(
+                array(
+                    'err' => 'true',
+                    'msg' => "Caught exception: ".$e->getMessage()."\n",
+                ),
+                400
+            );
+        }
+    }
+    public function put_users($id,$action="",$related_module="",$related_id=""){
+        try
+        {
+            $response = "";
+            if ($action==""||!isset($action)){
+                $response = \Users\User::update($id);
+            }else{
+                switch ($action){
+
+                }
+            }
+            return $this->response(
+                $response
+            );
+        }
+        catch (\Exception $e) {
+            return $this->response(
+                array(
+                    'err' => 'true',
+                    'msg' => "Caught exception: ".$e->getMessage()."\n",
+                ),
+                400
+            );
+        }
     }
 }
