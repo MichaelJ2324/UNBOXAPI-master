@@ -11,14 +11,8 @@ namespace Oauth;
 
 class Oauth {
 
-    protected static $_seed_models = array(
-        'Clients',
-        'Scopes',
-        'Sessions'
-    );
-    public static function seeds(){
-        return static::$_seed_models;
-    }
+    protected static $_name = 'Oauth';
+    protected static $_config;
 
     protected $authorization_server;
     protected $resource_server;
@@ -40,6 +34,18 @@ class Oauth {
             'Scopes',
             'Sessions'
         );
+    }
+    public static function config(){
+        static::$_config = \Config::load(static::$_name."::module");
+        return static::$_config;
+    }
+    public static function seeds()
+    {
+        $config = static::config();
+        if (isset($config['seed_models'])) {
+            return $config['seed_models'];
+        }
+        return false;
     }
     public static function getInstance()
     {

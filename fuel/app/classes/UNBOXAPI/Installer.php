@@ -326,11 +326,9 @@ class Installer {
             $ModelNS = "\\$module\\Seed\\";
             $seedModels = $Class::seeds();
             if (in_array($model,$seedModels)) {
-                foreach ($seedModels as $modelName) {
-                    print("Seeding $modelName in Module $module\n");
-                    $SeedModel = $ModelNS . $modelName;
-                    $SeedModel::run();
-                }
+                print("Seeding $model in Module $module\n");
+                $SeedModel = $ModelNS . $model;
+                $SeedModel::run();
                 print \Cli::color("All seed data entered!\n", "green");
             }else{
                 print \Clie::color("Model has not seeder defined.\n","red");
