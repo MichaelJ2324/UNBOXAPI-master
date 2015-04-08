@@ -2277,7 +2277,7 @@ UNBOX.Models = {
             _.bindAll(this, 'getValue');
             this.resetToken();
         },
-        urlRoot: "user/",
+        urlRoot: "user/me",
         default: {
             token: null,
             name: null,
@@ -2310,6 +2310,8 @@ UNBOX.Models = {
                     $.ajaxSetup({
                         headers: { 'Authorization' :'Bearer '+UNBOX.app.user.getToken() }
                     });
+                    UNBOX.app.metadata.fetchAll();
+                    this.fetch();
                     UNBOX.app.router.navigate("home",{trigger: true});
                 },
                 error: function(data){
@@ -2447,9 +2449,21 @@ UNBOX.Collections = {
         }
     }),
     MetaData: Backbone.Collection.extend({
+        initialize: function(){
+            _.bindAll(this,"fetchAll");
+        },
         name: "Application Metadata",
         url: UNBOX.Global.ajaxURL + "metadata/",
-        model: UNBOX.Models.Data
+        model: UNBOX.Models.Data,
+        fetchAll: function(){
+            UNBOX.Collections.Utils.fetch({
+                collection: this,
+                options: null,
+                success: function() {
+                    this.trigger("fetched");
+                }
+            });
+        }
     }),
     Data: Backbone.Collection.extend({
         model: UNBOX.Models.Data

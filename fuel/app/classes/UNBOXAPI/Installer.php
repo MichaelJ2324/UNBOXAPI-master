@@ -97,8 +97,8 @@ class Installer {
     private function setup_config(){
         $unboxConfig = \Config::get('unbox');
         //TODO::Client ID and Secret generation during Installation. Currently using md5'd GUIDS.
-        $unboxConfig['client']['id'] = md5(\UNBOXAPI\Data\Util\Guid::make());
-        $unboxConfig['client']['secret'] = md5(\UNBOXAPI\Data\Util\Guid::make());
+        $unboxConfig['oauth']['client']['id'] = md5(\UNBOXAPI\Data\Util\Guid::make());
+        $unboxConfig['oauth']['client']['secret'] = md5(\UNBOXAPI\Data\Util\Guid::make());
         \Config::save('unbox.php',$unboxConfig);
     }
     private function setDatabaseConfig($dbConfig){

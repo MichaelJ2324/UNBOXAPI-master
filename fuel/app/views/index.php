@@ -118,6 +118,7 @@
         <%= current.get('icon') %>
         <%= current.escape('name') %>
         </a>
+        <% if (modules.length>1){ %>
         <a href='#' class='dropdown-toggle' data-toggle='dropdown' style='float: right; padding-left: 0px;'>
             <span class='caret'></span>
         </a>
@@ -129,9 +130,12 @@
             <%      }
             }) %>
         </ul>
+        <% } %>
     </li>
     <% _.each(links,function(link){ %>
-        <li><a href='<%= link.link %>'><%= link.icon %><%= _.escape(link.name) %></a></li>
+    <li>
+        <a href='<%= link.link %>'><%= link.icon %><%= _.escape(link.name) %></a>
+    </li>
     <% }) %>
 </script>
 <script type="text/template" id="panel">
