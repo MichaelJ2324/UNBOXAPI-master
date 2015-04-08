@@ -6,7 +6,7 @@
  * Time: 5:20 PM
  */
 
-namespace HttpMethods\Seeds;
+namespace HttpMethods\Seed;
 
 
 use UNBOXAPI\Data\Seed\Seeder;

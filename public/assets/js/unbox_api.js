@@ -866,7 +866,7 @@ UNBOX.Views.Home = {
             this.captcha = UNBOX.Global.Login.Google.ReCaptcha.render('captcha');
         },
         submit: function(){
-            this.model.url = this.model.urlRoot+"register";
+            this.model.url = "user/register";
             if (typeof grecaptcha !== 'undefined') {
                 this.model.set('captcha', grecaptcha.getResponse(this.captcha));
             }
