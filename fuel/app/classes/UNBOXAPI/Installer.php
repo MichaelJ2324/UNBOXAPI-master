@@ -152,9 +152,11 @@ class Installer {
                 $Class = "\\$module\\$class";
                 if (get_parent_class($Class) == 'UNBOXAPI\Module') {
                     $Model = $Class::model();
-                    $options = $Class::options();
-                    if ($options['versioning']==true){
-                        $this->versionedModules[] = $module;
+                    $config = $Class::config();
+                    if (isset($config['versioning'])){
+                        if ($config['versioning']===true) {
+                            $this->versionedModules[] = $module;
+                        }
                     }
                     $Table = new Data\DB\Table($Model);
                     $this->tables[$Table->name] = $Table;
