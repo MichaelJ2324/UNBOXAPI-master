@@ -40,7 +40,7 @@ UNBOX.Global = {
         getTemplate: function(template,global){
             global = typeof global !== 'undefined' ? global : false;
             if (global==false) {
-                var templates = UNBOX.app.models.currentLayout.get("templates");
+                var templates = UNBOX.app.layouts.current.get("templates");
                 return templates[template];
             }else{
                 var t = document.getElementById(template);
@@ -217,17 +217,17 @@ UNBOX.Router = Backbone.Router.extend({
     },
     quickRecord: function(module,action,id){
         if (UNBOX.Global.Utils.loggedIn()) {
-            if (UNBOX.app.models.currentLayout.get("name") !== "Manager") {
+            if (UNBOX.app.layouts.current.get("name") !== "Manager") {
                 this.manager(module);
             }
             if (!(module == "" || typeof module == 'undefined' || module == null)) {
-                if (UNBOX.app.models.currentModule.get("name") !== module) {
+                if (UNBOX.app.modules.current.get("name") !== module) {
                     UNBOX.app.modules.setCurrent(module);
                 }
                 if (!(action == "" || typeof action == 'undefined' || action == null)) {
                     if (action == "create" || action == "view") {
                         if (typeof UNBOX.manager.models.current == 'Object') {
-                            if (model == UNBOX.app.models.currentModule) {
+                            if (model == UNBOX.app.modules.current) {
                                 if (!(typeof id == 'undefined' || id == "" || id == null)) {
                                     if (id !== UNBOX.manager.models.current.get("id")) {
                                         UNBOX.manager.models.current.clear();
@@ -249,7 +249,7 @@ UNBOX.Router = Backbone.Router.extend({
                             number: 2
                         });
                         var options = {
-                            module: UNBOX.app.models.currentModule,
+                            module: UNBOX.app.modules.current,
                             model: UNBOX.manager.models.current,
                             panel: panel2
                         };
@@ -339,7 +339,7 @@ UNBOX.Router = Backbone.Router.extend({
         }
     },
     login: function(){
-        if (UNBOX.app.models.currentLayout.get("name") !== "Home") {
+        if (UNBOX.app.layouts.current.get("name") !== "Home") {
             this.home();
         }
         if (UNBOX.Global.Utils.loggedIn()==false){
@@ -538,7 +538,8 @@ UNBOX.Views = {
             //build nav
             this.nav = new UNBOX.Views.NavBar({
                 el: this.$navBar,
-                collection: this.layouts
+                collection: this.layouts,
+                model: this.layouts.current
             });
             //build notice
             this.notice = new UNBOX.Views.Notice({
@@ -604,20 +605,16 @@ UNBOX.Views = {
         initialize: function(){
             _.bindAll(this,"render")
             this.collection.on("change",this.render);
-
+            this.model.on("change",this.render);
             this.template = UNBOX.Global.Utils.getTemplate('navBtns',true);
         },
         render: function(){
-            this.model = this.collection.findWhere({
-                current: true,
-                enabled: true
-            });
             this.html = _.template(this.template,{
                 current: this.model,
                 modules: this.collection.where({
                     enabled: true
                 }),
-                links: this.model.get("links")
+                links: this.collection.current.get("links")
             });
             this.$el.html(this.html);
             return this;
@@ -2460,7 +2457,7 @@ UNBOX.Collections = {
                 collection: this,
                 options: null,
                 success: function() {
-                    this.trigger("fetched");
+                    UNBOX.app.metadata.trigger("fetched");
                 }
             });
         }
@@ -2526,6 +2523,7 @@ UNBOX.Collections = {
         initialize: function(options){
             this.options = options || {};
             this.metadata = typeof this.options.metadata !== 'undefined' ? this.options.metadata : new UNBOX.Collections.MetaData;
+            this.current = typeof this.options.current !== 'undefined' ? this.options.current : new UNBOX.Models.Modules;
             _.bindAll(this,"update","setCurrent");
             this.metadata.bind("fetched",this.update)
         },
@@ -2558,38 +2556,62 @@ UNBOX.Collections = {
                         }
                     }
                 }
+                if (typeof this.current !== 'undefined' || this.current == null) {
+                    this.setCurrent();
+                }
             }else{
                 if (layout=="all") {
-                    this.fetch();
+                    UNBOX.Collections.Utils.fetch({
+                        collection: this,
+                        success: function(){
+                            UNBOX.app.modules.setCurrent();
+                        }
+                    });
                 }else{
                     var l = this.findWhere({
                         name: layout
                     });
                     l.url = l.urlRoot+"/"+layout;
-                    l.fetch();
+                    UNBOX.Models.Utils.fetch({
+                        collection: l,
+                        success: function(){
+                            UNBOX.app.modules.setCurrent();
+                        }
+                    });
                 }
             }
         },
-        setCurrent: function(layout){
-            UNBOX.app.models.currentLayout.set({
-                    current: false
-                },
-                {
-                    silent: true
+        setCurrent: function(layout) {
+            if (typeof layout == 'undefined'){
+                var model = this.findWhere({name: this.current.get('name')});
+                if (!(typeof model == 'undefined' || model== null)) {
+                    model.set({
+                        current: true
+                    });
+                }
+            }else {
+                this.current.set({
+                        current: false
+                    },
+                    {
+                        silent: true
+                    }
+                );
+                var model = this.findWhere({name: layout});
+                model.set({
+                    current: true
                 });
-            var model = this.findWhere({ name: layout });
-            model.set({
-                current: true
-            });
-            UNBOX.app.models.currentLayout.set(
-                model.toJSON()
-            );
+                this.current.set(
+                    model.toJSON()
+                );
+            }
         }
     }),
     Modules: Backbone.Collection.extend({
         initialize: function(options){
             this.options = options || {};
             this.metadata = typeof this.options.metadata !== 'undefined' ? this.options.metadata : new UNBOX.Collections.MetaData;
+            this.current = typeof this.options.current !== 'undefined' ? this.options.current : new UNBOX.Models.Modules;
             _.bindAll(this,"update","setCurrent");
             this.metadata.bind("fetched",this.update)
         },
@@ -2615,39 +2637,61 @@ UNBOX.Collections = {
                                 enabled: moduleArray[x].enabled,
                                 fields: moduleArray[x].fields,
                                 relationships: moduleArray[x].relationships,
-                                options: moduleArray[x].options
+                                config: moduleArray[x].config
                             });
                             break;
                         }
                     }
                 }
+                if (typeof this.current !== 'undefined' || this.current == null) {
+                    this.setCurrent();
+                }
             }else{
                 if (module=="all") {
-                    this.fetch();
+                    UNBOX.Collections.Utils.fetch({
+                        collection: this,
+                        success: function(){
+                            UNBOX.app.modules.setCurrent();
+                        }
+                    });
                 }else{
                     var mod = this.findWhere({
                         name: module
                     });
                     mod.url = mod.urlRoot+"/"+module;
-                    mod.fetch();
+                    UNBOX.Models.Utils.fetch({
+                        collection: mod,
+                        success: function(){
+                            UNBOX.app.modules.setCurrent();
+                        }
+                    });
                 }
             }
         },
         setCurrent: function(module) {
-            UNBOX.app.models.currentModule.set({
-                    current: false
-                },
-                {
-                    silent: true
+            if (typeof module == 'undefined'){
+                var model = this.findWhere({name: this.current.get('name')});
+                if (!(typeof model == 'undefined' || model== null)) {
+                    model.set({
+                        current: true
+                    });
                 }
-            );
-            var model = this.findWhere({ name: module });
-            model.set({
-                current: true
-            });
-            UNBOX.app.models.currentModule.set(
-                model.toJSON()
-            );
+            }else {
+                this.current.set({
+                        current: false
+                    },
+                    {
+                        silent: true
+                    }
+                );
+                var model = this.findWhere({name: module});
+                model.set({
+                    current: true
+                });
+                this.current.set(
+                    model.toJSON()
+                );
+            }
         }
     }),
     Config: Backbone.Collection.extend({
@@ -2686,9 +2730,7 @@ UNBOX.app = {
     layouts: null,
     user: new UNBOX.Models.User,
     models: {
-        mainPanel: null,
-        currentLayout: new UNBOX.Models.Layouts,
-        currentModule: new UNBOX.Models.Modules
+        mainPanel: null
     },
     collections: {
         httpMethods: new UNBOX.Collections.HttpMethods,
@@ -2746,8 +2788,8 @@ UNBOX.app.view = new UNBOX.Views.AppView({
     config: UNBOX.app.config,
     modules: UNBOX.app.modules,
     layouts: UNBOX.app.layouts,
-    module: UNBOX.app.models.currentModule,
-    layout: UNBOX.app.models.currentLayout,
+    module: UNBOX.app.modules.current,
+    layout: UNBOX.app.layouts.current,
     notices: UNBOX.app.collections.notices
 });
 UNBOX.Collections.Utils.fetch({
