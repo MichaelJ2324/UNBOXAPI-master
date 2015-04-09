@@ -128,7 +128,7 @@ class Oauth {
                 break;
         }
     }
-    public function getAccessToken(){
+    public function issueAccessToken(){
         return $this->authorization_server->issueAccessToken();
     }
     public function validToken(){
@@ -141,5 +141,8 @@ class Oauth {
             return $this->resource_server->isValidRequest(true,$token);
         }
         return $this->resource_server->isValidRequest();
+    }
+    public function getUserId(){
+        return $this->resource_server->getAccessToken()->getSession()->getOwnerId();
     }
 }

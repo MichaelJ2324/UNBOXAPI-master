@@ -16,17 +16,8 @@ class Session extends AbstractStorage implements SessionInterface
      */
     public function getByAccessToken(AccessTokenEntity $accessToken)
     {
-        $session = \Oauth\Model\Sessions::find('first',
-            array(
-                'related' => array(
-                    'accessToken' => array(
-                        'where'=> array(
-                            array('access_token',$accessToken->getId())
-                        )
-                    )
-                )
-            )
-        );
+        $AccessToken = \Oauth\Model\AccessTokens::query()->where('access_token',$accessToken->getId())->get_one();
+        $session = \Oauth\Model\Sessions::find($AccessToken->session_id);
         if (count($session) === 1) {
             $Session = new SessionEntity($this->server);
             $Session->setId($session->id);
@@ -48,7 +39,7 @@ class Session extends AbstractStorage implements SessionInterface
                 'related' => array(
                     'authCode' => array(
                         'where'=> array(
-                            'auth_code',$authCode->getId()
+                            array('auth_code',$authCode->getId())
                         )
                     )
                 )
