@@ -49,7 +49,7 @@ class Metadata {
                     if ($moduleMeta['enabled'] == true) {
                         if ($moduleMeta['config']['login']===true && $loggedIn===true){
                             $metadata[1]['value'][] = $moduleMeta;
-                        }else if ($moduleMeta['config']['login']===false && $loggedIn===false){
+                        }else if ($moduleMeta['config']['login']===false){
                             $metadata[1]['value'][] = $moduleMeta;
                         }
                     }
@@ -57,7 +57,7 @@ class Metadata {
                     if ($moduleMeta['enabled'] == true) {
                         if ($moduleMeta['config']['login']===true && $loggedIn===true){
                             $metadata[2]['value'][] = $moduleMeta;
-                        }else if ($moduleMeta['config']['login']===false && $loggedIn===false){
+                        }else if ($moduleMeta['config']['login']===false){
                             $metadata[2]['value'][] = $moduleMeta;
                         }
                     }

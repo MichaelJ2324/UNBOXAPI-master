@@ -34,7 +34,7 @@ class User extends \Controller_Rest{
                 $this->oauth_server->setupGrant('password');
                 $this->oauth_server->setupGrant('refreshToken');
                 //TODO:Return encrypted cookie
-                $response = $this->oauth_server->getAccessToken();
+                $response = $this->oauth_server->issueAccessToken();
 
             }else{
                 throw new \Exception("Username and password must be provided");
@@ -107,8 +107,7 @@ class User extends \Controller_Rest{
     public function get_me(){
         try {
             if ($this->oauth_server->validToken()){
-                $resourceServer = $this->oauth_server->getResourceServer();
-                $userId = $resourceServer->getAccessToken()->getSession()->getOwnerId();
+                $userId = $this->oauth_server->getUserId();
                 $response = \Users\User::me($userId);
                 return $this->response(
                     $response
