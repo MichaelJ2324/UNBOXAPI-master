@@ -15,25 +15,22 @@ Prereqs:
 PHP 5.4 (for now)
 
 1. In WebServer directory install FuelPHP
-- curl get.fuelphp.com/oil | sh
-- oil create [directory]
+  * curl get.fuelphp.com/oil | sh
+  * oil create [directory]
 
 2. Copy/Push the above Repo to this folder, overwrite fuel/app and public directories
 
 3. In fuel/app directory
-- composer.phar update
---- Only needed after initial push of App directory
---- This will pull required PHP Libraries used by UNBOX API
+  * composer.phar update
+    * Only needed after initial push of App directory
+    * This will pull required PHP Libraries used by UNBOX API
 
 4. Configure install.php file in fuel/app/config/
-- Setup database creds and database name
+  * Setup database creds and database name
 
 5. Install Database
-- oil r Unbox:install
-- oil r Unbox:setupForeignKeys
-- oil r Unbox:seed
+  * oil r Unbox:install
+  * oil r Unbox:setupForeignKeys
+  * oil r Unbox:seed
 
 6. Go to your localhost and view the site, a Login page should prompt you
-
-
-
