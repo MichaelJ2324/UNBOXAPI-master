@@ -13,7 +13,6 @@ class API extends \UNBOXAPI\Module{
     protected static $_name = "Apis";
     protected static $_label = "API";
     protected static $_label_plural = "Apis";
-    protected static $_enabled = true;
 
     public $version;
     public $web_address;

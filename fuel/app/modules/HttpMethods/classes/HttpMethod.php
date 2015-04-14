@@ -12,7 +12,8 @@ namespace HttpMethods;
 class HttpMethod extends \UNBOXAPI\Module{
 
     protected static $_name = "HttpMethods";
-    protected static $_enabled = true;
+    protected static $_label = "Http Method";
+    protected static $_label_plural = "Http Methods";
 
     protected static $_available_methods = array(
         'GET',

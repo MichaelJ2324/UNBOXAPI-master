@@ -13,7 +13,6 @@ class EntryPoint extends \UNBOXAPI\Module{
     protected static $_name = "EntryPoints";
     protected static $_label = "Entry Point";
     protected static $_label_plural = "Entry Points";
-    protected static $_enabled = true;
 
     public $description;
     public $url;

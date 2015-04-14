@@ -15,7 +15,6 @@ class Layout {
     protected static $_label_plural = "";
     protected static $_link = "";
     protected static $_icon = "";
-    protected static $_enabled = false;
     protected static $_links = array();
     protected static $_templates;
     protected static $_config;
@@ -27,7 +26,6 @@ class Layout {
             'label_plural' => static::$_label_plural,
             'link' => static::$_link,
             'icon' => static::$_icon,
-            'enabled' => static::$_enabled,
             'links' => static::$_links,
             'templates' => static::templates(),
             'config' => static::config()

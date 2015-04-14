@@ -14,10 +14,10 @@ class Client extends AbstractStorage implements ClientInterface
      */
     public function get($clientId, $clientSecret = null, $redirectUri = null, $grantType = null)
     {
-        $query = \Oauth\Model\Clients::query()->where('client_id','=',$clientId);
+        $query = \Oauth\Model\Clients::query()->where('client_id',$clientId);
 
         if ($clientSecret !== null) {
-            $query->where('secret','=',$clientSecret);
+            $query->where('secret',$clientSecret);
         }
 
         if ($redirectUri !== null) {

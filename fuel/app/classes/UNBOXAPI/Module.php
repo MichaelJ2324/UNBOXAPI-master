@@ -13,7 +13,6 @@ class Module {
     protected static $_name = "";
     protected static $_label = "";
     protected static $_label_plural = "";
-    protected static $_enabled = false;
     protected static $_config;
     //TODO::Add static $_labels and label configuration to Modules
 
@@ -65,7 +64,6 @@ class Module {
             'name' => static::$_name,
             'label' => static::$_label,
             'label_plural' => static::$_label_plural,
-            'enabled' => static::$_enabled,
             'fields' => static::fields(),
             'relationships' => static::relationships(),
             'config' => static::config()

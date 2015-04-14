@@ -13,7 +13,6 @@ class User extends \UNBOXAPI\Module{
     protected static $_name = "Users";
     protected static $_label = "User";
     protected static $_label_plural = "Users";
-    protected static $_enabled = false;
 
     public $first_name;
     public $last_name;

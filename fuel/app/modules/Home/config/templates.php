@@ -20,7 +20,7 @@ return array(
                         <button class='btn btn-primary btn-block' type='button' id='login'>Login</button>
                     </div>
                     <div class='col-md-4'>
-                        <button class='btn btn-default btn-block' type='button' id='register'>Register</button>
+                        <a href='#register' class='btn btn-default btn-block' id='register'>Register</a>
                     </div>
                     <div class='col-md-4'>
                         <div id='gLoginWrapper'>

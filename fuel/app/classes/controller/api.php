@@ -5,13 +5,13 @@ namespace Controller;
 
 class Api extends \Controller_Rest{
 
-    public $oauth_server;
+    public $oauth_client;
 
     private $logged_in = false;
 
     private function loggedIn(){
         try{
-            $this->logged_in = $this->oauth_server->validToken();
+            $this->logged_in = $this->oauth_client->validateToken();
             return $this->logged_in;
         }catch(\Exception $ex){
             \Log::debug("Exception:".$ex->getMessage());
@@ -22,7 +22,7 @@ class Api extends \Controller_Rest{
 
     public function router($resource, $arguments) {
         try{
-            $this->oauth_server = \Oauth\Oauth::getInstance();
+            $this->oauth_client = new \Oauth\Client();
             if (!$this->loggedIn()&&$resource!=="metadata")
             {
                 $response = \Response::forge(\Format::forge(array('Error' => 'Invalid Access Token'))->to_json(), 401)->set_header('Content-Type', 'application.json');

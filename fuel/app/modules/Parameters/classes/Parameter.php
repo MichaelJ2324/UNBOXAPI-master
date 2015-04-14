@@ -13,7 +13,6 @@ class Parameter extends \UNBOXAPI\Module{
     protected static $_name = "Parameters";
     protected static $_label = "Parameter";
     protected static $_label_plural = "Parameters";
-    protected static $_enabled = true;
 
     public $data_type;
     public $api_type;

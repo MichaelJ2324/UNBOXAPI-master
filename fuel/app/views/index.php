@@ -20,7 +20,6 @@
           href="<?php echo Uri::base(false).Asset::find_file('logo_dark_ico.png', 'img'); ?>">
     <style>
     </style>
-    <script src="https://www.google.com/recaptcha/api.js?&render=explicit" async defer></script>
 </head>
 <body>
 <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -158,7 +157,8 @@
 <?php echo Asset::js('bootstrap.min.js'); ?>
 <?php echo Asset::js('bootstrap-datepicker.js'); ?>
 <?php echo Asset::js('select2.min.js'); ?>
-<script src="https://plus.google.com/js/client:platform.js" async defer></script>
+<script src="https://www.google.com/recaptcha/api.js?&render=explicit" async defer></script>
+<!--<script src="https://plus.google.com/js/client:platform.js" async defer></script>-->
 <?php echo Asset::js('unbox_api.js'); ?>
 
 </body>

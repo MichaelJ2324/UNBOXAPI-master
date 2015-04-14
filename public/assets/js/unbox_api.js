@@ -3,49 +3,37 @@ Backbone.View.prototype.close = function(){
     this.unbind();
 }
 
-var UNBOX = UNBOX || {};
-UNBOX.Global = {
+var UNBOXAPI = UNBOXAPI || {};
+
+UNBOXAPI.Global = {
     ajaxURL: "api/",
-    Bootstrap: {
-        total: 0,
-        count: 0,
-        notice: null,
-        start: function () {
-            if (UNBOX.Global.Utils.loggedIn()) {
-                var models = UNBOX.app.config.findWhere({
-                    key: "bootstrapped_models"
-                });
-                models = models.get('value');
-                this.total = models.length;
-                for (var x = 0; x < models.length; x++) {
-                    UNBOX.Collections.Utils.fetch({
-                        collection: UNBOX.app.collections[models[x]],
-                        success: function () {
-                            UNBOX.Global.Bootstrap.count++;
-                            if (UNBOX.Global.Bootstrap.count == UNBOX.Global.Bootstrap.total) {
-                                UNBOX.Global.Bootstrap.done();
-                            }
-                        }
-                    })
-                }
-            }else{
-                UNBOX.Global.Bootstrap.done();
-            }
-        },
-        done: function(){
-            UNBOX.app.view.start();
-        }
-    },
     Utils: {
+        bootstrap: function(models,layout,callback){
+            if (typeof layout.collections == 'undefined'){
+                layout.collections = {};
+            }
+            var functions = [];
+            for (var x = 0; x < models.length; x++) {
+                layout.collections[models[x]] = new UNBOXAPI.Collections[models[x]];
+                functions[x] = {
+                    f: UNBOXAPI.Collections.Utils.fetch,
+                    p: {
+                        collection: layout.collections[models[x]]
+                    }
+                }
+            }
+            var queue = UNBOXAPI.Queue(functions,callback);
+            return queue.process();
+        },
         getTemplate: function(template,global){
             global = typeof global !== 'undefined' ? global : false;
             if (global==false) {
-                var templates = UNBOX.app.layouts.current.get("templates");
+                var templates = UNBOX.layouts.current.get("templates");
                 return templates[template];
             }else{
                 var t = document.getElementById(template);
                 if (t == null || typeof t == 'undefined') {
-                    var templates = UNBOX.app.metadata.findWhere({key: "templates"});
+                    var templates = UNBOX.metadata.findWhere({key: "templates"});
                     var templateArray = templates.get("value");
                     return templateArray[template];
                 }
@@ -54,44 +42,44 @@ UNBOX.Global = {
         },
         Loading: {
             start: function (data) {
-                var notice = new UNBOX.Models.Notices;
+                var notice = new UNBOXAPI.Models.Notices;
                 notice.set({
                     type: "loading",
                     level: "info",
                     show: true,
                     message: data
                 });
-                UNBOX.app.collections.notices.log(notice);
+                UNBOX.collections.notices.log(notice);
                 return notice;
             },
             done: function (model){
-                var notice = UNBOX.app.collections.notices.done(model);
+                var notice = UNBOX.collections.notices.done(model);
                 $("body").css("cursor", "auto");
             }
         },
         log: function(response){
-            var notice = new UNBOX.Models.Notices;
+            var notice = new UNBOXAPI.Models.Notices;
             notice.set({
                 type: "warning",
                 level: "debug",
                 show: true,
                 message: response.status + ": " + response.statusText
             });
-            UNBOX.app.collections.notices.log(notice);
+            UNBOX.collections.notices.log(notice);
         },
         notice: function(message,type){
-            var notice = new UNBOX.Models.Notices;
+            var notice = new UNBOXAPI.Models.Notices;
             notice.set({
                 type: type,
                 level: "info",
                 show: true,
                 message: message
             });
-            UNBOX.app.collections.notices.log(notice);
+            UNBOX.collections.notices.log(notice);
         },
         loggedIn: function(){
-            var access_token = UNBOX.app.user.getToken();
-            if (!(access_token == null || typeof access_token == 'undefined')) {
+            var access_token = UNBOX.user.getToken();
+            if (!(access_token == null || typeof access_token == 'undefined' || access_token == false)) {
                 return true;
             }
             return false;
@@ -109,7 +97,7 @@ UNBOX.Global = {
                     } else {
                         if (authResult['status']['signed_in']) {
                             document.getElementById('gLoginWrapper').setAttribute('style', 'display: none');
-                            gapi.client.load('plus', 'v1', UNBOX.Global.Login.Google.apiClientLoaded);
+                            gapi.client.load('plus', 'v1', UNBOXAPI.Global.Login.Google.apiClientLoaded);
                         } else {
                             console.log(authResult);
                         }
@@ -120,7 +108,7 @@ UNBOX.Global = {
                 var request = gapi.client.plus.people.get({
                     'userId': 'me'
                 });
-                request.execute(UNBOX.Global.Login.Google.handleProfile);
+                request.execute(UNBOXAPI.Global.Login.Google.handleProfile);
             },
             handleProfile: function (resp) {
                 console.log(resp);
@@ -139,7 +127,7 @@ UNBOX.Global = {
         }
     }
 }
-UNBOX.Router = Backbone.Router.extend({
+UNBOXAPI.App = Backbone.Router.extend({
     routes: {
         "help": "help",
         "about": "about",
@@ -151,110 +139,138 @@ UNBOX.Router = Backbone.Router.extend({
         "register": "register",
         '*path': 'defaultRoute'
     },
-    initialize: function () {
+    initialize: function (options) {
+        this.options = options || {};
+        this.metadata = new UNBOXAPI.Collections.MetaData;
+        this.user = new UNBOXAPI.Models.User;
+        this.view = new UNBOXAPI.Views.AppView({
+            el: $("body"),
+            metadata: this.metadata
+        });
         //_.bindAll(this);
     },
+    start: function(){
+        var functions = [
+            {
+                f: this.metadata.fetchAll,
+                p: {}
+            },
+            {
+                f: UNBOXAPI.Models.Utils.fetch,
+                p: {
+                    model: this.user
+                }
+            }
+        ];
+        var queue = new UNBOXAPI.Queue(functions,function(){
+            Backbone.history.start({
+                root: window.location.pathname
+            });
+        });
+        queue.process();
+    },
+    //Route functions
     help: function () {
-        UNBOX.app.view.tutorial();
+
     },
     about: function () {
-        UNBOX.app.view.about();
+
     },
     manager: function (module) {
-        if (UNBOX.Global.Utils.loggedIn()) {
-            UNBOX.app.layouts.setCurrent("Manager");
-            UNBOX.app.view.reset(false, true, true);
+        if (UNBOXAPI.Global.Utils.loggedIn()) {
+            this.metadata.layouts.setCurrent("Manager");
+            this.view.reset(false, true, true);
             //Panel 1
-            var panel1 = UNBOX.app.collections.panels.findWhere({
+            var panel1 = this.view.panels.findWhere({
                 number: 1
             });
             var options = {
-                collection: UNBOX.app.modules,
+                collection: UNBOX.modules,
                 module: module,
                 panel: panel1
             };
             panel1.set({
-                content: new UNBOX.Views.Manager.Actions(options)
+                content: new UNBOXAPI.Views.Manager.Actions(options)
             });
             panel1.trigger("open");
 
             options = {};
             options = {
-                model: UNBOX.tester.models.request
+                model: UNBOXAPI.manager.models.request
             };
-            UNBOX.app.models.mainPanel.set({
-                content: new UNBOX.Views.Manager.ListView.Panel(options)
+            UNBOX.models.mainPanel.set({
+                content: new UNBOXAPI.Views.Manager.ListView.Panel(options)
             });
             /*
-             UNBOX.app.views.manager.applicationSelect = new UNBOX.Views.Manager.ListView.ApplicationSelect({
+             UNBOX.views.manager.applicationSelect = new UNBOXAPI.Views.Manager.ListView.ApplicationSelect({
              el: $("#application"),
-             collection: UNBOX.app.collections.applications
+             collection: UNBOX.collections.applications
              });
-             UNBOX.app.views.manager.apiSelect = new UNBOX.Views.Manager.ListView.APISelect({
+             UNBOX.views.manager.apiSelect = new UNBOXAPI.Views.Manager.ListView.APISelect({
              el: $("#api"),
-             collection: UNBOX.app.collections.apis
+             collection: UNBOX.collections.apis
              });
-             UNBOX.app.views.manager.httpMethodSelect = new UNBOX.Views.Manager.ListView.HttpMethodSelect({
+             UNBOX.views.manager.httpMethodSelect = new UNBOXAPI.Views.Manager.ListView.HttpMethodSelect({
              el: $("#httpMethod"),
-             collection: UNBOX.app.collections.httpMethods
+             collection: UNBOX.collections.httpMethods
              });
-             UNBOX.app.views.manager.listView = new UNBOX.Views.Manager.ListView.List({
+             UNBOX.views.manager.listView = new UNBOXAPI.Views.Manager.ListView.List({
              el: $("#list"),
-             collection: UNBOX.app.collections.entryPoints,
-             model: UNBOX.app.models.entryPoint
+             collection: UNBOX.collections.entryPoints,
+             model: UNBOX.models.entryPoint
              });
              //Setup cascading dropdowns, and linked models
-             UNBOX.app.views.manager.applicationSelect.apiSelect = UNBOX.app.views.manager.apiSelect;
-             UNBOX.app.views.manager.applicationSelect.entryPointList = UNBOX.app.views.manager.entryPointList;
-             UNBOX.app.views.manager.apiSelect.httpMethodSelect = UNBOX.app.views.manager.httpMethodSelect;
-             UNBOX.app.views.manager.apiSelect.entryPointList = UNBOX.app.views.manager.entryPointList;
-             UNBOX.app.views.manager.httpMethodSelect.entryPointList = UNBOX.app.views.manager.entryPointList;
-             UNBOX.app.views.output.listView = UNBOX.app.views.manager.entryPointList;
+             UNBOX.views.manager.applicationSelect.apiSelect = UNBOX.views.manager.apiSelect;
+             UNBOX.views.manager.applicationSelect.entryPointList = UNBOX.views.manager.entryPointList;
+             UNBOX.views.manager.apiSelect.httpMethodSelect = UNBOX.views.manager.httpMethodSelect;
+             UNBOX.views.manager.apiSelect.entryPointList = UNBOX.views.manager.entryPointList;
+             UNBOX.views.manager.httpMethodSelect.entryPointList = UNBOX.views.manager.entryPointList;
+             UNBOX.views.output.listView = UNBOX.views.manager.entryPointList;
              */
         }else{
-            UNBOX.app.router.navigate("login",{trigger: true});
+            UNBOX.router.navigate("login",{trigger: true});
         }
     },
     quickRecord: function(module,action,id){
-        if (UNBOX.Global.Utils.loggedIn()) {
-            if (UNBOX.app.layouts.current.get("name") !== "Manager") {
+        if (UNBOXAPI.Global.Utils.loggedIn()) {
+            if (UNBOX.layouts.current.get("name") !== "Manager") {
                 this.manager(module);
             }
             if (!(module == "" || typeof module == 'undefined' || module == null)) {
-                if (UNBOX.app.modules.current.get("name") !== module) {
-                    UNBOX.app.modules.setCurrent(module);
+                if (UNBOX.modules.current.get("name") !== module) {
+                    UNBOX.modules.setCurrent(module);
                 }
                 if (!(action == "" || typeof action == 'undefined' || action == null)) {
                     if (action == "create" || action == "view") {
-                        if (typeof UNBOX.manager.models.current == 'Object') {
-                            if (model == UNBOX.app.modules.current) {
+                        if (typeof UNBOXAPI.manager.models.current == 'Object') {
+                            if (model == UNBOX.modules.current) {
                                 if (!(typeof id == 'undefined' || id == "" || id == null)) {
-                                    if (id !== UNBOX.manager.models.current.get("id")) {
-                                        UNBOX.manager.models.current.clear();
-                                        UNBOX.manager.models.current.set({id: id});
+                                    if (id !== UNBOXAPI.manager.models.current.get("id")) {
+                                        UNBOXAPI.manager.models.current.clear();
+                                        UNBOXAPI.manager.models.current.set({id: id});
                                     }
                                 } else {
-                                    UNBOX.manager.models.current.clear();
+                                    UNBOXAPI.manager.models.current.clear();
                                 }
                             } else {
-                                UNBOX.manager.models.current = new UNBOX.Models[module];
+                                UNBOXAPI.manager.models.current = new UNBOXAPI.Models[module];
                             }
                         } else {
-                            UNBOX.manager.models.current = new UNBOX.Models[module];
-                            if (id !== UNBOX.manager.models.current.get("id")) {
-                                UNBOX.manager.models.current.set({id: id});
+                            UNBOXAPI.manager.models.current = new UNBOXAPI.Models[module];
+                            if (id !== UNBOXAPI.manager.models.current.get("id")) {
+                                UNBOXAPI.manager.models.current.set({id: id});
                             }
                         }
-                        var panel2 = UNBOX.app.collections.panels.findWhere({
+                        var panel2 = UNBOX.collections.panels.findWhere({
                             number: 2
                         });
                         var options = {
-                            module: UNBOX.app.modules.current,
-                            model: UNBOX.manager.models.current,
+                            module: UNBOX.modules.current,
+                            model: UNBOXAPI.manager.models.current,
                             panel: panel2
                         };
                         panel2.set({
-                            content: new UNBOX.Views.Manager.QuickRecord(options)
+                            content: new UNBOXAPI.Views.Manager.QuickRecord(options)
                         });
                         panel2.trigger("open");
                     } else if (action == "list") {
@@ -267,118 +283,115 @@ UNBOX.Router = Backbone.Router.extend({
                 }
             }
         }else{
-            UNBOX.app.router.navigate("login",{trigger: true});
+            UNBOX.router.navigate("login",{trigger: true});
         }
     },
     tester: function () {
-        if (UNBOX.Global.Utils.loggedIn()) {
-            UNBOX.app.layouts.setCurrent("Tester");
-            UNBOX.app.view.reset(false, true, true);
+        if (UNBOXAPI.Global.Utils.loggedIn()) {
+            UNBOX.layouts.setCurrent("Tester");
+            UNBOX.view.reset(false, true, true);
 
             //Setup UI
-            var panel1 = UNBOX.app.collections.panels.findWhere({
+            var panel1 = UNBOX.collections.panels.findWhere({
                 number: 1
             });
-            UNBOX.tester.models.entryPoint = new UNBOX.Models.EntryPoints;
-            UNBOX.tester.models.token = new UNBOX.Models.Tokens;
-            UNBOX.tester.collections.parameters = new UNBOX.Collections.Parameters({
-                entryPoint: UNBOX.tester.models.entryPoint
+            UNBOXAPI.tester.models.entryPoint = new UNBOXAPI.Models.EntryPoints;
+            UNBOXAPI.tester.models.token = new UNBOXAPI.Models.Tokens;
+            UNBOXAPI.tester.collections.parameters = new UNBOXAPI.Collections.Parameters({
+                entryPoint: UNBOXAPI.tester.models.entryPoint
             });
-            UNBOX.tester.models.request = new UNBOX.Models.Requests;
+            UNBOXAPI.tester.models.request = new UNBOXAPI.Models.Requests;
 
             var options = {
-                entryPoint: UNBOX.tester.models.entryPoint,
-                token: UNBOX.tester.models.token,
+                entryPoint: UNBOXAPI.tester.models.entryPoint,
+                token: UNBOXAPI.tester.models.token,
                 panel: panel1
             };
             panel1.set({
-                content: new UNBOX.Views.Tester.Setup.Panel(options)
+                content: new UNBOXAPI.Views.Tester.Setup.Panel(options)
             });
             panel1.trigger("open");
 
             //panel 2
             options = {};
-            var panel2 = UNBOX.app.collections.panels.findWhere({
+            var panel2 = UNBOX.collections.panels.findWhere({
                 number: 2
             });
             options = {
-                model: UNBOX.tester.models.entryPoint,
-                collection: UNBOX.tester.collections.parameters,
-                token: UNBOX.tester.models.token,
+                model: UNBOXAPI.tester.models.entryPoint,
+                collection: UNBOXAPI.tester.collections.parameters,
+                token: UNBOXAPI.tester.models.token,
                 panel: panel2
             };
             panel2.set({
-                content: new UNBOX.Views.Tester.EntryPointDetail.Panel(options)
+                content: new UNBOXAPI.Views.Tester.EntryPointDetail.Panel(options)
             });
 
             //panel 3
             options = {};
-            var panel3 = UNBOX.app.collections.panels.findWhere({
+            var panel3 = UNBOX.collections.panels.findWhere({
                 number: 3
             });
             options = {
-                collection: UNBOX.tester.collections.parameters,
-                token: UNBOX.tester.models.token,
+                collection: UNBOXAPI.tester.collections.parameters,
+                token: UNBOXAPI.tester.models.token,
                 panel: panel3,
-                request: UNBOX.tester.models.request
+                request: UNBOXAPI.tester.models.request
             };
             panel3.set({
-                content: new UNBOX.Views.Tester.Parameters.Panel(options)
+                content: new UNBOXAPI.Views.Tester.Parameters.Panel(options)
             });
 
             //Output
             options = {};
             options = {
-                model: UNBOX.tester.models.request
+                model: UNBOXAPI.tester.models.request
             };
-            UNBOX.app.models.mainPanel.set({
-                content: new UNBOX.Views.Tester.Output.Panel(options)
+            UNBOX.models.mainPanel.set({
+                content: new UNBOXAPI.Views.Tester.Output.Panel(options)
             });
         }else{
-            UNBOX.app.router.navigate("login",{trigger: true});
+            this.navigate("login",{trigger: true});
         }
     },
     login: function(){
-        if (UNBOX.app.layouts.current.get("name") !== "Home") {
+        if (this.metadata.layouts.current.get("name") !== "Home") {
             this.home();
         }
-        if (UNBOX.Global.Utils.loggedIn()==false){
-            var panel1 = UNBOX.app.collections.panels.findWhere({
+        if (UNBOXAPI.Global.Utils.loggedIn()==false){
+            var panel1 = this.view.collection.findWhere({
                 number: 1
             });
             var options = {
-                model: UNBOX.app.user,
+                model: UNBOX.user,
                 panel: panel1
             };
             panel1.set({
-                content: new UNBOX.Views.Home.Login(options)
+                content: new UNBOXAPI.Views.Home.Login(options)
             });
             panel1.trigger("open");
         }
     },
     home: function(){
-        UNBOX.app.layouts.setCurrent("Home");
-        UNBOX.app.view.reset(false,true,true);
-        if (UNBOX.Global.Utils.loggedIn()==false){
-            UNBOX.app.router.navigate("login");
-            this.login();
-        }else{
-            this.profile();
-        }
+        this.view.reset(false,true,true);
+        this.currentLayout = new UNBOXAPI.Models.Layout({
+            model: this.metadata.layouts.findWhere({name: "Home"}),
+            collection: this.view.collection
+        });
+
     },
     register: function(){
-        UNBOX.app.layouts.setCurrent("Home");
-        UNBOX.app.view.reset(false,true,true);
-        if (UNBOX.Global.Utils.loggedIn()==false){
-            var panel1 = UNBOX.app.collections.panels.findWhere({
+
+        if (UNBOXAPI.Global.Utils.loggedIn()==false){
+            var panel1 = this.view.collection.findWhere({
                 number: 1
             });
             var options = {
-                model: UNBOX.app.user,
+                model: UNBOX.user,
                 panel: panel1
             };
             panel1.set({
-                content: new UNBOX.Views.Home.Register(options)
+                content: new UNBOXAPI.Views.Home.Register(options)
             });
             panel1.trigger("open");
         }else{
@@ -392,7 +405,7 @@ UNBOX.Router = Backbone.Router.extend({
         this.home();
     }
 });
-UNBOX.Views = {
+UNBOXAPI.Views = {
     DynamicOption: Backbone.View.extend({
         tagName: "option",
 
@@ -416,7 +429,7 @@ UNBOX.Views = {
             }
         },
         addOne: function(model){
-            var selectView = new UNBOX.Views.DynamicOption({ model: model });
+            var selectView = new UNBOXAPI.Views.DynamicOption({ model: model });
             this.selectViews.push(selectView);
             $(this.el).append(selectView.render().el);
         },
@@ -436,8 +449,8 @@ UNBOX.Views = {
             this.setSelectedId($(this.el).val());
         },
         populateFrom: function(url) {
-            this.collection.url = UNBOX.Global.ajaxURL + url;
-            UNBOX.Collections.Utils.fetch({
+            this.collection.url = UNBOXAPI.Global.ajaxURL + url;
+            UNBOXAPI.Collections.Utils.fetch({
                 collection: this.collection,
                 options: {
                     reset: true
@@ -518,14 +531,24 @@ UNBOX.Views = {
         },
         initialize: function(options) {
             this.options = options || {};
-            this.modules = this.options.modules || null;
-            this.layouts = this.options.layouts || null;
-            this.config = this.options.config || null;
-            this.notices = this.options.notices || null;
-            this.layout = this.options.layout || null;
-            this.module = this.options.module || null;
+            this.metadata = this.options.metadata || null;
 
-            _.bindAll(this,"start","reset");
+            this.model = new UNBOXAPI.Models.MainPanel;
+            this.collection = new UNBOXAPI.Collections.Panels;
+            this.collection.add([
+                new UNBOXAPI.Models.Panels({
+                    number: 1
+                }),
+                new UNBOXAPI.Models.Panels({
+                    number: 2
+                }),
+                new UNBOXAPI.Models.Panels({
+                    number: 3
+                })
+            ]);
+            this.notices = new UNBOXAPI.Collections.Notices;
+
+            _.bindAll(this,"reset");
 
             //Dom elements
             this.$panel1 = $("#panel1");
@@ -536,67 +559,51 @@ UNBOX.Views = {
             this.$notices = $("#notices");
 
             //build nav
-            this.nav = new UNBOX.Views.NavBar({
+            this.nav = new UNBOXAPI.Views.NavBar({
                 el: this.$navBar,
-                collection: this.layouts,
-                model: this.layouts.current
+                collection: this.metadata.layouts,
+                model: this.metadata.layouts.current
             });
             //build notice
-            this.notice = new UNBOX.Views.Notice({
+            this.notice = new UNBOXAPI.Views.Notice({
                 el: this.$notices,
                 collection: this.notices
             });
             //build main
-            this.main = new UNBOX.Views.Main({
+            this.main = new UNBOXAPI.Views.Main({
                 el: this.$main,
                 model: this.model
             });
-
-            //setup panels
-            this.panel1 = null;
-            this.panel2 = null;
-            this.panel3 = null;
+            //build panels
+            this.panel1 = new UNBOXAPI.Views.Panel({
+                el: this.$panel1,
+                model: this.collection.findWhere({
+                    number: 1
+                })
+            });
+            this.panel2 = new UNBOXAPI.Views.Panel({
+                el: this.$panel2,
+                model: this.collection.findWhere({
+                    number: 2
+                })
+            });
+            this.panel3 = new UNBOXAPI.Views.Panel({
+                el: this.$panel3,
+                model: this.collection.findWhere({
+                    number: 3
+                })
+            });
 
             this.render();
         },
         render: function() {
             return this;
         },
-        start: function(){
-            //build panels
-            this.panel1 = new UNBOX.Views.Panel({
-                el: this.$panel1,
-                model: this.collection.findWhere({
-                    number: 1
-                })
-            });
-            this.panel2 = new UNBOX.Views.Panel({
-                el: this.$panel2,
-                model: this.collection.findWhere({
-                    number: 2
-                })
-            });
-            this.panel3 = new UNBOX.Views.Panel({
-                el: this.$panel3,
-                model: this.collection.findWhere({
-                    number: 3
-                })
-            });
-            //start
-            //this.notice.;
-
-            //stat History
-            Backbone.history.start({
-                root: window.location.pathname
-            });
-        },
-        register: function(){
-
-        },
         reset: function(panel1,panel2,panel3){
             this.panel1.reset(panel1);
             this.panel2.reset(panel2);
             this.panel3.reset(panel3);
+            this.main.reset();
         }
     }),
     NavBar: Backbone.View.extend({
@@ -606,7 +613,7 @@ UNBOX.Views = {
             _.bindAll(this,"render")
             this.collection.on("change",this.render);
             this.model.on("change",this.render);
-            this.template = UNBOX.Global.Utils.getTemplate('navBtns',true);
+            this.template = UNBOXAPI.Global.Utils.getTemplate('navBtns',true);
         },
         render: function(){
             this.html = _.template(this.template,{
@@ -631,11 +638,12 @@ UNBOX.Views = {
             this.model.on("change:content",this.setContent);
 
             this.$content = this.$el.children(".un-panel-content");
-
+            this.template = this.$el.html();
             this.render();
         },
         render: function(){
-            this.template = this.$el.html();
+            this.html = _.template(this.template);
+            this.$el.html(this.html);
             return this;
         },
         setContent: function(){
@@ -650,6 +658,9 @@ UNBOX.Views = {
         },
         resize: function(){
             this.$el.css("width", this.model.get("width")+"%");
+        },
+        reset: function(){
+            this.render();
         }
     }),
     Panel: Backbone.View.extend({
@@ -668,8 +679,7 @@ UNBOX.Views = {
             this.model.on("hide",this.hidePanel);
             this.model.on("change:content",this.setContent);
 
-            this.template = UNBOX.Global.Utils.getTemplate("panel",true);
-            this.render();
+            this.template = UNBOXAPI.Global.Utils.getTemplate("panel",true);
         },
         render: function(){
             this.html = _.template(this.template,{
@@ -762,7 +772,7 @@ UNBOX.Views = {
             this.collection.on("show",this.notify);
             this.collection.on("unshow",this.denotify);
 
-            this.template = UNBOX.Global.Utils.getTemplate("notice",true);
+            this.template = UNBOXAPI.Global.Utils.getTemplate("notice",true);
 
             this.$content = this.$el.children(".un-panel-content");
         },
@@ -792,18 +802,17 @@ UNBOX.Views = {
         }
     })
 }
-UNBOX.Views.Home = {
+UNBOXAPI.Views.Home = {
     Login: Backbone.View.extend({
         events: {
             "click #login": "login",
-            "click #register": "register",
             "focusout input": "updateModel"
         },
         initialize: function(options) {
             this.options = options || {};
             this.panel = this.options.panel || {};
 
-            this.model = this.model || new UNBOX.Models.User;
+            this.model = this.model || new UNBOXAPI.Models.User;
 
             this.username = null;
             this.password = null;
@@ -811,7 +820,7 @@ UNBOX.Views.Home = {
             _.bindAll(this,"login","updateModel");
         },
         render: function() {
-            var template = UNBOX.Global.Utils.getTemplate("Login");
+            var template = UNBOXAPI.Global.Utils.getTemplate("Login");
             this.template = _.template(template);
             this.$el.html(this.template);
             this.setup();
@@ -820,13 +829,10 @@ UNBOX.Views.Home = {
         },
         setup: function(){
             //setup Google+ button
-            UNBOX.Global.Login.Google.loginButton();
+            UNBOXAPI.Global.Login.Google.loginButton();
         },
         login: function(){
-            UNBOX.app.user.login();
-        },
-        register: function(){
-            UNBOX.app.router.navigate("register", {trigger: true});
+            this.model.login();
         },
         updateModel: function(e) {
             var changed = e.currentTarget;
@@ -852,7 +858,7 @@ UNBOX.Views.Home = {
             _.bindAll(this,"submit","updateModel");
         },
         render: function() {
-            var template = UNBOX.Global.Utils.getTemplate("Register");
+            var template = UNBOXAPI.Global.Utils.getTemplate("Register");
             this.template = _.template(template);
             this.$el.html(this.template);
             this.setup();
@@ -860,18 +866,18 @@ UNBOX.Views.Home = {
             return this;
         },
         setup: function(){
-            this.captcha = UNBOX.Global.Login.Google.ReCaptcha.render('captcha');
+            this.captcha = UNBOXAPI.Global.Login.Google.ReCaptcha.render('captcha');
         },
         submit: function(){
             this.model.url = "user/register";
             if (typeof grecaptcha !== 'undefined') {
                 this.model.set('captcha', grecaptcha.getResponse(this.captcha));
             }
-            UNBOX.Models.Utils.save({
+            UNBOXAPI.Models.Utils.save({
                 model: this.model,
                 success: function(model,response,options){
-                    UNBOX.Global.Utils.notice("User Created. Please login to access system.","success");
-                    UNBOX.app.router.navigate("login",{trigger: true});
+                    UNBOXAPI.Global.Utils.notice("User Created. Please login to access system.","success");
+                    UNBOX.router.navigate("login",{trigger: true});
                 }
             });
         },
@@ -893,7 +899,7 @@ UNBOX.Views.Home = {
 
     })
 }
-UNBOX.Views.Tester = {
+UNBOXAPI.Views.Tester = {
     Setup: {
         Panel: Backbone.View.extend({
             events: {
@@ -911,23 +917,23 @@ UNBOX.Views.Tester = {
                 this.$api_login = null;
 
                 //setup models
-                this.application = new UNBOX.Models.Applications;
-                this.api = new UNBOX.Models.APIs;
-                this.loginMethod = new UNBOX.Models.Logins;
-                this.httpMethod = new UNBOX.Models.HttpMethods;
-                this.entryPoint = this.options.entryPoint || new UNBOX.Models.EntryPoints;
-                this.token = this.options.token || new UNBOX.Models.Tokens;
+                this.application = new UNBOXAPI.Models.Applications;
+                this.api = new UNBOXAPI.Models.APIs;
+                this.loginMethod = new UNBOXAPI.Models.Logins;
+                this.httpMethod = new UNBOXAPI.Models.HttpMethods;
+                this.entryPoint = this.options.entryPoint || new UNBOXAPI.Models.EntryPoints;
+                this.token = this.options.token || new UNBOXAPI.Models.Tokens;
 
                 //setup collections
-                this.applications = new UNBOX.Collections.Applications;
-                this.apis = new UNBOX.Collections.APIs;
-                this.loginMethods = new UNBOX.Collections.Logins;
-                this.httpMethods = new UNBOX.Collections.HttpMethods;
-                this.entryPoints = new UNBOX.Collections.EntryPoints;
+                this.applications = new UNBOXAPI.Collections.Applications;
+                this.apis = new UNBOXAPI.Collections.APIs;
+                this.loginMethods = new UNBOXAPI.Collections.Logins;
+                this.httpMethods = new UNBOXAPI.Collections.HttpMethods;
+                this.entryPoints = new UNBOXAPI.Collections.EntryPoints;
 
             },
             render: function() {
-                var template = UNBOX.Global.Utils.getTemplate("Setup");
+                var template = UNBOXAPI.Global.Utils.getTemplate("Setup");
                 this.template = _.template(template);
                 this.$el.html(this.template);
 
@@ -947,27 +953,27 @@ UNBOX.Views.Tester = {
                 this.$api_login_form = $("#API_Login_form");
 
                 //setup views
-                this.applicationSelect = new UNBOX.Views.Tester.Setup.ApplicationSelect({
+                this.applicationSelect = new UNBOXAPI.Views.Tester.Setup.ApplicationSelect({
                     el: this.$application,
                     collection: this.applications,
                     model: this.application
                 });
-                this.apiSelect = new UNBOX.Views.Tester.Setup.APISelect({
+                this.apiSelect = new UNBOXAPI.Views.Tester.Setup.APISelect({
                     el: this.$api,
                     collection: this.apis,
                     model: this.api
                 });
-                this.loginSelect = new UNBOX.Views.Tester.Setup.LoginSelect({
+                this.loginSelect = new UNBOXAPI.Views.Tester.Setup.LoginSelect({
                     el: this.$loginMethod,
                     collection: this.loginMethods,
                     model: this.loginMethod
                 });
-                this.httpMethodSelect = new UNBOX.Views.Tester.Setup.HttpMethodSelect({
+                this.httpMethodSelect = new UNBOXAPI.Views.Tester.Setup.HttpMethodSelect({
                     el: this.$httpMethod,
                     collection: this.httpMethods,
                     model: this.httpMethod
                 });
-                this.entryPointSelect = new UNBOX.Views.Tester.Setup.EntryPointSelect({
+                this.entryPointSelect = new UNBOXAPI.Views.Tester.Setup.EntryPointSelect({
                     el: this.$entryPoint,
                     collection: this.entryPoints,
                     model: this.entryPoint
@@ -980,7 +986,7 @@ UNBOX.Views.Tester = {
                 this.httpMethodSelect.entryPointSelect = this.entryPointSelect;
 
                 //Setup Login Form
-                this.loginSubPanel = new UNBOX.Views.Tester.Setup.LoginPanel({
+                this.loginSubPanel = new UNBOXAPI.Views.Tester.Setup.LoginPanel({
                     el: this.$api_login,
                     model: this.loginMethod,
                     token: this.token
@@ -990,15 +996,15 @@ UNBOX.Views.Tester = {
                 this.applications.fetch({ reset: true });
             }
         }),
-        ApplicationSelect: UNBOX.Views.DynamicSelect.extend({
+        ApplicationSelect: UNBOXAPI.Views.DynamicSelect.extend({
             setSelectedId: function(applicationId) {
                 this.apiSelect.selectedId = null;
                 this.apiSelect.setApplicationId(applicationId);
                 this.model = this.collection.get(applicationId);
-                UNBOX.tester.models.application = this.model;
+                UNBOXAPI.tester.models.application = this.model;
             }
         }),
-        APISelect: UNBOX.Views.DynamicSelect.extend({
+        APISelect: UNBOXAPI.Views.DynamicSelect.extend({
             setSelectedId: function(apiID) {
                 this.httpMethodSelect.selectedId = null;
                 this.httpMethodSelect.setApiID(apiID);
@@ -1013,23 +1019,23 @@ UNBOX.Views.Tester = {
                    version: model.get('version'),
                    value: model.get('value')
                 });
-                UNBOX.tester.models.api = this.model;
+                UNBOXAPI.tester.models.api = this.model;
             },
             setApplicationId: function(applicationID) {
                 this.populateFrom("applications/" + applicationID + "/apis");
             }
         }),
-        HttpMethodSelect: UNBOX.Views.DynamicSelect.extend({
+        HttpMethodSelect: UNBOXAPI.Views.DynamicSelect.extend({
             setSelectedId: function(httpMethodID) {
                 this.entryPointSelect.selectedId = null;
                 this.entryPointSelect.setMethodId(httpMethodID);
-                UNBOX.tester.models.httpMethod = UNBOX.app.collections.httpMethods.findWhere({id:httpMethodID});
+                //UNBOXAPI.tester.models.httpMethod = UNBOX.collections.httpMethods.findWhere({id:httpMethodID});
             },
             setApiID: function(apiID) {
                 this.populateFrom("apis/" + apiID + "/methods");
             }
         }),
-        EntryPointSelect: UNBOX.Views.DynamicSelect.extend({
+        EntryPointSelect: UNBOXAPI.Views.DynamicSelect.extend({
             setSelectedId: function(entryPointID) {
                 this.model.clear({
                     silent: true
@@ -1039,7 +1045,7 @@ UNBOX.Views.Tester = {
                 },{
                     silent: true
                 });
-                UNBOX.Models.Utils.fetch({
+                UNBOXAPI.Models.Utils.fetch({
                     model: this.model
                 });
             },
@@ -1050,7 +1056,7 @@ UNBOX.Views.Tester = {
                 this.populateFrom("apis/" + this.chosenAPI + "/entryPoints/"+httpMethodID);
             }
         }),
-        LoginSelect: UNBOX.Views.DynamicSelect.extend({
+        LoginSelect: UNBOXAPI.Views.DynamicSelect.extend({
             setSelectedId: function(loginID) {
                 var model = this.collection.get(loginID);
                 this.model.set({
@@ -1059,7 +1065,7 @@ UNBOX.Views.Tester = {
                     logout_entryPoint_id: model.get('logout_entryPoint_id'),
                     value: model.get('value')
                 });
-                UNBOX.tester.models.loginMethod = this.model;
+                UNBOXAPI.tester.models.loginMethod = this.model;
             },
             setApiID: function(apiID) {
                 this.populateFrom("apis/" + apiID + "/logins/");
@@ -1074,7 +1080,7 @@ UNBOX.Views.Tester = {
             },
             initialize: function(options) {
                 this.options = options|| {};
-                this.token = this.options.token || new UNBOX.Models.Tokens;
+                this.token = this.options.token || new UNBOXAPI.Models.Tokens;
 
                 _.bindAll(this,"render","showForm","resetLogin","logout");
                 this.model.bind("change",this.render);
@@ -1084,7 +1090,7 @@ UNBOX.Views.Tester = {
                 this.$web_address = $("#web_address");
                 this.$login_method = $("#login_method");
                 this.$api_login_form = $("#API_Login_form");
-                this.loginForm = new UNBOX.Views.Tester.Setup.LoginForm({
+                this.loginForm = new UNBOXAPI.Views.Tester.Setup.LoginForm({
                     el: this.$api_login_form,
                     model: this.model,
                     token: this.token
@@ -1100,7 +1106,7 @@ UNBOX.Views.Tester = {
                 if (this.token.get("access_token")==null||this.token.get("access_token")==""){
                     this.showForm();
                 }else{
-                    var template = UNBOX.Global.Utils.getTemplate("LoginInfo");
+                    var template = UNBOXAPI.Global.Utils.getTemplate("LoginInfo");
                     this.template = _.template(template,{
                         token: this.model
                     });
@@ -1119,10 +1125,10 @@ UNBOX.Views.Tester = {
                 this.$el.addClass("flip");
             },
             setWebAddress: function(e){
-                UNBOX.tester.web_address = $(e.currentTarget).val();
+                UNBOXAPI.tester.web_address = $(e.currentTarget).val();
             },
             resetLogin: function(){
-                UNBOX.app.login_info = "";
+                UNBOX.login_info = "";
                 this.$loggedIn_btn.addClass("hidden");
                 this.$api_login_form.trigger("reset");
                 this.$web_address.value("");
@@ -1131,16 +1137,16 @@ UNBOX.Views.Tester = {
             },
             logout: function(){
                 var data = {
-                    'web_address': UNBOX.tester.web_address,
-                    'token': UNBOX.tester.models.token.get("access_token")
+                    'web_address': UNBOXAPI.tester.web_address,
+                    'token': UNBOXAPI.tester.models.token.get("access_token")
                 };
                 $.ajax({
-                    url: UNBOX.Global.ajaxURL+'apis/'+UNBOX.app.models.api.get('id')+'/test/'+UNBOX.app.models.login.get("logout_entryPoint_id"),
+                    url: UNBOXAPI.Global.ajaxURL+'apis/'+UNBOX.models.api.get('id')+'/test/'+UNBOX.models.login.get("logout_entryPoint_id"),
                     type: "POST",
                     data: data,
                     success: function(data){
-                        UNBOX.tester.models.token.clear();
-                        UNBOX.tester.models.token.trigger("logout");
+                        UNBOXAPI.tester.models.token.clear();
+                        UNBOXAPI.tester.models.token.trigger("logout");
                     },
                     dataType: 'json'
                 });
@@ -1152,7 +1158,7 @@ UNBOX.Views.Tester = {
             },
             initialize: function(options) {
                 this.options = options || {};
-                this.token = this.options.token || new UNBOX.Models.Tokens;
+                this.token = this.options.token || new UNBOXAPI.Models.Tokens;
 
                 _.bindAll(this,"render","login");
 
@@ -1164,7 +1170,7 @@ UNBOX.Views.Tester = {
                 this.$logoutBtn = $("#logoutBtn");
                 this.$loginBtn = $("#loginBtn");
 
-                this.collection = new UNBOX.Collections.Parameters({
+                this.collection = new UNBOXAPI.Collections.Parameters({
                     loginMethod: this.model
                 });
                 this.collection.on("sync",this.render);
@@ -1172,7 +1178,7 @@ UNBOX.Views.Tester = {
 
             },
             render: function(){
-                var template = UNBOX.Global.Utils.getTemplate("LoginParam");
+                var template = UNBOXAPI.Global.Utils.getTemplate("LoginParam");
                 var normal_params = this.collection.where({ login_pane: "normal" });
                 var type = "";
                 var field = "";
@@ -1228,18 +1234,18 @@ UNBOX.Views.Tester = {
                 var loginForm = this.$el.serializeArray();
                 loginForm.push({
                     name: 'web_address',
-                    value: UNBOX.tester.web_address
+                    value: UNBOXAPI.tester.web_address
                 });
                 $.ajax({
-                    url: UNBOX.Global.ajaxURL+'apis/'+UNBOX.tester.models.api.get("id")+'/login/'+this.model.get("login_entryPoint_id"),
+                    url: UNBOXAPI.Global.ajaxURL+'apis/'+UNBOXAPI.tester.models.api.get("id")+'/login/'+this.model.get("login_entryPoint_id"),
                     type: "POST",
                     data: loginForm,
                     context: this,
                     success: function(data){
                         this.$loggedIn_btn.removeClass("hidden");
-                        UNBOX.tester.login_info = jQuery.parseJSON(data['response']);
+                        UNBOXAPI.tester.login_info = jQuery.parseJSON(data['response']);
                         if (this.token!==null) this.token.clear({silent: true});
-                        this.token.set(UNBOX.tester.login_info);
+                        this.token.set(UNBOXAPI.tester.login_info);
                         this.$logoutBtn.removeAttr("disabled");
                     },
                     dataType: 'json'
@@ -1256,10 +1262,10 @@ UNBOX.Views.Tester = {
                 this.panel = this.options.panel || {};
                 this.token = this.options.token || {};
 
-                this.examples = new UNBOX.Collections.Examples({
+                this.examples = new UNBOXAPI.Collections.Examples({
                     entryPoint: this.model
                 });
-                this.exceptions = new UNBOX.Collections.Exceptions({
+                this.exceptions = new UNBOXAPI.Collections.Exceptions({
                     entryPoint: this.model
                 });
 
@@ -1274,7 +1280,7 @@ UNBOX.Views.Tester = {
                 this.model.bind("sync",this.panelState);
             },
             render: function(){
-                var template = UNBOX.Global.Utils.getTemplate("EntryPointOverview");
+                var template = UNBOXAPI.Global.Utils.getTemplate("EntryPointOverview");
                 this.template = _.template(template);
                 this.$el.html(this.template);
 
@@ -1289,25 +1295,25 @@ UNBOX.Views.Tester = {
                 this.$ep_examples = $("#ep_examples");
                 this.$ep_exceptions = ("#ep_exceptions");
 
-                this.entryPointDetail = new UNBOX.Views.Tester.EntryPointDetail.MainDetail({
+                this.entryPointDetail = new UNBOXAPI.Views.Tester.EntryPointDetail.MainDetail({
                     el: this.$ep_main,
                     model: this.model
                 });
-                this.actionButtons= new UNBOX.Views.Tester.ActionButtons({
+                this.actionButtons= new UNBOXAPI.Views.Tester.ActionButtons({
                     el: this.$ep_action,
                     model: this.token,
                     collection: this.collection,
                     panelNumber: this.panel.get("number")
                 });
-                this.parameterPanel = new UNBOX.Views.Tester.EntryPointDetail.Parameters({
+                this.parameterPanel = new UNBOXAPI.Views.Tester.EntryPointDetail.Parameters({
                     el: this.$ep_parameters,
                     collection: this.collection
                 });
-                this.examplePanel = new UNBOX.Views.Tester.EntryPointDetail.Examples({
+                this.examplePanel = new UNBOXAPI.Views.Tester.EntryPointDetail.Examples({
                     el: this.$ep_examples,
                     collection: this.examples
                 });
-                this.exceptionPanel = new UNBOX.Views.Tester.EntryPointDetail.Exceptions({
+                this.exceptionPanel = new UNBOXAPI.Views.Tester.EntryPointDetail.Exceptions({
                     el: this.$ep_exceptions,
                     collection: this.exceptions
                 });
@@ -1328,7 +1334,7 @@ UNBOX.Views.Tester = {
                 this.model.bind("sync",this.render);
             },
             render: function(){
-                var template = UNBOX.Global.Utils.getTemplate("EntryPointMain");
+                var template = UNBOXAPI.Global.Utils.getTemplate("EntryPointMain");
                 this.template = _.template(template,{
                     entryPoint: this.model
                 });
@@ -1344,7 +1350,7 @@ UNBOX.Views.Tester = {
                 this.collection.bind("sync",this.render);
             },
             render: function(){
-                var template = UNBOX.Global.Utils.getTemplate("EntryPointParameters");
+                var template = UNBOXAPI.Global.Utils.getTemplate("EntryPointParameters");
                 this.template = _.template(template, {
                     parameters: this.collection.where({url_param: "0"})
                 });
@@ -1361,7 +1367,7 @@ UNBOX.Views.Tester = {
             },
             render: function(){
                 if (this.collection.length>0) {
-                    var template = UNBOX.Global.Utils.getTemplate("EntryPointExamples");
+                    var template = UNBOXAPI.Global.Utils.getTemplate("EntryPointExamples");
                     this.template = _.template(template, {
                         examples: this.collection
                     });
@@ -1379,7 +1385,7 @@ UNBOX.Views.Tester = {
             },
             render: function(){
                 if (this.collection.length>0) {
-                    var template = UNBOX.Global.Utils.getTemplate("EntryPointExceptions");
+                    var template = UNBOXAPI.Global.Utils.getTemplate("EntryPointExceptions");
                     this.template = _.template(template, {
                         exceptions: this.collection
                     });
@@ -1406,7 +1412,7 @@ UNBOX.Views.Tester = {
                 this.collection.on("testerSetup",this.panelState);
             },
             render: function(){
-                var template = UNBOX.Global.Utils.getTemplate("ParameterForm");
+                var template = UNBOXAPI.Global.Utils.getTemplate("ParameterForm");
                 this.template = _.template(template);
                 this.$el.html(this.template);
 
@@ -1420,15 +1426,15 @@ UNBOX.Views.Tester = {
                 this.$request_parameters = $("#ep_request_params");
                 this.$actions = $("#ep_action2");
 
-                this.urlParams = new UNBOX.Views.Tester.Parameters.UrlParams({
+                this.urlParams = new UNBOXAPI.Views.Tester.Parameters.UrlParams({
                     el: this.$url_parameters,
                     collection: this.collection
                 });
-                this.requestParams = new UNBOX.Views.Tester.Parameters.RequestParams({
+                this.requestParams = new UNBOXAPI.Views.Tester.Parameters.RequestParams({
                     el: this.$request_parameters,
                     collection: this.collection
                 });
-                this.actionButtons = new UNBOX.Views.Tester.ActionButtons({
+                this.actionButtons = new UNBOXAPI.Views.Tester.ActionButtons({
                     el: this.$actions,
                     model: this.token,
                     collection: this.collection,
@@ -1449,7 +1455,7 @@ UNBOX.Views.Tester = {
                 this.collection.on("testerSetup",this.render);
             },
             render: function(){
-                var template = UNBOX.Global.Utils.getTemplate("Parameters");
+                var template = UNBOXAPI.Global.Utils.getTemplate("Parameters");
                 var url_params = this.collection.where({ url_param: "1"});
                 var html = "";
                 for (var x=0;x<url_params.length;x++) {
@@ -1479,7 +1485,7 @@ UNBOX.Views.Tester = {
                 this.collection.on("testerSetup",this.render);
             },
             render: function(){
-                var template = UNBOX.Global.Utils.getTemplate("Parameters");
+                var template = UNBOXAPI.Global.Utils.getTemplate("Parameters");
                 var url_params = this.collection.where({ url_param: "0"});
                 var html = "";
                 for (var x=0;x<url_params.length;x++) {
@@ -1526,7 +1532,7 @@ UNBOX.Views.Tester = {
                 this.$response = $("#response");
             },
             render: function () {
-                var template = UNBOX.Global.Utils.getTemplate("Output");
+                var template = UNBOXAPI.Global.Utils.getTemplate("Output");
                 this.template = _.template(template,{
                     request: this.model,
                     style: this.style
@@ -1561,7 +1567,7 @@ UNBOX.Views.Tester = {
             if (this.collection.length>0){
                 hasParams = true;
             }
-            var template = UNBOX.Global.Utils.getTemplate("EntryPointActions");
+            var template = UNBOXAPI.Global.Utils.getTemplate("EntryPointActions");
             this.template = _.template(template,{
                 hasParams: hasParams,
                 panelNumber: this.panelNumber
@@ -1585,19 +1591,19 @@ UNBOX.Views.Tester = {
             paramForm.push(
                 {
                     name: 'token',
-                    value: UNBOX.tester.models.token.get('access_token')
+                    value: UNBOXAPI.tester.models.token.get('access_token')
                 },
                 {
                     name: 'web_address',
-                    value: UNBOX.tester.web_address
+                    value: UNBOXAPI.tester.web_address
                 });
             $.ajax({
-                url: UNBOX.Global.ajaxURL+'apis/'+UNBOX.tester.models.api.get('id')+'/test/'+UNBOX.tester.models.entryPoint.get("id"),
+                url: UNBOXAPI.Global.ajaxURL+'apis/'+UNBOXAPI.tester.models.api.get('id')+'/test/'+UNBOXAPI.tester.models.entryPoint.get("id"),
                 type: "POST",
                 data: paramForm,
                 success: function(data){
-                    UNBOX.tester.models.request.clear();
-                    UNBOX.tester.models.request.set(data);
+                    UNBOXAPI.tester.models.request.clear();
+                    UNBOXAPI.tester.models.request.set(data);
                 },
                 dataType: 'json'
             });
@@ -1607,7 +1613,7 @@ UNBOX.Views.Tester = {
         }
     })
 }
-UNBOX.Views.Manager = {
+UNBOXAPI.Views.Manager = {
     Actions: Backbone.View.extend({
         events: {
             "click .btn": "action"
@@ -1617,7 +1623,7 @@ UNBOX.Views.Manager = {
             this.module = this.options.module || false;
         },
         render: function(){
-            var template = UNBOX.Global.Utils.getTemplate("Actions");
+            var template = UNBOXAPI.Global.Utils.getTemplate("Actions");
             this.template = _.template(template,{
                 modules: this.collection.where({
                     enabled: true
@@ -1629,8 +1635,8 @@ UNBOX.Views.Manager = {
         action: function(e){
             var module = $(e.currentTarget).data('module');
             var action = $(e.currentTarget).data('action');
-            UNBOX.app.modules.setCurrent(module);
-            UNBOX.app.router.navigate("manage/"+module+"/"+action,{trigger: true});
+            UNBOX.modules.setCurrent(module);
+            UNBOX.navigate("manage/"+module+"/"+action,{trigger: true});
         }
     }),
     ListView: {
@@ -1649,7 +1655,7 @@ UNBOX.Views.Manager = {
                 this.render();
             },
             render: function () {
-                var template = UNBOX.Global.Utils.getTemplate("Output");
+                var template = UNBOXAPI.Global.Utils.getTemplate("Output");
                 this.template = _.template(template,{
                     request: this.model
                 });
@@ -1667,7 +1673,7 @@ UNBOX.Views.Manager = {
 
             }
         }),
-        ApplicationSelect: UNBOX.Views.DynamicSelect.extend({
+        ApplicationSelect: UNBOXAPI.Views.DynamicSelect.extend({
             setSelectedId: function(applicationId) {
                 this.apiSelect.setApplicationID(applicationId);
                 this.entryPointList.setApplicationID(applicationId);
@@ -1676,7 +1682,7 @@ UNBOX.Views.Manager = {
 
             }
         }),
-        APISelect: UNBOX.Views.DynamicSelect.extend({
+        APISelect: UNBOXAPI.Views.DynamicSelect.extend({
             setSelectedId: function(apiID) {
                 this.httpMethodSelect.setApiID(apiID);
                 this.entryPointList.setApiID(apiID);
@@ -1688,7 +1694,7 @@ UNBOX.Views.Manager = {
 
             }
         }),
-        HttpMethodSelect: UNBOX.Views.DynamicSelect.extend({
+        HttpMethodSelect: UNBOXAPI.Views.DynamicSelect.extend({
             setSelectedId: function(httpMethodID) {
                 this.entryPointList.setMethodID(httpMethodID);
             },
@@ -1719,7 +1725,7 @@ UNBOX.Views.Manager = {
                 this.populateFrom();
             },
             render: function(){
-                var template = UNBOX.Global.Utils.getTemplate("List");
+                var template = UNBOXAPI.Global.Utils.getTemplate("List");
                 this.template = _.template(template,{
                     entryPoints: this.collection.models
                 });
@@ -1757,11 +1763,11 @@ UNBOX.Views.Manager = {
                     if (old_filter!==filter){
                         this.offset=0;
                     }
-                    this.collection.url = UNBOX.Global.ajaxURL + "entryPoints/filter?" + filter + "&limit=" + this.limit + "&offset=" + this.offset;
+                    this.collection.url = UNBOXAPI.Global.ajaxURL + "entryPoints/filter?" + filter + "&limit=" + this.limit + "&offset=" + this.offset;
                 }else{
-                    this.collection.url = UNBOX.Global.ajaxURL + "entryPoints?limit=" + this.limit + "&offset=" + this.offset;
+                    this.collection.url = UNBOXAPI.Global.ajaxURL + "entryPoints?limit=" + this.limit + "&offset=" + this.offset;
                 }
-                UNBOX.Collections.Utils.fetch({
+                UNBOXAPI.Collections.Utils.fetch({
                     collection: this.collection,
                     options: {
                         reset: true
@@ -1851,7 +1857,7 @@ UNBOX.Views.Manager = {
             this.quickRecord = $("#quickRecord");
 
             if (!(typeof this.model.get("id") =='undefined' || this.model.get("id")=="" || this.model.get("id")==null)){
-                UNBOX.Models.Utils.fetch({
+                UNBOXAPI.Models.Utils.fetch({
                     model: this.model
                 });
             }
@@ -1859,7 +1865,7 @@ UNBOX.Views.Manager = {
         render: function(){
             var fields = this.getFields();
             var actionMenu = this.getActions();
-            this.template = this.template==null ? UNBOX.Global.Utils.getTemplate("Record") : this.template;
+            this.template = this.template==null ? UNBOXAPI.Global.Utils.getTemplate("Record") : this.template;
             this.html = _.template(this.template, {
                 currentModule: this.module,
                 actions: actionMenu,
@@ -1868,7 +1874,7 @@ UNBOX.Views.Manager = {
             this.$el.html(this.html);
         },
         getActions: function(){
-            var template = UNBOX.Global.Utils.getTemplate("RecordActions");
+            var template = UNBOXAPI.Global.Utils.getTemplate("RecordActions");
             template = _.template(template, {
                 currentModule: this.module
             });
@@ -1877,8 +1883,8 @@ UNBOX.Views.Manager = {
         getFields: function(){
             var fields = [];
             var moduleFields = this.module.get("fields");
-            var labelTemplate = UNBOX.Global.Utils.getTemplate("label",true);
-            var helpTemplate = UNBOX.Global.Utils.getTemplate("help",true);
+            var labelTemplate = UNBOXAPI.Global.Utils.getTemplate("label",true);
+            var helpTemplate = UNBOXAPI.Global.Utils.getTemplate("help",true);
             for (var fieldName in moduleFields){
                 if (moduleFields.hasOwnProperty(fieldName)) {
                     html = "";
@@ -1893,16 +1899,16 @@ UNBOX.Views.Manager = {
                                 id: attributes['id'],
                                 class: attributes['class'],
                                 placeholder: attributes['placeholder'],
-                                options: new UNBOX.Collections.Data,
+                                options: new UNBOXAPI.Collections.Data,
                                 help: field['help'],
                                 disabled: attributes['disabled'],
                                 value: this.model.get(fieldName)
                             };
-                            var fieldTemplate = UNBOX.Global.Utils.getTemplate(attributes['type'], true);
+                            var fieldTemplate = UNBOXAPI.Global.Utils.getTemplate(attributes['type'], true);
                             if (attributes['type']=='select'){
                                 if (!(typeof attributes['collection']=='undefined' || attributes['collection']==null || attributes['collection']=="")){
-                                    for (var x=0; x<UNBOX.app.collections[attributes['collection']].length;x++){
-                                        var model = UNBOX.app.collections[attributes['collection']].get(x);
+                                    for (var x=0; x<UNBOX.collections[attributes['collection']].length;x++){
+                                        var model = UNBOX.collections[attributes['collection']].get(x);
                                         if (typeof model!=='undefined') {
                                             fieldProperties.options.add({
                                                 key: model.get('id'),
@@ -1942,24 +1948,24 @@ UNBOX.Views.Manager = {
         },
         save: function(e){
             if (typeof this.model.get("id")=='undefined'||this.model.get('id')==""||this.model.get("id")==null){
-                UNBOX.Models.Utils.save({
+                UNBOXAPI.Models.Utils.save({
                     model: this.model,
                     options: {
                         module: this.module
                     },
                     success: function(model,response,options){
-                        UNBOX.app.router.navigate("#manage/"+options.module.get('name')+"/view/"+model.get('id'));
+                        UNBOX.router.navigate("#manage/"+options.module.get('name')+"/view/"+model.get('id'));
                     }
                 });
                 /*
                 this.model.save(null,{
                     module: this.module,
                     success: function(model,response,options){
-                        UNBOX.app.router.navigate("#manage/"+options.module.get('name')+"/view/"+model.get('id'));
+                        UNBOX.router.navigate("#manage/"+options.module.get('name')+"/view/"+model.get('id'));
                     }
                 });*/
             }else{
-                UNBOX.Models.Utils.save({
+                UNBOXAPI.Models.Utils.save({
                     model: this.model
                 });
             }
@@ -1972,7 +1978,7 @@ UNBOX.Views.Manager = {
 
     }
 }
-UNBOX.Models = {
+UNBOXAPI.Models = {
     Utils: {
         fetch: function(object){
             var model = object.model || null;
@@ -1980,17 +1986,17 @@ UNBOX.Models = {
             var success = object.success || function () {};
             var error = object.error || function () {};
             if (model!==null) {
-                var notice = UNBOX.Global.Utils.Loading.start("Loading " + model.name + " at " + model.url);
+                //var notice = UNBOXAPI.Global.Utils.Loading.start("Loading " + model.name + " at " + model.url);
                 options.success = function (model, response, options) {
                     success(model,response,options);
-                    UNBOX.Global.Utils.Loading.done(notice);
+                    //UNBOXAPI.Global.Utils.Loading.done(notice);
                 }
                 options.error = function (model, response, options) {
                     error(model,response,options);
-                    UNBOX.Global.Utils.Loading.done(notice);
-                    UNBOX.Global.Utils.log(response);
+                    //UNBOXAPI.Global.Utils.Loading.done(notice);
+                    //UNBOXAPI.Global.Utils.log(response);
                 }
-                model.fetch(options);
+                return model.fetch(options);
             }else{
                 console.log("No model passed to fetch");
             }
@@ -2001,16 +2007,16 @@ UNBOX.Models = {
             var options = object.options || {};
             var success = object.success || function () {};
             var error = object.error || function () {};
-            var notice = UNBOX.Global.Utils.Loading.start("Loading "+model.name+" at "+model.url);
+            var notice = UNBOXAPI.Global.Utils.Loading.start("Loading "+model.name+" at "+model.url);
             if (model!==null) {
                 options.success = function (model, response, options) {
                     success(model,response,options);
-                    UNBOX.Global.Utils.Loading.done(notice);
+                    UNBOXAPI.Global.Utils.Loading.done(notice);
                 }
                 options.error = function (model, response, options) {
                     error(model,response,options);
-                    UNBOX.Global.Utils.Loading.done(notice);
-                    UNBOX.Global.Utils.log(response);
+                    UNBOXAPI.Global.Utils.Loading.done(notice);
+                    UNBOXAPI.Global.Utils.log(response);
                 }
                 model.save(attributes, options);
             }else{
@@ -2018,12 +2024,16 @@ UNBOX.Models = {
             }
         }
     },
+    //Modules
+    Module: Backbone.Model.extend({
+
+    }),
     Applications: Backbone.Model.extend({
         initialize: function(){
             _.bindAll(this, 'getValue');
         },
         name: "Application",
-        urlRoot: UNBOX.Global.ajaxURL+'applications',
+        urlRoot: UNBOXAPI.Global.ajaxURL+'applications',
         defaults: {
             name: null,
             description: "",
@@ -2038,7 +2048,7 @@ UNBOX.Models = {
             _.bindAll(this, 'getValue');
         },
         name: "API",
-        urlRoot: UNBOX.Global.ajaxURL+'apis',
+        urlRoot: UNBOXAPI.Global.ajaxURL+'apis',
         defaults: {
             name: null,
             version: null,
@@ -2053,7 +2063,7 @@ UNBOX.Models = {
             _.bindAll(this, 'getValue');
         },
         name: "HttpMethod",
-        urlRoot: UNBOX.Global.ajaxURL+'httpMethods',
+        urlRoot: UNBOXAPI.Global.ajaxURL+'httpMethods',
         defaults: {
             method: null
         },
@@ -2066,7 +2076,7 @@ UNBOX.Models = {
             _.bindAll(this, 'getValue','getHttpMethod');
         },
         name: "Entry Point",
-        urlRoot: UNBOX.Global.ajaxURL+'entryPoints',
+        urlRoot: UNBOXAPI.Global.ajaxURL+'entryPoints',
         defaults: {
             name: null,
             method: 1,
@@ -2089,7 +2099,7 @@ UNBOX.Models = {
             _.bindAll(this, 'getValue');
         },
         name: "Parameter",
-        urlRoot: UNBOX.Global.ajaxURL+'parameters',
+        urlRoot: UNBOXAPI.Global.ajaxURL+'parameters',
         defaults: {
             data_type: 1,
             api_type: null,
@@ -2107,7 +2117,7 @@ UNBOX.Models = {
             _.bindAll(this, 'getValue');
         },
         name: "Parameter Type",
-        urlRoot: UNBOX.Global.ajaxURL+'parameterTypes',
+        urlRoot: UNBOXAPI.Global.ajaxURL+'parameterTypes',
         defaults: {
             name: null,
             type: 1,
@@ -2122,7 +2132,7 @@ UNBOX.Models = {
             _.bindAll(this, 'getValue');
         },
         name: "Example",
-        urlRoot: UNBOX.Global.ajaxURL+'examples',
+        urlRoot: UNBOXAPI.Global.ajaxURL+'examples',
         defaults: {
             type: null,
             name: null,
@@ -2137,7 +2147,7 @@ UNBOX.Models = {
             _.bindAll(this, 'getValue');
         },
         name: "Exception",
-        urlRoot: UNBOX.Global.ajaxURL+'exceptions',
+        urlRoot: UNBOXAPI.Global.ajaxURL+'exceptions',
         defaults: {
             type: null,
             name: null,
@@ -2153,7 +2163,7 @@ UNBOX.Models = {
             _.bindAll(this, 'getValue');
         },
         name: "Login",
-        urlRoot: UNBOX.Global.ajaxURL+'logins',
+        urlRoot: UNBOXAPI.Global.ajaxURL+'logins',
         defaults: {
             name: null,
             login_entryPoint_id: null,
@@ -2179,6 +2189,38 @@ UNBOX.Models = {
             response: ""
         }
     }),
+    //Layout Model
+    Layout: Backbone.Model.extend({
+        initialize: function(options){
+            //this.model is LayoutMeta
+            //this.collection is Panels
+            this.options = options || {};
+            this.user = typeof this.options.user !== 'undefined' ? this.options.user : new UNBOXAPI.Models.User;
+
+            this.templates = new UNBOXAPI.Collections.Templates;
+            this.config = new UNBOXAPI.Collections.Config;
+
+            this.config.on('reset',this.start);
+
+            this.init();
+        },
+        init: function(){
+            this.name = this.model.get('name');
+            this.model.
+            this.setupTemplates();
+            this.setupConfig();
+        },
+        setupTemplates: function(){
+            this.templates.refresh(this.model.get('templates'));
+        },
+        setupConfig: function(){
+            this.config.refresh(this.model.get('config'));
+        },
+        start: function(){
+
+        }
+    }),
+    //View Models
     Panels: Backbone.Model.extend({
         initialize: function(){
         },
@@ -2192,7 +2234,7 @@ UNBOX.Models = {
     MainPanel: Backbone.Model.extend({
         initialize: function(options){
             this.options = options || {};
-            this.panels = this.options.panels || new UNBOX.Collections.Panels;
+            this.panels = this.options.panels || new UNBOXAPI.Collections.Panels;
 
             _.bindAll(this,"resize");
             this.panels.on("change",this.resize);
@@ -2219,11 +2261,24 @@ UNBOX.Models = {
             message: null
         }
     }),
-    Modules: Backbone.Model.extend({
+    //Metadata Models
+    Data: Backbone.Model.extend({
         initialize: function(){
             _.bindAll(this, 'getValue');
         },
-        urlRoot: UNBOX.Global.ajaxURL+"metadata/",
+        default: {
+            key: null,
+            value: null
+        },
+        getValue: function(){
+            return this.get('value');
+        }
+    }),
+    ModuleMeta: Backbone.Model.extend({
+        initialize: function(){
+            _.bindAll(this, 'getValue');
+        },
+        urlRoot: UNBOXAPI.Global.ajaxURL+"metadata/",
         default:{
             name: "",
             label: null,
@@ -2237,59 +2292,48 @@ UNBOX.Models = {
             return this.get('name');
         }
     }),
-    Layouts: Backbone.Model.extend({
+    LayoutMeta: Backbone.Model.extend({
         initialize: function(){
             _.bindAll(this, 'getValue');
         },
-        urlRoot: UNBOX.Global.ajaxURL+"metadata/",
+        urlRoot: UNBOXAPI.Global.ajaxURL+"metadata/",
         default:{
             name: "",
             label: null,
             label_plural: null,
             icon: "",
-            enabled: true,
+            enabled: false,
             current: false,
             link: null,
             links: null,
-            labels: {}
+            labels: {},
+            templates: {},
+            config: {}
         },
         getValue: function(){
             return this.get('name');
         }
     }),
-    Data: Backbone.Model.extend({
-        initialize: function(){
-            _.bindAll(this, 'getValue');
-        },
-        default: {
-            key: null,
-            value: null
-        },
-        getValue: function(){
-            return this.get('value');
-        }
-    }),
+    //User Model
     User: Backbone.Model.extend({
         initialize: function(){
-            _.bindAll(this, 'getValue');
-            this.resetToken();
+            _.bindAll(this, 'getValue','getToken');
         },
         urlRoot: "user/me",
         default: {
-            token: null,
-            name: null,
-            username: null,
-            first_name: null,
-            last_name: null,
-            email: null,
+            token: [],
+            name: "",
+            username: "",
+            first_name: "",
+            last_name: "",
+            email: "",
             password: null
         },
         getValue: function(){
             return this.get('name');
         },
         login: function(){
-            var loading = UNBOX.Global.Utils.Loading.start("Logging In");
-            this.resetToken();
+            var loading = UNBOXAPI.Global.Utils.Loading.start("Logging In");
             $.ajax({
                 url: 'user/login',
                 type: "POST",
@@ -2299,24 +2343,21 @@ UNBOX.Models = {
                     password: this.get('password')
                 },
                 success: function(data){
-                    token = this.resetToken(data);
-                    this.set({
-                        token: token,
-                        password: null
-                    });
-                    $.ajaxSetup({
-                        headers: { 'Authorization' :'Bearer '+UNBOX.app.user.getToken() }
-                    });
-                    UNBOX.app.metadata.fetchAll();
-                    this.fetch();
-                    UNBOX.app.router.navigate("home",{trigger: true});
+                    if (data['err']==false) {
+                        this.set({
+                            password: null
+                        });
+                        this.fetch();
+                        UNBOX.metadata.fetchAll();
+                        UNBOX.router.navigate("home", {trigger: true});
+                    }
                 },
                 error: function(data){
-                    UNBOX.Global.Utils.log(data);
+                    UNBOXAPI.Global.Utils.log(data);
                 },
                 dataType: 'json'
             }).done(function() {
-                UNBOX.Global.Utils.Loading.done(loading);
+                UNBOXAPI.Global.Utils.Loading.done(loading);
             });
         },
         logout: function() {
@@ -2325,23 +2366,18 @@ UNBOX.Models = {
                 headers: {}
             });
         },
-        resetToken: function(data){
-            var token = new UNBOX.Models.Tokens;
-            if (typeof data !=='undefined'){
-                token.set(data);
-            }
-            this.set({
-                token: token
-            });
-            return this.get('token');
-        },
         getToken: function(){
             var token = this.get('token');
-            return token.get('access_token');
+            if (typeof token !== 'undefined') {
+                if ("access_token" in token) {
+                    return token['access_token'];
+                }
+            }
+            return false
         }
     })
 }
-UNBOX.Collections = {
+UNBOXAPI.Collections = {
     Utils: {
         fetch: function (object) {
             var options = object.options || {};
@@ -2349,130 +2385,113 @@ UNBOX.Collections = {
             var error = object.error || function () {};
             var collection = object.collection || null;
             if (collection !== null) {
-                var notice = UNBOX.Global.Utils.Loading.start("Loading " + collection.name + " at " + collection.url);
+                //var notice = UNBOXAPI.Global.Utils.Loading.start("Loading " + collection.name + " at " + collection.url);
                 options.success = function (model, response, options) {
                     success(model,response,options);
-                    UNBOX.Global.Utils.Loading.done(notice);
+                    //UNBOXAPI.Global.Utils.Loading.done(notice);
                 }
                 options.error = function (model, response, options) {
                     error(model,response,options);
-                    UNBOX.Global.Utils.Loading.done(notice);
-                    UNBOX.Global.Utils.log(response);
+                    //UNBOXAPI.Global.Utils.Loading.done(notice);
+                    //UNBOXAPI.Global.Utils.log(response);
                 }
-                collection.fetch(options);
+                return collection.fetch(options);
             }else{
                 console.log("No Collection passed to fetch method");
             }
         }
     },
     Applications: Backbone.Collection.extend({
-        model: UNBOX.Models.Applications,
-        url: UNBOX.Global.ajaxURL+"applications/"
+        model: UNBOXAPI.Models.Applications,
+        url: UNBOXAPI.Global.ajaxURL+"applications/"
     }),
     APIs: Backbone.Collection.extend({
-        model: UNBOX.Models.APIs,
-        url: UNBOX.Global.ajaxURL+"apis/"
+        model: UNBOXAPI.Models.APIs,
+        url: UNBOXAPI.Global.ajaxURL+"apis/"
     }),
     Logins: Backbone.Collection.extend({
-        model: UNBOX.Models.Logins,
-        url: UNBOX.Global.ajaxURL+"logins/"
+        model: UNBOXAPI.Models.Logins,
+        url: UNBOXAPI.Global.ajaxURL+"logins/"
     }),
     HttpMethods: Backbone.Collection.extend({
-        model: UNBOX.Models.HttpMethods,
-        url: UNBOX.Global.ajaxURL+"httpMethods/"
+        model: UNBOXAPI.Models.HttpMethods,
+        url: UNBOXAPI.Global.ajaxURL+"httpMethods/"
     }),
     EntryPoints: Backbone.Collection.extend({
-        model: UNBOX.Models.EntryPoints,
-        url: UNBOX.Global.ajaxURL+"entryPoints/"
+        model: UNBOXAPI.Models.EntryPoints,
+        url: UNBOXAPI.Global.ajaxURL+"entryPoints/"
     }),
     Parameters: Backbone.Collection.extend({
         initialize: function(options){
             this.options = options || {};
-            this.entryPoint = this.options.entryPoint || new UNBOX.Models.EntryPoints;
-            this.loginMethod = this.options.loginMethod || new UNBOX.Models.Logins;
+            this.entryPoint = this.options.entryPoint || new UNBOXAPI.Models.EntryPoints;
+            this.loginMethod = this.options.loginMethod || new UNBOXAPI.Models.Logins;
 
             _.bindAll(this,"getEntryPointParams","getLoginParams");
             this.entryPoint.on("change:id",this.getEntryPointParams);
             this.loginMethod.on("change:id",this.getLoginParams);
         },
-        model: UNBOX.Models.Parameters,
-        url: UNBOX.Global.ajaxURL+"parameters/",
+        model: UNBOXAPI.Models.Parameters,
+        url: UNBOXAPI.Global.ajaxURL+"parameters/",
         getEntryPointParams: function(){
-            this.url = UNBOX.Global.ajaxURL+"entryPoints/"+this.entryPoint.get("id")+"/link/parameters";
+            this.url = UNBOXAPI.Global.ajaxURL+"entryPoints/"+this.entryPoint.get("id")+"/link/parameters";
             this.fetch();
         },
         getLoginParams: function(){
             console.log(this.loginMethod);
-            this.url = UNBOX.Global.ajaxURL+"entryPoints/"+this.loginMethod.get("login_entryPoint_id")+"/link/parameters";
+            this.url = UNBOXAPI.Global.ajaxURL+"entryPoints/"+this.loginMethod.get("login_entryPoint_id")+"/link/parameters";
             this.fetch();
         }
     }),
     DataTypes: Backbone.Collection.extend({
-        model: UNBOX.Models.Parameters,
-        url: UNBOX.Global.ajaxURL+"parameterTypes/1"
+        model: UNBOXAPI.Models.Parameters,
+        url: UNBOXAPI.Global.ajaxURL+"parameterTypes/1"
     }),
     ApiTypes: Backbone.Collection.extend({
-        model: UNBOX.Models.Parameters,
-        url: UNBOX.Global.ajaxURL+"parameterTypes/2"
+        model: UNBOXAPI.Models.Parameters,
+        url: UNBOXAPI.Global.ajaxURL+"parameterTypes/2"
     }),
     Examples: Backbone.Collection.extend({
         initialize: function(options){
             this.options = options || {};
-            this.entryPoint = this.options.entryPoint || new UNBOX.Models.EntryPoints;
+            this.entryPoint = this.options.entryPoint || new UNBOXAPI.Models.EntryPoints;
 
             _.bindAll(this,"getExamples");
             this.entryPoint.on("change",this.getExamples);
         },
-        model: UNBOX.Models.Examples,
-        url: UNBOX.Global.ajaxURL+"examples/",
+        model: UNBOXAPI.Models.Examples,
+        url: UNBOXAPI.Global.ajaxURL+"examples/",
         getExamples: function(){
-            this.url = UNBOX.Global.ajaxURL+"entryPoints/"+this.entryPoint.get("id")+"/link/examples";
+            this.url = UNBOXAPI.Global.ajaxURL+"entryPoints/"+this.entryPoint.get("id")+"/link/examples";
             /*this.fetch();*/
         }
     }),
     Exceptions: Backbone.Collection.extend({
         initialize: function(options){
             this.options = options || {};
-            this.entryPoint = this.options.entryPoint || new UNBOX.Models.EntryPoints;
+            this.entryPoint = this.options.entryPoint || new UNBOXAPI.Models.EntryPoints;
 
             _.bindAll(this,"getExceptions");
             this.entryPoint.on("change",this.getExceptions);
         },
-        model: UNBOX.Models.Exceptions,
-        url: UNBOX.Global.ajaxURL+"exceptions/",
+        model: UNBOXAPI.Models.Exceptions,
+        url: UNBOXAPI.Global.ajaxURL+"exceptions/",
         getExceptions: function(){
-            this.url = UNBOX.Global.ajaxURL+"entryPoints/"+this.entryPoint.get("id")+"/link/parameters";
+            this.url = UNBOXAPI.Global.ajaxURL+"entryPoints/"+this.entryPoint.get("id")+"/link/parameters";
             /*this.fetch();*/
         }
     }),
-    MetaData: Backbone.Collection.extend({
-        initialize: function(){
-            _.bindAll(this,"fetchAll");
-        },
-        name: "Application Metadata",
-        url: UNBOX.Global.ajaxURL + "metadata/",
-        model: UNBOX.Models.Data,
-        fetchAll: function(){
-            UNBOX.Collections.Utils.fetch({
-                collection: this,
-                options: null,
-                success: function() {
-                    UNBOX.app.metadata.trigger("fetched");
-                }
-            });
-        }
-    }),
     Data: Backbone.Collection.extend({
-        model: UNBOX.Models.Data
+        model: UNBOXAPI.Models.Data
     }),
     Panels: Backbone.Collection.extend({
-        model: UNBOX.Models.Panels
+        model: UNBOXAPI.Models.Panels
     }),
     Notices: Backbone.Collection.extend({
         initialize: function(){
             _.bindAll(this,"log","appLoading","done");
         },
-        model: UNBOX.Models.Notices,
+        model: UNBOXAPI.Models.Notices,
         log: function(model){
             this.add(model);
             switch (model.get("type")){
@@ -2487,9 +2506,7 @@ UNBOX.Collections = {
                 default:
                     if (model.get("show")==true){
                         this.trigger("show",model);
-                        setTimeout(function(model){
-                            UNBOX.app.collections.notices.done(model);
-                        },10000,model);
+                        setTimeout(this.done,10000,model);
                     }
             }
         },
@@ -2519,65 +2536,105 @@ UNBOX.Collections = {
             }
         }
     }),
+    //Metadata Handling
+    MetaData: Backbone.Collection.extend({
+        initialize: function(){
+            _.bindAll(this,"fetchAll","setup","setupConfig","setupModules","setupLayouts","setupTemplates");
+            this.config = new UNBOXAPI.Collections.Config;
+            this.modules = new UNBOXAPI.Collections.Modules;
+            this.layouts = new UNBOXAPI.Collections.Layouts;
+            this.templates = new UNBOXAPI.Collections.Templates;
+            this.on("reset",this.setup);
+        },
+        name: "Application Metadata",
+        url: UNBOXAPI.Global.ajaxURL + "metadata/",
+        model: UNBOXAPI.Models.Data,
+        fetchAll: function(){
+            return UNBOXAPI.Collections.Utils.fetch({
+                collection: this,
+                options: {
+                    reset: true
+                },
+                success: function(collection,response,options) {
+                    collection.trigger("fetched");
+                },
+                fail: function(collection,response,options){
+                    //TODO: Failure handling on Metadata fetch
+                    console.log('Broken.')
+                }
+            });
+        },
+        setup: function(){
+            this.setupConfig();
+            this.setupModules();
+            this.setupLayouts();
+            this.setupTemplates();
+        },
+        setupConfig: function(){
+            var config = this.findWhere({
+                key: "config"
+            });
+            this.config.refresh(config.get('value'));
+        },
+        setupModules: function(){
+            var modules = this.findWhere({
+                key: "modules"
+            });
+            this.modules.refresh(modules.get('value'));
+        },
+        setupLayouts: function(){
+            var layouts = this.findWhere({
+                key: "layouts"
+            });
+            console.log(layouts);
+            this.layouts.refresh(layouts.get('value'));
+        },
+        setupTemplates: function(){
+            var templates = this.findWhere({
+                key: "templates"
+            });
+            this.templates.refresh(templates.get('value'));
+        }
+    }),
+    Templates: Backbone.Collection.extend({
+        initialize: function(options){
+            _.bindAll(this,"refresh","getTemplate");
+        },
+        model: UNBOXAPI.Models.Data,
+        refresh: function(templates){
+            templates = typeof templates !== "undefined" ? templates : false;
+            if (templates!==false){
+                this.reset();
+                for(var key in templates){
+                    this.add({
+                        key: key,
+                        value: templates[key]
+                    });
+                }
+            }
+        },
+        getTemplate: function(template){
+            var model = this.findWhere({key: template});
+            if (!(model==null||typeof model == 'undefined')){
+                return model.getValue();
+            }else{
+                return null;
+            }
+        }
+    }),
     Layouts: Backbone.Collection.extend({
         initialize: function(options){
             this.options = options || {};
-            this.metadata = typeof this.options.metadata !== 'undefined' ? this.options.metadata : new UNBOX.Collections.MetaData;
-            this.current = typeof this.options.current !== 'undefined' ? this.options.current : new UNBOX.Models.Modules;
-            _.bindAll(this,"update","setCurrent");
-            this.metadata.bind("fetched",this.update)
+            this.current = typeof this.options.current !== 'undefined' ? this.options.current : new UNBOXAPI.Models.Layouts;
+            _.bindAll(this,"refresh","setCurrent");
         },
-        model: UNBOX.Models.Layouts,
-        update: function(layout,cached){
-            layout = typeof layout !== "undefined" ? layout : "all";
-            cached = typeof cached !== "undefined" ? cached : true;
-            if (cached==true){
-                var layouts = this.metadata.findWhere({key:"layouts"});
-                if (layout=="all") {
-                    this.reset(layouts.get('value'));
-                }else{
-                    var layoutArray = layouts.get('value');
-                    for (var x = 0; x < layoutArray.length; x++) {
-                        if (layout==layoutArray[x].name) {
-                            var l = this.findWhere({
-                                name: layout
-                            });
-                            l.set({
-                                name: moduleArray[x].name,
-                                label: moduleArray[x].label,
-                                label_plural: moduleArray[x].label_plural,
-                                link: moduleArray[x].link,
-                                icon: moduleArray[x].icon,
-                                enabled: moduleArray[x].enabled,
-                                links: moduleArray[x].links,
-                                templates: moduleArray[x].templates
-                            });
-                            break;
-                        }
-                    }
-                }
+        model: UNBOXAPI.Models.LayoutMeta,
+        refresh: function(layouts){
+            layouts = typeof layouts !== "undefined" ? layouts : false;
+            if (layouts!==false){
+                this.reset(layouts);
                 if (typeof this.current !== 'undefined' || this.current == null) {
                     this.setCurrent();
-                }
-            }else{
-                if (layout=="all") {
-                    UNBOX.Collections.Utils.fetch({
-                        collection: this,
-                        success: function(){
-                            UNBOX.app.modules.setCurrent();
-                        }
-                    });
-                }else{
-                    var l = this.findWhere({
-                        name: layout
-                    });
-                    l.url = l.urlRoot+"/"+layout;
-                    UNBOX.Models.Utils.fetch({
-                        collection: l,
-                        success: function(){
-                            UNBOX.app.modules.setCurrent();
-                        }
-                    });
                 }
             }
         },
@@ -2610,62 +2667,13 @@ UNBOX.Collections = {
     Modules: Backbone.Collection.extend({
         initialize: function(options){
             this.options = options || {};
-            this.metadata = typeof this.options.metadata !== 'undefined' ? this.options.metadata : new UNBOX.Collections.MetaData;
-            this.current = typeof this.options.current !== 'undefined' ? this.options.current : new UNBOX.Models.Modules;
-            _.bindAll(this,"update","setCurrent");
-            this.metadata.bind("fetched",this.update)
+            _.bindAll(this,"refresh","setCurrent");
         },
-        model: UNBOX.Models.Modules,
-        update: function(module,cached){
-            module = typeof module !== "undefined" ? module : "all";
-            cached = typeof cached !== "undefined" ? cached : true;
-            if (cached==true){
-                var modules = this.metadata.findWhere({key:"modules"});
-                if (module=="all") {
-                    this.reset(modules.get('value'));
-                }else{
-                    var moduleArray = modules.get('value');
-                    for (var x = 0; x < moduleArray.length; x++) {
-                        if (module==moduleArray[x].name) {
-                            var mod = this.findWhere({
-                                name: module
-                            });
-                            mod.set({
-                                name: moduleArray[x].name,
-                                label: moduleArray[x].label,
-                                label_plural: moduleArray[x].label_plural,
-                                enabled: moduleArray[x].enabled,
-                                fields: moduleArray[x].fields,
-                                relationships: moduleArray[x].relationships,
-                                config: moduleArray[x].config
-                            });
-                            break;
-                        }
-                    }
-                }
-                if (typeof this.current !== 'undefined' || this.current == null) {
-                    this.setCurrent();
-                }
-            }else{
-                if (module=="all") {
-                    UNBOX.Collections.Utils.fetch({
-                        collection: this,
-                        success: function(){
-                            UNBOX.app.modules.setCurrent();
-                        }
-                    });
-                }else{
-                    var mod = this.findWhere({
-                        name: module
-                    });
-                    mod.url = mod.urlRoot+"/"+module;
-                    UNBOX.Models.Utils.fetch({
-                        collection: mod,
-                        success: function(){
-                            UNBOX.app.modules.setCurrent();
-                        }
-                    });
-                }
+        model: UNBOXAPI.Models.ModuleMeta,
+        refresh: function(modules){
+            modules = typeof modules !== "undefined" ? modules : false;
+            if (modules!==false){
+                this.reset(modules);
             }
         },
         setCurrent: function(module) {
@@ -2697,112 +2705,135 @@ UNBOX.Collections = {
     Config: Backbone.Collection.extend({
         initialize: function(options){
             this.options = options || {};
-            this.metadata = typeof this.options.metadata !== 'undefined' ? this.options.metadata : new UNBOX.Collections.MetaData;
-            _.bindAll(this,"update");
-            this.metadata.bind("fetched",this.update)
+            _.bindAll(this,"refresh","getValue");
         },
-        url: UNBOX.Global.ajaxURL + "metadata/config/",
-        model: UNBOX.Models.Data,
-        update: function(cached){
-            cached = typeof cached !== "undefined" ? cached : true;
-            if (cached==true){
+        url: UNBOXAPI.Global.ajaxURL + "metadata/config/",
+        model: UNBOXAPI.Models.Data,
+        refresh: function(config){
+            config = typeof config !== "undefined" ? config : false;
+            if (config!==true){
                 this.reset();
-                var config = this.metadata.findWhere({key:"config"});
-                var configArray = config.get('value');
-                for(var key in configArray){
+                for(var key in config){
                     this.add({
                         key: key,
-                        value: configArray[key]
+                        value: config[key]
                     });
                 }
+            }
+        },
+        getValue: function(key){
+            var model = this.findWhere({key: key});
+            if (!(model==null||typeof model == 'undefined')){
+                return model.getValue();
             }else{
-                this.fetch();
+                return null;
             }
         }
     })
 }
+UNBOXAPI.Queue = function(functions,callback){
+    var running = false;
+    var queue = functions;
+    var callback = callback;
+    var queued = queue.length;
+    this.process = function(){
+        running = true;
+        for(x=0;x<queued;x++){
+            queue[x].f(queue[x].p).always(this.down);
+        }
+    }
+    this.down = function(){
+        queued--;
+        if (queued==0){
+            running = false;
+            callback();
+        }
+    }
+}
 
-//Setup App
-UNBOX.app = {
-    metadata: new UNBOX.Collections.MetaData,
+UNBOX = new UNBOXAPI.App;
+UNBOX.start();
+
+/*
+UNBOX = {
+    metadata: new UNBOXAPI.Collections.MetaData,
     config: null,
     modules: null,
     layouts: null,
-    user: new UNBOX.Models.User,
+    user: new UNBOXAPI.Models.User,
     models: {
         mainPanel: null
     },
     collections: {
-        httpMethods: new UNBOX.Collections.HttpMethods,
-        dataTypes: new UNBOX.Collections.DataTypes,
-        apiTypes: new UNBOX.Collections.ApiTypes,
-        panels: new UNBOX.Collections.Panels,
-        notices: new UNBOX.Collections.Notices
+        httpMethods: new UNBOXAPI.Collections.HttpMethods,
+        dataTypes: new UNBOXAPI.Collections.DataTypes,
+        apiTypes: new UNBOXAPI.Collections.ApiTypes,
+        panels: new UNBOXAPI.Collections.Panels,
+        notices: new UNBOXAPI.Collections.Notices
     },
     templates: {},
     view: null,
     nav: null,
-    router: new UNBOX.Router
+    router: new UNBOXAPI.Router
 };
 //Create objects for global storing of module specific data
-UNBOX.tester = {
+UNBOXAPI.tester = {
     test: null,
     web_address: null,
     login_info: null,
     models: {},
     collections: {}
 };
-UNBOX.manager = {
+UNBOXAPI.manager = {
     models: {},
     collections: {}
 };
-UNBOX.automater = {};
-UNBOX.documenter = {};
-UNBOX.app.collections.panels.add([
-    new UNBOX.Models.Panels({
+UNBOXAPI.automater = {};
+UNBOXAPI.documenter = {};
+UNBOX.collections.panels.add([
+    new UNBOXAPI.Models.Panels({
         number: 1
     }),
-    new UNBOX.Models.Panels({
+    new UNBOXAPI.Models.Panels({
         number: 2
     }),
-    new UNBOX.Models.Panels({
+    new UNBOXAPI.Models.Panels({
         number: 3
     })
 ]);
-UNBOX.app.models.mainPanel = new UNBOX.Models.MainPanel({
-    panels: UNBOX.app.collections.panels
+UNBOX.models.mainPanel = new UNBOXAPI.Models.MainPanel({
+    panels: UNBOX.collections.panels
 });
-UNBOX.app.config = new UNBOX.Collections.Config({
-    metadata: UNBOX.app.metadata
+UNBOX.config = new UNBOXAPI.Collections.Config({
+    metadata: UNBOX.metadata
 });
-UNBOX.app.modules = new UNBOX.Collections.Modules({
-    metadata: UNBOX.app.metadata
+UNBOX.modules = new UNBOXAPI.Collections.Modules({
+    metadata: UNBOX.metadata
 });
-UNBOX.app.layouts = new UNBOX.Collections.Layouts({
-    metadata: UNBOX.app.metadata
+UNBOX.layouts = new UNBOXAPI.Collections.Layouts({
+    metadata: UNBOX.metadata
 });
-UNBOX.app.view = new UNBOX.Views.AppView({
+UNBOX.view = new UNBOXAPI.Views.AppView({
     el: $("body"),
-    model: UNBOX.app.models.mainPanel,
-    collection: UNBOX.app.collections.panels,
-    config: UNBOX.app.config,
-    modules: UNBOX.app.modules,
-    layouts: UNBOX.app.layouts,
-    module: UNBOX.app.modules.current,
-    layout: UNBOX.app.layouts.current,
-    notices: UNBOX.app.collections.notices
+    model: UNBOX.models.mainPanel,
+    collection: UNBOX.collections.panels,
+    config: UNBOX.config,
+    modules: UNBOX.modules,
+    layouts: UNBOX.layouts,
+    module: UNBOX.modules.current,
+    layout: UNBOX.layouts.current,
+    notices: UNBOX.collections.notices
 });
-UNBOX.Collections.Utils.fetch({
-    collection: UNBOX.app.metadata,
-    options: null,
+UNBOXAPI.Collections.Utils.fetch({
+    collection: UNBOX.metadata,
+    options: {
+        reset: true
+    },
     success: function() {
-        UNBOX.app.metadata.trigger("fetched");
-        UNBOX.Global.Bootstrap.start();
+        UNBOX.metadata.trigger("fetched");
+        UNBOX.user.fetch();
     }
-});
-function googleLoginWrapper(authResult){
-    UNBOX.Global.Login.Google.loginButton(authResult);
-}
+});*/
 
 
 

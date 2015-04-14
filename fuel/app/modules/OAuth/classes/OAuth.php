@@ -114,7 +114,7 @@ class Oauth {
                 });
                 $this->authorization_server->addGrantType($Grant);
                 break;
-            case 'refreshToken':
+            case 'refresh_token':
                 $Grant = new \League\OAuth2\Server\Grant\RefreshTokenGrant();
                 $this->authorization_server->addGrantType($Grant);
                 break;
@@ -131,18 +131,13 @@ class Oauth {
     public function issueAccessToken(){
         return $this->authorization_server->issueAccessToken();
     }
-    public function validToken(){
-        \Log::info("Checking Access Token.");
-        $token = \Input::headers('Authorization');
-        if (strpos($token,"Bearer ")!==false){
-            $token = str_replace("Bearer ","",$token);
-            \Log::info("token:".$token);
-            //TODO: League's Symphony Request object does not recognize Authorization header, so I force their check to use my token that Fuel recognizes in header. Figure out wtf is up with that
+    public function validateToken($token=null){
+        if ($token!==null){
             return $this->resource_server->isValidRequest(true,$token);
         }
         return $this->resource_server->isValidRequest();
     }
-    public function getUserId(){
+    public function getTokenUserId(){
         return $this->resource_server->getAccessToken()->getSession()->getOwnerId();
     }
 }
