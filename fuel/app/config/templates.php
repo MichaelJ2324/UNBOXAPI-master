@@ -37,7 +37,7 @@ return array(
             <li id='homeLi' class='dropdown active'>
             <a href='<%= current.get('link') %>' style='float: left;'>
             <%= current.get('icon') %>
-            <%= current.escape('name') %>
+            <%= current.escape('label') %>
             </a>
             <% if (modules.length>1){ %>
             <a href='#' class='dropdown-toggle' data-toggle='dropdown' style='float: right; padding-left: 0px;'>

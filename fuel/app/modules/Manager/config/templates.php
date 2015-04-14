@@ -29,13 +29,13 @@ return array(
                                <%= open %> ' id='<%= module.get('name') %>_actions'>
                     <div class='panel-body'>
                         <div class='col-xs-4 text-center'>
-                            <button type='button' class='btn btn-primary ' data-module='<%= module.get('name') %>' data-action='list'>List <span class='glyphicon glyphicon-th-list'></span></button>
+                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/list' >List <span class='glyphicon glyphicon-th-list'></span></a>
                         </div>
                         <div class='col-xs-4 text-center'>
-                            <button type='button' class='btn btn-primary ' data-module='<%= module.get('name') %>' data-action='create'>Create <span class='glyphicon glyphicon-plus'></span></button>
+                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/create' >Create <span class='glyphicon glyphicon-plus'></span></a>
                         </div>
                         <div class='col-xs-4 text-center'>
-                            <button type='button' class='btn btn-primary ' data-module='<%= module.get('name') %>' data-action='import'>Import <span class='glyphicon glyphicon-upload'></span></button>
+                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/import' >Import <span class='glyphicon glyphicon-upload'></span></a>
                         </div>
                     </div>
                 </div>

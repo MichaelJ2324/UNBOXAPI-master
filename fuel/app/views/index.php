@@ -111,6 +111,7 @@
     </div>
 </div>
 
+<!--
 <script type="text/template" id="navBtns">
     <li id='homeLi' class='dropdown active'>
         <a href='<%= current.get('link') %>' style='float: left;'>
@@ -150,7 +151,7 @@
         <button type='button' class='notice-close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
         <span class='notice-text'><%= notice.get('message') %></span>
     </span>
-</script>
+</script>-->
 <?php echo Asset::js('jquery-1.11.1.min.js'); ?>
 <?php echo Asset::js('underscore-min.js'); ?>
 <?php echo Asset::js('backbone-min.js'); ?>
