@@ -6,7 +6,7 @@
  * Time: 8:19 AM
  */
 
-namespace Fuel\modules\Users\classes\seed;
+namespace Users\seed;
 
 
 class Users extends \UNBOXAPI\Data\Seed\Seeder{
@@ -16,6 +16,7 @@ class Users extends \UNBOXAPI\Data\Seed\Seeder{
 
     protected static $_records = array(
         array(
+            'id' => 1,
             'first_name' => 'John',
             'last_name' => 'Smith',
             'username' => 'admin',
