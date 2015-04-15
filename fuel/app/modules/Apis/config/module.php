@@ -2,5 +2,7 @@
 return array(
     'login' => true,
     'versioning' => true,
-    'seed_models' => array()
+    'seed_models' => array(
+        //'APIs'
+    )
 );
