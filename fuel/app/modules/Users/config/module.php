@@ -1,7 +1,7 @@
 <?php
 return array(
     'login' => true,
-    'versioning' => true,
+    'versioning' => false,
     'seed_models' => array(
         'Users'
     )

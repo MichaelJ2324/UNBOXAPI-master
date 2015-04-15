@@ -26,8 +26,8 @@ class Sessions extends \UNBOXAPI\Data\Seed\Seeder{
     public static function run(){
         $records = array();
         foreach(static::$_records as $record => $values){
-            $values['owner_id'] = \Config::get('unbox.client.id');
-            $client = \Oauth\Model\Clients::query()->where('client_id',\Config::get('unbox.client.id'))->get_one();
+            $values['owner_id'] = \Config::get('unbox.oauth.client.id');
+            $client = \Oauth\Model\Clients::query()->where('client_id',\Config::get('unbox.oauth.client.id'))->get_one();
             $values['client_id'] = $client->id;
             $records[] = $values;
         }
