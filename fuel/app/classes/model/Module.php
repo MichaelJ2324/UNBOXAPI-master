@@ -46,19 +46,13 @@ class Module extends \Orm\Model_Soft{
             'validation' => array(
                 'max_length' => 50
             ),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
-            ),
+            'form' => false,
         ),
         'date_created' => array(
             'data_type' => 'datetime',
             'label' => 'Date Created',
             'validation' => array(),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
-            ),
+            'form' => false,
         ),
         'modified_by' => array(
             'data_type' => 'varchar',
@@ -66,19 +60,13 @@ class Module extends \Orm\Model_Soft{
             'validation' => array(
                 'max_length' => 50
             ),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
-            ),
+            'form' => false,
         ),
         'date_modified' => array(
             'data_type' => 'datetime',
             'label' => 'Date Modified',
             'validation' => array(),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
-            ),
+            'form' => false,
         ),
         'deleted' => array(
             'data_type' => 'tinyint',
@@ -221,11 +209,13 @@ class Module extends \Orm\Model_Soft{
                 $type = "BelongsTo";
             }
             $model = $relationshipObject->__get("model_to");
-            $arr = explode($model,'\\');
+            $arr = explode("\\",$model);
             $module = $arr[0];
+            $model = end($arr);
             $relationships[$relationshipName] = array(
                 'type' => $type,
-                'module' => $module
+                'module' => $module,
+                'model' => $model
             );
             if (isset(static::$_relationship_properties[$relationshipName])) {
                 $relationships[$relationshipName]['fields'] = static::$_relationship_properties[$relationshipName];

@@ -74,33 +74,29 @@
 <div id="notices">
 
 </div>
-<div id="drawer" class="hidden">
-    <div id="drawerContent"></div>
-    <a href='#' class='drawer-close-btn'><span class='glyphicon glyphicon-chevron-up'></span></a>
-</div>
 <div class='un-color1 opaque un-panel un-panel-closed hidden' id='panel1'>
-    <a href='#' data-panel='1' class='un-panel-toggle un-open-panel opaque un-color1' id='panel1_toggle'>
+    <span data-panel='1' class='un-panel-toggle un-open-panel opaque un-color1' id='panel1_toggle'>
         <span class='glyphicon glyphicon-chevron-right'></span>
         <span class='glyphicon glyphicon-chevron-right'></span>
-    </a>
+    </span>
     <div class='un-panel-content hidden' id='panel1_content'>
 
     </div>
 </div>
 <div class='un-color2 opaque un-panel un-panel-closed hidden' id='panel2'>
-    <a href='#' data-panel='2' class='un-panel-toggle un-open-panel opaque un-color2' id='panel2_toggle'>
+    <span data-panel='2' class='un-panel-toggle un-open-panel opaque un-color2' id='panel2_toggle'>
         <span class='glyphicon glyphicon-chevron-right'></span>
         <span class='glyphicon glyphicon-chevron-right'></span>
-    </a>
+    </span>
     <div class='un-panel-content hidden' id='panel2_content'>
 
     </div>
 </div>
 <div class='un-color3 opaque un-panel un-panel-closed hidden' id='panel3'>
-    <a href='#' data-panel='3' class='un-panel-toggle un-open-panel opaque un-color3' id='panel3_toggle'>
+    <span data-panel='3' class='un-panel-toggle un-open-panel opaque un-color3' id='panel3_toggle'>
         <span class='glyphicon glyphicon-chevron-right'></span>
         <span class='glyphicon glyphicon-chevron-right'></span>
-    </a>
+    </span>
     <div class='un-panel-content hidden' id='panel3_content'>
 
     </div>
@@ -110,48 +106,6 @@
 
     </div>
 </div>
-
-<!--
-<script type="text/template" id="navBtns">
-    <li id='homeLi' class='dropdown active'>
-        <a href='<%= current.get('link') %>' style='float: left;'>
-        <%= current.get('icon') %>
-        <%= current.escape('name') %>
-        </a>
-        <% if (modules.length>1){ %>
-        <a href='#' class='dropdown-toggle' data-toggle='dropdown' style='float: right; padding-left: 0px;'>
-            <span class='caret'></span>
-        </a>
-        <ul class='dropdown-menu' role='menu'>
-            <% _.each(modules,function(module){
-            if (module.get('name')!==current.get('name')){
-            %>
-            <li><a href='<%= module.get('link') %>'><%= module.get('icon') %><%= module.escape('name') %></a></li>
-            <%      }
-            }) %>
-        </ul>
-        <% } %>
-    </li>
-    <% _.each(links,function(link){ %>
-    <li>
-        <a href='<%= link.link %>'><%= link.icon %><%= _.escape(link.name) %></a>
-    </li>
-    <% }) %>
-</script>
-<script type="text/template" id="panel">
-    <a href='#' data-panel='<%= num %>' class='un-panel-toggle un-open-panel opaque un-color<%= num %>' id='panel<%= num %>_toggle'>
-        <span class='glyphicon glyphicon-chevron-right'></span>
-        <span class='glyphicon glyphicon-chevron-right'></span>
-    </a>
-    <div class='un-panel-content' id='panel<%= num %>_content'>
-    </div>
-</script>
-<script type="text/template" id="notice">
-    <span class='notice notice-<%= notice.get('type') %> alert-dismissible' role='alert' id='notice_<%= id %>' >
-        <button type='button' class='notice-close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
-        <span class='notice-text'><%= notice.get('message') %></span>
-    </span>
-</script>-->
 <?php echo Asset::js('jquery-1.11.1.min.js'); ?>
 <?php echo Asset::js('underscore-min.js'); ?>
 <?php echo Asset::js('backbone-min.js'); ?>

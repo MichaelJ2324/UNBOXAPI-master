@@ -36,14 +36,6 @@ class Observer_ModifiedBy extends \Orm\Observer{
      */
     public function before_save(\Orm\Model $model)
     {
-        $model->{$this->_property} = self::getUserID();
-    }
-    public static function getUserID(){
-        $userid = \Session::get('userid');
-        if ($userid==false||!isset($userid)){
-            return 1;
-        }else{
-            return $userid;
-        }
+        $model->{$this->_property} = $GLOBALS['user_id'];
     }
 }

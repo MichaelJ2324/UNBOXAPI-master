@@ -19,11 +19,10 @@ class EntryPoints extends \Model\Module{
                 'required' => true
             ),
             'form' => array(
-                'type' => 'select',
+                'type' => 'relate',
                 'name' => 'method',
-                'class' => 'select2',
-                'options' => array(),
-                'collection' => "httpMethods"
+                'module' => 'httpMethods',
+                'collection' => "HttpMethods"
             ),
             'filter' => true
         ),

@@ -58,17 +58,15 @@ class Client {
         $unauth = \Cookie::get('unauth');
         if ($unauth!==null){
             $tokenInfo = unserialize(\Crypt::decode($unauth));
+            $this->_token = $tokenInfo;
             if ($this->_server=='localhost'){
-                if ($this->server->validateToken($tokenInfo['access_token'])){
-                    $this->_token = $tokenInfo;
-                }else{
+                if (!$this->server->validateToken($tokenInfo['access_token'])){
                     return false;
                 }
             }else{
                 $this->setupRequest("validate/".$tokenInfo['access_token'],"GET");
                 if ($this->sendRequest()!==false){
                     $response = $this->request->getResponse();
-                    $this->_token = $tokenInfo;
                     $this->_userId = $response['user'];
                 }else{
                     return false;
@@ -78,6 +76,20 @@ class Client {
         }else{
             return false;
         }
+    }
+    public function refreshToken($refresh_token=null){
+        $this->setGrantType("refresh_token");
+        if ($refresh_token==null){
+            $this->payload = array(
+                'refresh_token' => $this->_token['refresh_token']
+            );
+        }else{
+            $this->payload = array(
+                'refresh_token' => $refresh_token
+            );
+        }
+        $this->_token = $this->issueAccessToken();
+        return $this->_token;
     }
     public function getTokenUser(){
         if ($this->_server=='localhost'){
@@ -115,7 +127,12 @@ class Client {
             'client_secret' => $this->_secret,
             'grant_type' => $this->_grant_type
         );
-        $this->payload = array_merge($this->payload,$clientAttributes);
+        if (is_array($this->payload)){
+            $this->payload = array_merge($this->payload,$clientAttributes);
+        }else{
+            $this->payload = $clientAttributes;
+        }
+
     }
     private function sendRequest(){
         if (isset($this->payload)){

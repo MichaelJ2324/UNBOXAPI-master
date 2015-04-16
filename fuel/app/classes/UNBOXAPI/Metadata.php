@@ -14,7 +14,8 @@ class Metadata {
     protected static $_excluded_modules = array(
         'Oauth',
         'Users',
-        'Request'
+        'Request',
+        'Versions'
     );
 
     public static function get_metaData($loggedIn){
@@ -56,14 +57,10 @@ class Metadata {
                     }
                 } else if (get_parent_class($Class) == 'UNBOXAPI\Layout') {
                     if ($moduleMeta['config']['enabled'] == true) {
-                        if ($moduleMeta['config']['login']===true && $loggedIn===true){
-                            $metadata[2]['value'][] = $moduleMeta;
-                        }else if ($moduleMeta['config']['login']===false){
-                            $metadata[2]['value'][] = $moduleMeta;
-                        }
+                        $metadata[2]['value'][] = $moduleMeta;
                     }
                 }
-                unset($object);
+                unset($Class);
             }
         }
         return $metadata;

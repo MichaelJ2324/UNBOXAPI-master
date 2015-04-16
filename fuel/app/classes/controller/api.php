@@ -12,6 +12,16 @@ class Api extends \Controller_Rest{
     private function loggedIn(){
         try{
             $this->logged_in = $this->oauth_client->validateToken();
+            if ($this->logged_in == false){
+                $tokenInfo = $this->oauth_client->refreshToken();
+                if (isset($tokenInfo)) {
+                    \Oauth\Client::generateCookie($tokenInfo);
+                    $this->logged_in = true;
+                }
+            }
+            if ($this->logged_in==true) {
+                $GLOBALS['user_id'] = $this->oauth_client->getTokenUser();
+            }
             return $this->logged_in;
         }catch(\Exception $ex){
             \Log::debug("Exception:".$ex->getMessage());

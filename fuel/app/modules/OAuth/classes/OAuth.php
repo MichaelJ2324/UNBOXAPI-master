@@ -132,10 +132,16 @@ class Oauth {
         return $this->authorization_server->issueAccessToken();
     }
     public function validateToken($token=null){
-        if ($token!==null){
-            return $this->resource_server->isValidRequest(true,$token);
+        try{
+            if ($token!==null){
+                return $this->resource_server->isValidRequest(true,$token);
+            }
+            return $this->resource_server->isValidRequest();
+        }catch(\Exception $ex){
+            \Log::error("Invalid Token: $token - Exception ".$ex->getMessage());
+            return false;
         }
-        return $this->resource_server->isValidRequest();
+
     }
     public function getTokenUserId(){
         return $this->resource_server->getAccessToken()->getSession()->getOwnerId();

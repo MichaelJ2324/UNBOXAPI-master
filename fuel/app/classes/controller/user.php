@@ -108,19 +108,27 @@ class User extends \Controller_Rest{
                 $userId = $this->oauth_client->getTokenUser();
                 $response = \Users\User::me($userId);
                 $response['token'] = $this->oauth_client->getToken();
-                return $this->response(
-                    $response
-                );
             }else{
-                throw new \Exception("Access denied.");
+                $tokenInfo = $this->oauth_client->refreshToken();
+                if (isset($tokenInfo)) {
+                    \Oauth\Client::generateCookie($tokenInfo);
+                    $userId = $this->oauth_client->getTokenUser();
+                    $response = \Users\User::me($userId);
+                    $response['token'] = $this->oauth_client->getToken();
+                }else {
+                    throw new \Exception("Access denied.");
+                }
             }
+            return $this->response(
+                $response
+            );
         } catch (\Exception $e) {
             return $this->response(
                 array(
                     'err' => 'true',
                     'msg' => "Exception: " . $e->getMessage() . "\n",
                 ),
-                200
+                403
             );
         }
     }

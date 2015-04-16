@@ -7,6 +7,6 @@ return array(
         1 => 'DataTypes',
         2 => 'ApiTypes',
     ),
-    'default_module' => 'EntryPoints',
+    'default' => 'EntryPoints',
     'login' => true
 );

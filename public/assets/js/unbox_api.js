@@ -114,14 +114,14 @@ UNBOXAPI.App = Backbone.Router.extend({
     start: function(){
         var functions = [
             {
-                f: this.metadata.fetchAll,
-                p: {}
-            },
-            {
                 f: UNBOXAPI.Models.Utils.fetch,
                 p: {
                     model: this.user
                 }
+            },
+            {
+                f: this.metadata.fetchAll,
+                p: {}
             }
         ];
         var queue = new UNBOXAPI.Queue(functions,function(){
@@ -206,7 +206,7 @@ UNBOXAPI.App = Backbone.Router.extend({
     },
     quickRecord: function(module,action,id){
         if (this.metadata.layouts.current.get('name') !== "Manager") {
-            this.setupView("Manager");
+            this.manager(module);
         }
         if (!(module == "" || typeof module == 'undefined' || module == null)) {
             if (this.metadata.modules.current.get("name") !== module) {
@@ -214,28 +214,20 @@ UNBOXAPI.App = Backbone.Router.extend({
             }
             if (!(action == "" || typeof action == 'undefined' || action == null)) {
                 if (action == "create" || action == "view") {
-                    if (typeof this.view.current == 'Object') {
-                        if (model == UNBOX.modules.current) {
-                            if (!(typeof id == 'undefined' || id == "" || id == null)) {
-                                if (id !== this.view.current.get("id")) {
-                                    this.view.current.clear();
-                                    this.view.current.set({id: id});
-                                }
-                            } else {
-                                this.view.current.clear();
-                            }
-                        } else {
+                    if (!(typeof id == 'undefined' || id == "" || id == null)) {
+                        if (!(typeof this.view.current =='Object')) {
                             this.view.current = new UNBOXAPI.Models[module];
+                        }
+                        if (id !== this.view.current.get("id")) {
+                            this.view.current.clear();
+                            this.view.current.set({id: id});
                         }
                     } else {
                         this.view.current = new UNBOXAPI.Models[module];
-                        if (id !== this.view.current.get("id")) {
-                            this.view.current.set({id: id});
-                        }
                     }
                     this.view.setContent(
                         2,
-                        UNBOXAPI.Views.Manager.QuickRecord,
+                        UNBOXAPI.Views.Manager.Record.Panel,
                         {
                             module: this.metadata.modules.current,
                             model: this.view.current
@@ -406,30 +398,6 @@ UNBOXAPI.Views = {
             $(this.el).attr('disabled', disabled);
         }
     }),
-    Drawer: Backbone.View.extend({
-        el: $("#drawer"),
-        events: {
-            "click .drawer-close-btn":  "close"
-        },
-        size: "sm",
-        backdrop: true,
-        exit_key_exit: true,
-        initialize: function(options) {
-            this.$drawer = $("#drawerContent");
-            this.render();
-        },
-        render: function(){
-            this.$drawer.html(this.options.data);
-            this.$el.addClass("drawer-open");
-            this.$el.removeClass("hidden");
-            return this;
-        },
-        close: function () {
-            this.$drawer.html(this.options.data);
-            this.$el.removeClass("drawer-open");
-            this.$el.addClass("hidden");
-        }
-    }),
     Modal: Backbone.View.extend({
         el: $("#modal"),
         events: {
@@ -490,7 +458,7 @@ UNBOXAPI.Views = {
                     number: 3
                 })
             ]);
-            this.model = new UNBOXAPI.Models.MainPanel({
+            this.model = new UNBOXAPI.Models.MainPanel(null,{
                 panels: this.collection
             });
             this.notices = new UNBOXAPI.Collections.Notices;
@@ -561,7 +529,10 @@ UNBOXAPI.Views = {
                 functions[x] = {
                     f: UNBOXAPI.Collections.Utils.fetch,
                     p: {
-                        collection: this.collections[models[x]]
+                        collection: this.collections[models[x]],
+                        options: {
+                            name: models[x]
+                        }
                     }
                 }
             }
@@ -605,8 +576,8 @@ UNBOXAPI.Views = {
             this.template = this.options.template;
 
             _.bindAll(this,"render");
-            this.collection.on("change",this.render);
-            this.model.on("reset",this.render);
+            this.collection.on("reset",this.render);
+            this.model.on("change",this.render);
             this.render();
         },
         render: function(){
@@ -709,6 +680,10 @@ UNBOXAPI.Views = {
             view.render();
         },
         closePanel: function(event){
+            if (!typeof event=='undefined'){
+                console.log(event);
+                event.preventDefault();
+            }
             this.$panel.addClass("un-panel-closed").removeClass("un-panel-shadow");
             this.$content.addClass("hidden");
             this.$panel_toggle.removeClass("un-panel-close").addClass("un-open-panel un-panel-toggle-shadow").html(this.togglePanelIcon("open"));
@@ -718,6 +693,9 @@ UNBOXAPI.Views = {
             });
         },
         openPanel: function(event){
+            if (!typeof event=='undefined'){
+                event.preventDefault();
+            }
             if (this.model.get("hidden")==false) {
                 this.model.set({
                     open: true
@@ -1648,9 +1626,15 @@ UNBOXAPI.Views.Manager = {
             this.template = this.layout.templates.getTemplate("Actions");
         },
         render: function(){
+            var current;
+            if (this.module==false){
+                current = this.layout.config.getValue("default");
+            }else{
+                current = this.module;
+            }
             this.html = _.template(this.template,{
                 modules: this.collection.models,
-                default_module: this.module
+                current: current
             });
             this.$el.html(this.html);
         },
@@ -1835,179 +1819,213 @@ UNBOXAPI.Views.Manager = {
             }
         })
     },
-    RelateRecord: Backbone.View.extend({
-        events: {
-            "click #save": "save",
-            "click #clear": "clear",
-            "focusout input": "updateModel",
-            "focusout textarea": "updateModel",
-            "change select": "updateModel"
-        },
-        initialize: function(options){
-            this.options = options || {};
-            this.module = this.options.module || null;
-            this.layout = this.options.layout || {};
+    Record: {
+        Panel: Backbone.View.extend({
+            initialize: function(options){
+                this.options = options || {};
+                this.panel = this.options.panel || {};
+                this.module = this.options.module || null;
+                this.layout = this.options.layout || {};
+                this.related = this.options.related || false;
 
-            this.template = this.layout.templates.getTemplate("");
+                this.number = this.panel.get('number');
 
-            _.bindAll(this,"render","getFields","panelState","record","clear","save","updateModel");
-            this.model.on("sync",this.render,this);
+                this.relate = {};
+                this.detail = {};
+                this.actions = {};
 
-            this.$step2 = $("#step2");
-            this.$panelToggle = $("#panel_toggle2");
-            this.quickRecord = $("#quickRecord");
+                this.template = this.layout.templates.getTemplate("Record");
 
-            if (!(typeof this.model.get("id") =='undefined' || this.model.get("id")=="" || this.model.get("id")==null)){
-                this.model.fetch();
-            }else{
+                _.bindAll(this,"setup","setupDOMPointers","render","save");
+                this.module.on("reset",this.setup)
+                this.model.on("save",this.save);
+
                 this.render();
-            }
-        },
-        render: function(){
-            if (this.panelState()) {
-                this.$step2.html(this.template);
-            }
-        }
-    }),
-    QuickRecord: Backbone.View.extend({
-        events: {
-            "click #save": "save",
-            "click #clear": "clear",
-            "focusout input": "updateModel",
-            "focusout textarea": "updateModel",
-            "change select": "updateModel"
-        },
-        initialize: function(options){
-            this.options = options || {};
-            this.module = this.options.module || null;
-            this.layout = this.options.layout || {};
-
-            this.template = this.layout.templates.getTemplate("Record");
-
-            _.bindAll(this,"render","getFields","clear","save","updateModel");
-            this.model.on("sync",this.render);
-
-            this.quickRecord = $("#quickRecord");
-
-            if (!(typeof this.model.get("id") =='undefined' || this.model.get("id")=="" || this.model.get("id")==null)){
-                UNBOXAPI.Models.Utils.fetch({
-                    model: this.model
+            },
+            render: function() {
+                this.html = _.template(this.template,{
+                    number: this.number
                 });
-            }
-        },
-        render: function(){
-            var fields = this.getFields();
-            var actionMenu = this.getActions();
-            this.html = _.template(this.template, {
-                currentModule: this.module,
-                actions: actionMenu,
-                fields: fields
-            });
-            this.$el.html(this.html);
-        },
-        getActions: function(){
-            var template = UNBOXAPI.Global.Utils.getTemplate("RecordActions");
-            this.html = _.template(this.template, {
-                currentModule: this.module
-            });
-            return this.html;
-        },
-        getFields: function(){
-            var fields = [];
-            var moduleFields = this.module.get("fields");
-            var labelTemplate = UNBOXAPI.Global.Utils.getTemplate("label",true);
-            var helpTemplate = UNBOXAPI.Global.Utils.getTemplate("help",true);
-            for (var fieldName in moduleFields){
-                if (moduleFields.hasOwnProperty(fieldName)) {
-                    html = "";
-                    var field = moduleFields[fieldName];
-                    if (field.hasOwnProperty('form')) {
-                        var attributes = field['form'];
-                        if (attributes.hasOwnProperty("type")) {
-                            var fieldProperties = {
-                                type: attributes['type'],
-                                name: fieldName,
-                                label: field['label'],
-                                id: attributes['id'],
-                                class: attributes['class'],
-                                placeholder: attributes['placeholder'],
-                                options: new UNBOXAPI.Collections.Data,
-                                help: field['help'],
-                                disabled: attributes['disabled'],
-                                value: this.model.get(fieldName)
-                            };
-                            var fieldTemplate = UNBOXAPI.Global.Utils.getTemplate(attributes['type'], true);
-                            if (attributes['type']=='select'){
-                                if (!(typeof attributes['collection']=='undefined' || attributes['collection']==null || attributes['collection']=="")){
-                                    for (var x=0; x<UNBOX.collections[attributes['collection']].length;x++){
-                                        var model = UNBOX.collections[attributes['collection']].get(x);
-                                        if (typeof model!=='undefined') {
-                                            fieldProperties.options.add({
-                                                key: model.get('id'),
-                                                value: model.getValue()
-                                            });
-                                        }
-                                    }
-                                }else{
-                                    fieldProperties.options.reset(attributes['options']);
-                                }
-                            }
-                            html += _.template(labelTemplate, {
-                                field: fieldProperties
-                            });
-                            html += _.template(fieldTemplate, {
-                                field: fieldProperties,
-                                options: fieldProperties.options.models
-                            });
-                            if (field.hasOwnProperty('help')) {
-                                html += _.template(helpTemplate, {
-                                    field: fieldProperties
-                                });
-                            }
-                            fields.push(html);
+                this.$el.html(this.html);
+                this.setupDOMPointers();
+                this.setup();
+                return this;
+            },
+            setupDOMPointers: function(){
+                this.$relate = $("#Relate_"+this.number);
+                this.$actions = $("#RecordActions_"+this.number);
+                this.$detail = $("#RecordDetail_"+this.number);
+            },
+            setup: function(){
+                if (this.module == null && this.related){
+                    this.relate = new UNBOXAPI.Views.Manager.Record.RelateTo({
+                        el: this.$relate,
+                        collection: this.module.relationships,
+                        template: this.layout.templates.getTemplate("RelateTo")
+                    })
+                }else{
+                    this.actions = new UNBOXAPI.Views.Manager.Record.Actions({
+                        el: this.$actions,
+                        model: this.model,
+                        module: this.module,
+                        number: this.number,
+                        template: this.layout.templates.getTemplate("RecordActions")
+                    });
+                    this.detail = new UNBOXAPI.Views.Manager.Record.Detail({
+                        el: this.$detail,
+                        model: this.model,
+                        module: this.module,
+                        number: this.number,
+                        template: this.layout.templates.getTemplate("RecordDetail")
+                    });
+                }
+            },
+            save: function(e){
+                if (typeof this.model.get("id")=='undefined'||this.model.get('id')==""||this.model.get("id")==null){
+                    UNBOXAPI.Models.Utils.save({
+                        model: this.model,
+                        options: {
+                            module: this.module
+                        },
+                        success: function(model,response,options){
+                            UNBOX.navigate("#manage/"+options.module.get('name')+"/view/"+model.get('id'));
                         }
-                    }
+                    });
+                }else{
+                    UNBOXAPI.Models.Utils.save({
+                        model: this.model
+                    });
                 }
             }
-            return fields;
-        },
-        updateModel: function(e) {
-            var changed = e.currentTarget;
-            var value = $(e.currentTarget).val();
-            var obj = {};
-            obj[changed.name] = value;
-            this.model.set(obj);
-        },
-        save: function(e){
-            if (typeof this.model.get("id")=='undefined'||this.model.get('id')==""||this.model.get("id")==null){
-                UNBOXAPI.Models.Utils.save({
-                    model: this.model,
-                    options: {
-                        module: this.module
-                    },
-                    success: function(model,response,options){
-                        UNBOX.router.navigate("#manage/"+options.module.get('name')+"/view/"+model.get('id'));
-                    }
-                });
-                /*
-                this.model.save(null,{
-                    module: this.module,
-                    success: function(model,response,options){
-                        UNBOX.router.navigate("#manage/"+options.module.get('name')+"/view/"+model.get('id'));
-                    }
-                });*/
-            }else{
-                UNBOXAPI.Models.Utils.save({
-                    model: this.model
-                });
-            }
-        },
-        clear: function(e){
-            this.quickRecord.clear();
-        }
-    }),
-    RelatedRecord: {
+        }),
+        Detail: Backbone.View.extend({
+            events: {
+                "focusout input": "updateModel",
+                "focusout textarea": "updateModel",
+                "change select": "updateModel"
+            },
+            initialize: function(options){
+                this.options = options || {};
+                this.module = this.options.module || null;
+                this.template = this.options.template || {};
+                this.number = this.options.number || 2;
 
+                _.bindAll(this,"render","setupDOMPointers","clearForm","updateModel");
+                this.model.on("clear",this.clearForm);
+                this.model.on("sync",this.render);
+
+                if ((!(this.model.get('id')==""||this.model.get('id')==null||typeof this.model.get('id')=='undefined'))
+                    &&(typeof this.model.get('name')=='undefined'||this.model.get('name')==null||this.model.get('name')=="")){
+                    console.log()
+                    UNBOXAPI.Models.Utils.fetch({
+                        model: this.model
+                    })
+                }else {
+                    this.render();
+                }
+            },
+            render: function(){
+                this.html = _.template(this.template, {
+                    model: this.model,
+                    fields: this.module.fields.models,
+                    number: this.number
+                });
+                this.$el.html(this.html);
+                this.setupDOMPointers();
+                this.setupRelateFields();
+                return this;
+            },
+            setupDOMPointers: function(){
+                this.$record = $("#recordDetail_"+this.number);
+            },
+            setupRelateFields: function(){
+                var relateFields = this.$record.find(".select2.relate");
+                if (!(relateFields==null||typeof relateFields=='undefined'||relateFields.length==0)) {
+                    var url = UNBOXAPI.Global.ajaxURL + relateFields.data("module");
+                    relateFields.select2({
+                        placeholder: "Select "+relateFields.data("module"),
+                        minimumInputLength: 1,
+                        ajax: {
+                            url: url,
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) {
+                                var queryParameters = {
+                                    filter: params.term
+                                }
+                                return queryParameters;
+                            },
+                            processResults: function (data,params) {
+                                return {
+                                    results: data
+                                };
+                            },
+                            cache: true
+                        }
+                    });
+                }
+            },
+            clearForm: function(){
+                this.$record.trigger('reset');
+                this.model.clear();
+            },
+            updateModel: function(e) {
+                var changed = e.currentTarget;
+                var value = $(e.currentTarget).val();
+                var obj = {};
+                obj[changed.name] = value;
+                this.model.set(obj);
+            }
+        }),
+        Actions: Backbone.View.extend({
+            events: {
+                "click .save-record": "save",
+                "click .clear-record": "clear",
+                "click .version-record": "version",
+                "click .relate-record": "relate"
+            },
+            initialize: function(options){
+                this.options = options || {};
+                this.template = this.options.template || {};
+                this.module = this.options.module || {};
+
+                _.bindAll(this,"save","clear","render","relate","version");
+                this.number = this.options.number || 2;
+                this.render();
+            },
+            render: function(){
+                var isNew = (this.model.get('id')==null||this.model.get('id')==""||typeof this.model.get('id')=="undefined");
+                this.html = _.template(this.template, {
+                    isNew: isNew,
+                    module: this.module,
+                    number: this.number
+                });
+                this.$el.html(this.html);
+            },
+            clear: function(e){
+                if ($(e.currentTarget).data('panel')==this.number) {
+                    this.model.trigger("clear");
+                }
+            },
+            save: function(e){
+                if ($(e.currentTarget).data('panel')==this.number) {
+                    this.model.trigger("save");
+                }
+            },
+            version: function(e){
+                if ($(e.currentTarget).data('panel')==this.number) {
+                    this.model.trigger("version");
+                }
+            },
+            relate: function(e){
+                if ($(e.currentTarget).data('panel')==this.number) {
+                    this.model.trigger("relate");
+                }
+            }
+        }),
+        RelateTo: Backbone.View.extend({
+
+        })
     }
 }
 UNBOXAPI.Models = {
@@ -2057,7 +2075,7 @@ UNBOXAPI.Models = {
         }
     },
     //Modules
-    Module: Backbone.Model.extend({
+    Record: Backbone.Model.extend({
 
     }),
     Applications: Backbone.Model.extend({
@@ -2075,7 +2093,7 @@ UNBOXAPI.Models = {
             return this.get('name')+" - ("+this.get('version')+")";
         }
     }),
-    APIs: Backbone.Model.extend({
+    Apis: Backbone.Model.extend({
         initialize: function(){
             _.bindAll(this, 'getValue');
         },
@@ -2275,18 +2293,113 @@ UNBOXAPI.Models = {
             return this.get('value');
         }
     }),
-    Modules: Backbone.Model.extend({
+    Input: Backbone.Model.extend({
         initialize: function(){
+            this.templates = null;
+            this.html = null;
+            this.options = null;
+
+            _.bindAll(this,"getHTML");
+        },
+        default: {
+            type: null,
+            placeholder: "",
+            help: "",
+            disabled: false,
+            class: "",
+            name: "",
+            id: "",
+            value: null,
+            required: false
+        },
+        getHTML: function(value){
+            if (typeof value=='undefined'){
+                value='';
+            }
+            console.log(value);
+            if (this.template!==null) {
+                if (this.html == null) {
+                    this.html = _.template(this.template, {
+                        value: value,
+                        input: this
+                    });
+                }
+                return this.html;
+            }
+            return false;
+        }
+    }),
+    Fields: Backbone.Model.extend({
+        initialize: function(){
+            this.input = null;
+            this.html = null;
+            _.bindAll(this,"buildInput","getHTML");
+            //this.on("change",this.buildInput);
+        },
+        default: {
+            name: null,
+            data_type: null,
+            label: null,
+            validation: [],
+            form: []
+        },
+        buildInput: function(){
+            var formMeta = this.get("form");
+            if (!(formMeta==false||formMeta==null||typeof formMeta =='undefined')){
+                var validation = this.get("validation");
+                if (!formMeta.hasOwnProperty('id')){
+                    formMeta['id'] = this.get("name");
+                }
+                if (!formMeta.hasOwnProperty('name')){
+                    formMeta['name'] = this.get("name");
+                }
+                if (validation.hasOwnProperty('required')){
+                    formMeta['required'] = validation['required'];
+                }
+                this.input = new UNBOXAPI.Models.Input(formMeta);
+                this.input.template = this.templates.getTemplate(formMeta['type']);
+                if (formMeta['type']=='select') {
+                    if (typeof formMeta['relate'] == 'undefined' || formMeta['relate'] == null || formMeta['relate'] == "") {
+                        var options = new UNBOXAPI.Collections.Data;
+                        options.reset(formMeta['options']);
+                        this.input.options = options;
+                    }
+                }
+            }else{
+                this.input = false;
+            }
+        },
+        getHTML: function(value){
+            if (this.input==null){
+                this.buildInput();
+            }
+            if (typeof value=='undefined'){
+                value='';
+            }
+            if (this.input!==false) {
+                if (this.html == null) {
+                    this.html = _.template(this.templates.getTemplate("label"), {
+                        text: this.get('label'),
+                        name: this.input.get('name')
+                    });
+                    this.html += this.input.getHTML(value);
+                    this.html += _.template(this.templates.getTemplate("help"), {
+                        text: this.input.get('help')
+                    });
+                }
+                return this.html;
+            }
+            return false;
+        }
+    }),
+    Modules: Backbone.Model.extend({
+        initialize: function(options){
+            this.templates = {};
             this.config = new UNBOXAPI.Collections.Config;
-            //TODO: Create field and relationship collections for easy access to Module fields and relationships
-            //this.fields = new UNBOXAPI.Collections.Fields;
+            this.fields = new UNBOXAPI.Collections.Fields;
             //this.relationships = new UNBOXAPI.Collections.Relationships;
 
-            _.bindAll(this,"setup","setupConfig");
-
-            this.on("reset",this.setup);
-            //this.on("change:fields",this.setupFields);
-            //this.on("change:relationships",this.setupRelationships);
+            _.bindAll(this,"setup","setupConfig","setupFields");
 
         },
         urlRoot: UNBOXAPI.Global.ajaxURL+"metadata/",
@@ -2300,12 +2413,22 @@ UNBOXAPI.Models = {
         },
         setup: function(){
             this.setupConfig();
-            //this.setupFields();
+            this.setupFields();
             //this.setupRelationships();
         },
-        /*setupFields: function(){
-            this.templates.refresh(this.get('templates'));
-        },*/
+        setupFields: function(){
+            var fields = this.get('fields');
+            var models = [];
+            var c = 0;
+            for (var field in fields){
+                fields[field].name = field;
+                var model = new UNBOXAPI.Models.Fields(fields[field]);
+                model.templates = this.templates;
+                models[c] = model;
+                c++;
+            };
+            this.fields.reset(models);
+        },
         setupConfig: function(){
             this.config.refresh(this.get('config'));
         }
@@ -2376,9 +2499,7 @@ UNBOXAPI.Models = {
                     password: this.get('password')
                 },
                 success: function(data){
-                    if (data['err']!==true) {
-                        this.fetch({reset: true});
-                    }
+                    this.fetch({reset: true});
                 },
                 error: function(data){
                     console.log(data);
@@ -2441,7 +2562,7 @@ UNBOXAPI.Collections = {
         model: UNBOXAPI.Models.Applications,
         url: UNBOXAPI.Global.ajaxURL+"applications/"
     }),
-    APIs: Backbone.Collection.extend({
+    Apis: Backbone.Collection.extend({
         model: UNBOXAPI.Models.APIs,
         url: UNBOXAPI.Global.ajaxURL+"apis/"
     }),
@@ -2474,7 +2595,6 @@ UNBOXAPI.Collections = {
             this.fetch();
         },
         getLoginParams: function(){
-            console.log(this.loginMethod);
             this.url = UNBOXAPI.Global.ajaxURL+"entryPoints/"+this.loginMethod.get("login_entryPoint_id")+"/link/parameters";
             this.fetch();
         }
@@ -2585,9 +2705,9 @@ UNBOXAPI.Collections = {
         initialize: function(){
             _.bindAll(this,"fetchAll","setup","setupConfig","setupModules","setupLayouts","setupTemplates");
             this.config = new UNBOXAPI.Collections.Config;
+            this.templates = new UNBOXAPI.Collections.Templates;
             this.modules = new UNBOXAPI.Collections.Modules;
             this.layouts = new UNBOXAPI.Collections.Layouts;
-            this.templates = new UNBOXAPI.Collections.Templates;
             this.on("reset",this.setup);
         },
         name: "Application Metadata",
@@ -2600,7 +2720,7 @@ UNBOXAPI.Collections = {
                     reset: true
                 },
                 success: function(collection,response,options) {
-                    collection.trigger("fetched");
+                    //
                 },
                 fail: function(collection,response,options){
                     //TODO: Failure handling on Metadata fetch
@@ -2610,9 +2730,9 @@ UNBOXAPI.Collections = {
         },
         setup: function(){
             this.setupConfig();
+            this.setupTemplates();
             this.setupModules();
             this.setupLayouts();
-            this.setupTemplates();
         },
         setupConfig: function(){
             var config = this.findWhere({
@@ -2621,16 +2741,28 @@ UNBOXAPI.Collections = {
             this.config.refresh(config.get('value'));
         },
         setupModules: function(){
-            var modules = this.findWhere({
+            var moduleConfig = this.findWhere({
                 key: "modules"
             });
-            this.modules.refresh(modules.get('value'));
+            var modules = moduleConfig.get('value');
+            var models = [];
+            var c = 0;
+            if (modules.length>0) {
+                for (var module in modules){
+                    var model = new UNBOXAPI.Models.Modules(modules[module]);
+                    model.templates = this.templates;
+                    model.setup();
+                    models[c] = model;
+                    c++;
+                }
+            }
+            this.modules.reset(models);
         },
         setupLayouts: function(){
             var layouts = this.findWhere({
                 key: "layouts"
             });
-            this.layouts.refresh(layouts.get('value'));
+            this.layouts.reset(layouts.get('value'));
         },
         setupTemplates: function(){
             var templates = this.findWhere({
@@ -2670,85 +2802,34 @@ UNBOXAPI.Collections = {
             this.options = options || {};
             this.current = typeof this.options.current !== 'undefined' ? this.options.current : new UNBOXAPI.Models.Layouts;
 
-            _.bindAll(this,"refresh","setCurrent");
+            _.bindAll(this,"setCurrent");
         },
         model: UNBOXAPI.Models.Layouts,
-        refresh: function(layouts){
-            layouts = typeof layouts !== "undefined" ? layouts : false;
-            if (layouts!==false){
-                this.reset(layouts);
-                if (typeof this.current !== 'undefined' || this.current == null) {
-                    this.setCurrent();
-                }
-            }
-        },
         setCurrent: function(layout) {
-            if (typeof layout == 'undefined'){
-                var model = this.findWhere({name: this.current.get('name')});
-                if (!(typeof model == 'undefined' || model== null)) {
-                    model.set({
-                        current: true
-                    });
-                }
-            }else {
-                this.current.set({
-                        current: false
-                    },
-                    {
-                        silent: true
-                    }
-                );
-                var model = this.findWhere({name: layout});
-                model.set({
-                    current: true
-                });
-                this.current.set(
-                    model.toJSON()
-                );
-            }
+            var model = this.findWhere({name: layout});
+            this.current.set(
+                model.toJSON()
+            );
         }
     }),
     Modules: Backbone.Collection.extend({
         initialize: function(options){
             this.options = options || {};
             this.current = typeof this.options.current !== 'undefined' ? this.options.current : new UNBOXAPI.Models.Modules;
-            _.bindAll(this,"refresh","setCurrent");
+            _.bindAll(this,"setCurrent");
         },
         model: UNBOXAPI.Models.Modules,
-        refresh: function(modules){
-            modules = typeof modules !== "undefined" ? modules : false;
-            if (modules!==false){
-                this.reset(modules);
-                if (typeof this.current !== 'undefined' || this.current == null) {
-                    this.setCurrent();
-                }
-            }
-        },
         setCurrent: function(module) {
-            if (typeof module == 'undefined'){
-                var model = this.findWhere({name: this.current.get('name')});
-                if (!(typeof model == 'undefined' || model== null)) {
-                    model.set({
-                        current: true
-                    });
-                }
-            }else {
-                this.current.set({
-                        current: false
-                    },
-                    {
-                        silent: true
-                    }
-                );
-                var model = this.findWhere({name: module});
-                model.set({
-                    current: true
-                });
-                this.current.set(
-                    model.toJSON()
-                );
-            }
+            var model = this.findWhere({name: module});
+            this.current = model;
+            this.current.trigger("change");
+            /*this.current.set(
+                model.toJSON()
+            );*/
         }
+    }),
+    Fields: Backbone.Collection.extend({
+        model: UNBOXAPI.Models.Fields
     }),
     Config: Backbone.Collection.extend({
         initialize: function(options){
