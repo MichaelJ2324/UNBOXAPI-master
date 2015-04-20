@@ -21,10 +21,11 @@ class Parameters extends \Model\Module{
                 'max_length' => 50
             ),
             'form' => array(
-                'type' => 'select',
-                'class' => 'select2',
-                'options' => array(),
-                'collection' => 'dataTypes'
+                'type' => 'relate',
+                'module' => 'ParameterTypes',
+                'filter' => array(
+                    'type' => 2
+                )
             )
         ),
         'api_type' => array(
@@ -35,10 +36,11 @@ class Parameters extends \Model\Module{
                 'max_length' => 50
             ),
             'form' => array(
-                'type' => 'select',
-                'class' => 'select2',
-                'options' => array(),
-                'collection' => 'apiTypes'
+                'type' => 'relate',
+                'module' => 'ParameterTypes',
+                'filter' => array(
+                    'type' => 2
+                )
             )
         ),
         'description' => array(

@@ -13,10 +13,13 @@ class Metadata {
 
     protected static $_excluded_modules = array(
         'Oauth',
-        'Users'
+        'Users',
+        'Request',
+        'Versions',
+        'HttpMethods'
     );
 
-    public static function get_metaData($loggedIn){
+    public static function get_metaData(){
         $metadata = array(
             array(
                 'key' => 'config',
@@ -46,29 +49,32 @@ class Metadata {
                 $Class = "\\$module\\$class";
                 $moduleMeta = $Class::metadata();
                 if (get_parent_class($Class) == 'UNBOXAPI\Module') {
-                    if ($moduleMeta['enabled'] == true) {
-                        if ($moduleMeta['config']['login']===true && $loggedIn===true){
+                    if ($moduleMeta['config']['enabled'] == true) {
+                        if ($moduleMeta['config']['login']===true && $_SESSION['loggedIn']===true){
                             $metadata[1]['value'][] = $moduleMeta;
                         }else if ($moduleMeta['config']['login']===false){
                             $metadata[1]['value'][] = $moduleMeta;
                         }
                     }
                 } else if (get_parent_class($Class) == 'UNBOXAPI\Layout') {
-                    if ($moduleMeta['enabled'] == true) {
-                        if ($moduleMeta['config']['login']===true && $loggedIn===true){
+                    if ($moduleMeta['config']['enabled'] == true) {
+                        if ($moduleMeta['config']['login']===true && $_SESSION['loggedIn']===true){
                             $metadata[2]['value'][] = $moduleMeta;
                         }else if ($moduleMeta['config']['login']===false){
                             $metadata[2]['value'][] = $moduleMeta;
                         }
                     }
                 }
-                unset($object);
+                unset($Class);
             }
         }
         return $metadata;
     }
     public static function get_config(){
-        return \Config::get("unbox");
+        $config = \Config::get("unbox");
+        unset($config['oauth']);
+        unset($config['google']);
+        return $config;
     }
 
     public function install($config){

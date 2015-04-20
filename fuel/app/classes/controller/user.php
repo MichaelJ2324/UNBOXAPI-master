@@ -9,13 +9,15 @@
 namespace Controller;
 
 
+use Oauth\Oauth;
+
 class User extends \Controller_Rest{
 
-    public $oauth_server;
+    public $oauth_client;
 
-    public function router($resource,$arguments){
+    public function router($resource, $arguments) {
         try{
-            $this->oauth_server = \Oauth\Oauth::getInstance();
+            $this->oauth_client = new \Oauth\Client();
             parent::router($resource, $arguments);
         }catch(\Exception $ex){
             $response = \Response::forge(\Format::forge(array('Error' => $ex->getMessage()))->to_json(), 500)->set_header('Content-Type', 'application.json');
@@ -25,23 +27,28 @@ class User extends \Controller_Rest{
 
     public function post_login(){
         try {
-            //TODO::Move grant, client id and client secret to OAuth\Client object
-            $_POST['grant_type'] = 'password';
-            $_POST['client_id'] = \Config::get('unbox.client.id');
-            $_POST['client_secret'] = \Config::get('unbox.client.secret');
-
             if (isset($_POST['username'])&&isset($_POST['password'])){
-                $this->oauth_server->setupGrant('password');
-                $this->oauth_server->setupGrant('refreshToken');
-                //TODO:Return encrypted cookie
-                $response = $this->oauth_server->issueAccessToken();
-
+                $payload = array(
+                    'username' => $_POST['username'],
+                    'password' => $_POST['password']
+                );
+                if ($this->oauth_client->setGrantType('password')!==false){
+                    $this->oauth_client->payload = $payload;
+                    $tokenInfo = $this->oauth_client->issueAccessToken();
+                    \Oauth\Client::encryptCookie($tokenInfo);
+                    $response = array(
+                        'err' => false,
+                        'msg' => "Successfully logged in."
+                    );
+                }else{
+                    throw new \Exception("Grant type not found");
+                }
+                return $this->response(
+                    $response
+                );
             }else{
                 throw new \Exception("Username and password must be provided");
             }
-            return $this->response(
-                $response
-            );
         } catch (\Exception $e) {
             return $this->response(
                 array(
@@ -52,14 +59,16 @@ class User extends \Controller_Rest{
             );
         }
     }
-    public function post_token(){
-        //TODO: Actual OAuth token request goes here
-    }
-    public function post_register($id="",$action="",$related_module="",$related_id=""){
+
+    public function post_register(){
         try
         {
-            $response = "";
-            if ($action==""||!isset($action)){
+            if (isset($_POST['username'])&&
+                isset($_POST['password'])&&
+                isset($_POST['last_name'])&&
+                isset($_POST['captcha'])&&
+                isset($_POST['email'])
+            ){
                 $captcha = \Input::json('captcha');
                 $remoteIp = \Input::ip();
                 $recaptcha = new \ReCaptcha\ReCaptcha(\Config::get("unbox.google.recaptcha"));
@@ -70,7 +79,7 @@ class User extends \Controller_Rest{
                     $errors = $resp->getErrorCodes();
                     return $this->response(
                         array(
-                            'err' => 'true',
+                            'err' => true,
                             'msg' => "ReCaptcha not valid. Errors:".json_encode($errors),
                         ),
                         400
@@ -80,43 +89,35 @@ class User extends \Controller_Rest{
                     $response
                 );
             }else{
-                switch ($action){
-
-                }
+                throw new \Exception("Missing required field for registration.");
             }
-            return $this->response(
-                $response
-            );
         }
         catch (\Exception $e) {
             return $this->response(
                 array(
-                    'err' => 'true',
+                    'err' => true,
                     'msg' => "Caught exception: ".$e->getMessage()."\n",
                 ),
                 400
             );
         }
     }
-    public function post_refresh(){
-
-    }
-    public function post_authorization(){
-
-    }
     public function get_me(){
         try {
-            if ($this->oauth_server->validToken()){
-                $userId = $this->oauth_server->getUserId();
+            if ($this->oauth_client->validateToken()){
+                $userId = $this->oauth_client->getUserId();
                 $response = \Users\User::me($userId);
-                return $this->response(
-                    $response
-                );
+                $response['token'] = $this->oauth_client->getToken();
+            }else {
+                throw new \Exception("Access denied.");
             }
+            return $this->response(
+                $response
+            );
         } catch (\Exception $e) {
             return $this->response(
                 array(
-                    'err' => 'true',
+                    'err' => true,
                     'msg' => "Exception: " . $e->getMessage() . "\n",
                 ),
                 403

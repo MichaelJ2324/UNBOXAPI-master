@@ -5,14 +5,12 @@ namespace Controller;
 
 class Api extends \Controller_Rest{
 
-    public $oauth_server;
-
-    private $logged_in = false;
+    public $oauth_client;
 
     private function loggedIn(){
         try{
-            $this->logged_in = $this->oauth_server->validToken();
-            return $this->logged_in;
+            $loggedIn = $this->oauth_client->validateToken();
+            return $loggedIn;
         }catch(\Exception $ex){
             \Log::debug("Exception:".$ex->getMessage());
             $this->logged_in = false;
@@ -22,7 +20,7 @@ class Api extends \Controller_Rest{
 
     public function router($resource, $arguments) {
         try{
-            $this->oauth_server = \Oauth\Oauth::getInstance();
+            $this->oauth_client = new \Oauth\Client();
             if (!$this->loggedIn()&&$resource!=="metadata")
             {
                 $response = \Response::forge(\Format::forge(array('Error' => 'Invalid Access Token'))->to_json(), 401)->set_header('Content-Type', 'application.json');
@@ -51,7 +49,7 @@ class Api extends \Controller_Rest{
         try {
             $response = "";
             if ($module == "" || !isset($module)) {
-                $response = \UNBOXAPI\Metadata::get_metaData($this->logged_in);
+                $response = \UNBOXAPI\Metadata::get_metaData();
             } else {
                 if (\Module::exists($module)!==false){
                     if (substr($module, -1) === "s"){

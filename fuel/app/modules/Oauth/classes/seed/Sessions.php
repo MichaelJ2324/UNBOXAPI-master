@@ -8,7 +8,7 @@
 
 namespace Oauth\Seed;
 
-
+//Deprecated
 class Sessions extends \UNBOXAPI\Data\Seed\Seeder{
 
     protected static $_module = 'Oauth';

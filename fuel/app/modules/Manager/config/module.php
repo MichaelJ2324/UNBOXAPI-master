@@ -1,11 +1,12 @@
 <?php
 
 return array(
+    'enabled' => true,
     'bootstrap' => 	array(
-        0 => 'httpMethods',
-        1 => 'dataTypes',
-        2 => 'apiTypes',
+        0 => 'HttpMethods',
+        1 => 'DataTypes',
+        2 => 'ApiTypes',
     ),
-    'default_module' => 'EntryPoints',
+    'default' => 'EntryPoints',
     'login' => true
 );

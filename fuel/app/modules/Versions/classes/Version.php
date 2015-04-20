@@ -14,8 +14,6 @@ class Version extends \UNBOXAPI\Module {
     protected static $_name = "Versions";
     protected static $_label = 'Version';
     protected static $_label_plural = 'Versions';
-    protected static $_enabled = false;
-    protected static $_options = "";
 
     public $version;
     public $related_module;

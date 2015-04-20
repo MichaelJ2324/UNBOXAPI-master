@@ -17,10 +17,10 @@ return array(
                       </label>
                     </div>
                     <div class='col-md-4'>
-                        <button class='btn btn-primary btn-block' type='button' id='login'>Login</button>
+                        <button class='btn btn-primary btn-block' type='button' id='submit'>Login</button>
                     </div>
                     <div class='col-md-4'>
-                        <button class='btn btn-default btn-block' type='button' id='register'>Register</button>
+                        <a href='#register' class='btn btn-default btn-block' id='register_btn'>Register</a>
                     </div>
                     <div class='col-md-4'>
                         <div id='gLoginWrapper'>

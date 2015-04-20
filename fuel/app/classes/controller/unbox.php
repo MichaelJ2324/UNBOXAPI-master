@@ -4,9 +4,6 @@ namespace Controller;
 
 class Unbox extends \Controller
 {
-    private $data = array(
-        'bootstrapped_data' => ""
-    );
     /**
      * The basic welcome message
      *
@@ -15,7 +12,9 @@ class Unbox extends \Controller
      */
     public function action_index()
     {
-        return \Response::forge(\View::forge('index',$this->data));
+        $OAuthClient = new \Oauth\Client();
+        $OAuthClient->validateToken();
+        return \Response::forge(\View::forge('index'));
     }
     /**
      * The 404 action for the application.
