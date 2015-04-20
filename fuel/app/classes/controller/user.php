@@ -35,7 +35,7 @@ class User extends \Controller_Rest{
                 if ($this->oauth_client->setGrantType('password')!==false){
                     $this->oauth_client->payload = $payload;
                     $tokenInfo = $this->oauth_client->issueAccessToken();
-                    \Oauth\Client::generateCookie($tokenInfo);
+                    \Oauth\Client::encryptCookie($tokenInfo);
                     $response = array(
                         'err' => false,
                         'msg' => "Successfully logged in."
@@ -79,7 +79,7 @@ class User extends \Controller_Rest{
                     $errors = $resp->getErrorCodes();
                     return $this->response(
                         array(
-                            'err' => 'true',
+                            'err' => true,
                             'msg' => "ReCaptcha not valid. Errors:".json_encode($errors),
                         ),
                         400
@@ -95,7 +95,7 @@ class User extends \Controller_Rest{
         catch (\Exception $e) {
             return $this->response(
                 array(
-                    'err' => 'true',
+                    'err' => true,
                     'msg' => "Caught exception: ".$e->getMessage()."\n",
                 ),
                 400
@@ -105,19 +105,11 @@ class User extends \Controller_Rest{
     public function get_me(){
         try {
             if ($this->oauth_client->validateToken()){
-                $userId = $this->oauth_client->getTokenUser();
+                $userId = $this->oauth_client->getUserId();
                 $response = \Users\User::me($userId);
                 $response['token'] = $this->oauth_client->getToken();
-            }else{
-                $tokenInfo = $this->oauth_client->refreshToken();
-                if (isset($tokenInfo)) {
-                    \Oauth\Client::generateCookie($tokenInfo);
-                    $userId = $this->oauth_client->getTokenUser();
-                    $response = \Users\User::me($userId);
-                    $response['token'] = $this->oauth_client->getToken();
-                }else {
-                    throw new \Exception("Access denied.");
-                }
+            }else {
+                throw new \Exception("Access denied.");
             }
             return $this->response(
                 $response
@@ -125,7 +117,7 @@ class User extends \Controller_Rest{
         } catch (\Exception $e) {
             return $this->response(
                 array(
-                    'err' => 'true',
+                    'err' => true,
                     'msg' => "Exception: " . $e->getMessage() . "\n",
                 ),
                 403

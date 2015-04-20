@@ -23,8 +23,6 @@ class User extends \UNBOXAPI\Module{
     public static function authenticate($username,$password,$crypt = true){
         $model = static::model();
         if ($crypt) $password = \Crypt::encode($password);
-        \Log::info("User:".$username);
-        \Log::info("Password:".$password);
         $user = $model::query()->where('username', $username )->where('password',$password)->get_one();
         $count = count($user);
         if ($count===1){

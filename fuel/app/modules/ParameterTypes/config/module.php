@@ -5,5 +5,8 @@ return array(
     'versioning' => false,
     'seed_models' => array(
         'BaseTypes'
+    ),
+    'manager' => array(
+        'module_of' => 'Parameters'
     )
 );

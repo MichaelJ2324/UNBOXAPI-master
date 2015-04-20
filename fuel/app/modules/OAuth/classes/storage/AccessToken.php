@@ -32,7 +32,6 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function getScopes(AccessTokenEntity $token)
     {
-
         $accessToken = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'));
         $response = array();
         if (property_exists($accessToken,'scopes')){

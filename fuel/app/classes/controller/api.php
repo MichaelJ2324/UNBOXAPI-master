@@ -7,22 +7,10 @@ class Api extends \Controller_Rest{
 
     public $oauth_client;
 
-    private $logged_in = false;
-
     private function loggedIn(){
         try{
-            $this->logged_in = $this->oauth_client->validateToken();
-            if ($this->logged_in == false){
-                $tokenInfo = $this->oauth_client->refreshToken();
-                if (isset($tokenInfo)) {
-                    \Oauth\Client::generateCookie($tokenInfo);
-                    $this->logged_in = true;
-                }
-            }
-            if ($this->logged_in==true) {
-                $GLOBALS['user_id'] = $this->oauth_client->getTokenUser();
-            }
-            return $this->logged_in;
+            $loggedIn = $this->oauth_client->validateToken();
+            return $loggedIn;
         }catch(\Exception $ex){
             \Log::debug("Exception:".$ex->getMessage());
             $this->logged_in = false;
@@ -61,7 +49,7 @@ class Api extends \Controller_Rest{
         try {
             $response = "";
             if ($module == "" || !isset($module)) {
-                $response = \UNBOXAPI\Metadata::get_metaData($this->logged_in);
+                $response = \UNBOXAPI\Metadata::get_metaData();
             } else {
                 if (\Module::exists($module)!==false){
                     if (substr($module, -1) === "s"){

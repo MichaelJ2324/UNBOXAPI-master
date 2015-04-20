@@ -21,8 +21,7 @@ class EntryPoints extends \Model\Module{
             'form' => array(
                 'type' => 'relate',
                 'name' => 'method',
-                'module' => 'httpMethods',
-                'collection' => "HttpMethods"
+                'module' => 'HttpMethods'
             ),
             'filter' => true
         ),

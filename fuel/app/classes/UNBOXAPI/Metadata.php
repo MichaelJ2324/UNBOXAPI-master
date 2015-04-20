@@ -15,10 +15,11 @@ class Metadata {
         'Oauth',
         'Users',
         'Request',
-        'Versions'
+        'Versions',
+        'HttpMethods'
     );
 
-    public static function get_metaData($loggedIn){
+    public static function get_metaData(){
         $metadata = array(
             array(
                 'key' => 'config',
@@ -49,7 +50,7 @@ class Metadata {
                 $moduleMeta = $Class::metadata();
                 if (get_parent_class($Class) == 'UNBOXAPI\Module') {
                     if ($moduleMeta['config']['enabled'] == true) {
-                        if ($moduleMeta['config']['login']===true && $loggedIn===true){
+                        if ($moduleMeta['config']['login']===true && $_SESSION['loggedIn']===true){
                             $metadata[1]['value'][] = $moduleMeta;
                         }else if ($moduleMeta['config']['login']===false){
                             $metadata[1]['value'][] = $moduleMeta;
@@ -57,7 +58,11 @@ class Metadata {
                     }
                 } else if (get_parent_class($Class) == 'UNBOXAPI\Layout') {
                     if ($moduleMeta['config']['enabled'] == true) {
-                        $metadata[2]['value'][] = $moduleMeta;
+                        if ($moduleMeta['config']['login']===true && $_SESSION['loggedIn']===true){
+                            $metadata[2]['value'][] = $moduleMeta;
+                        }else if ($moduleMeta['config']['login']===false){
+                            $metadata[2]['value'][] = $moduleMeta;
+                        }
                     }
                 }
                 unset($Class);

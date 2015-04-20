@@ -23,11 +23,21 @@ class oauth extends \Controller_Rest {
         }
     }
 
-    public function get_validate($token){
+    public function post_me(){
         try {
-
-            if (isset($token)){
-                $response = $this->oauth_server->validateToken($token);
+            if (isset($_POST['client_id'])&&
+                isset($_POST['client_secret'])&&
+                isset($_POST['access_token'])
+            ){
+                if ($this->oauth_server->validateToken($_POST['access_token'])){
+                    $userId = $this->oauth_server->getTokenUserId();
+                    $response = \Users\User::me($userId);
+                }else{
+                    $response = array(
+                        'err' => true,
+                        'msg' => 'Invalid Access Token.'
+                    );
+                }
             }else{
                 throw new \Exception("Missing all required parameters for authorization.");
             }
@@ -37,7 +47,7 @@ class oauth extends \Controller_Rest {
         } catch (\Exception $e) {
             return $this->response(
                 array(
-                    'err' => 'true',
+                    'err' => true,
                     'msg' => "Error: " . $e->getMessage() . "\n",
                 ),
                 401
@@ -54,7 +64,7 @@ class oauth extends \Controller_Rest {
                 isset($_POST['client_secret'])
             ){
                 $this->oauth_server->setupGrant('password');
-                $this->oauth_server->setupGrant('refreshToken');
+                $this->oauth_server->setupGrant('refresh_token');
                 $response = $this->oauth_server->issueAccessToken();
             }else{
                 throw new \Exception("Missing all required parameters for authorization.");
@@ -65,7 +75,7 @@ class oauth extends \Controller_Rest {
         } catch (\Exception $e) {
             return $this->response(
                 array(
-                    'err' => 'true',
+                    'err' => true,
                     'msg' => "Error: " . $e->getMessage() . "\n",
                 ),
                 401
@@ -79,8 +89,7 @@ class oauth extends \Controller_Rest {
                 isset($_POST['client_id'])&&
                 isset($_POST['client_secret'])
             ){
-                $this->oauth_server = \Oauth\Oauth::getInstance();
-                $this->oauth_server->setupGrant('refreshToken');
+                $this->oauth_server->setupGrant('refresh_token');
                 $response = $this->oauth_server->issueAccessToken();
             }else{
                 throw new \Exception("Missing all required parameters for authorization.");
@@ -91,7 +100,7 @@ class oauth extends \Controller_Rest {
         } catch (\Exception $e) {
             return $this->response(
                 array(
-                    'err' => 'true',
+                    'err' => true,
                     'msg' => "Error: " . $e->getMessage() . "\n",
                 ),
                 401

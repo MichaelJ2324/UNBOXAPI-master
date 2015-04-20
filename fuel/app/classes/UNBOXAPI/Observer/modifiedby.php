@@ -36,6 +36,6 @@ class Observer_ModifiedBy extends \Orm\Observer{
      */
     public function before_save(\Orm\Model $model)
     {
-        $model->{$this->_property} = $GLOBALS['user_id'];
+        $model->{$this->_property} = $_SESSION['user_id'];
     }
 }

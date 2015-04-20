@@ -49,7 +49,7 @@ class Observer_CreatedBy extends \Orm\Observer
     {
         if ($this->_overwrite or empty($model->{$this->_property}))
         {
-            $model->{$this->_property} = $GLOBALS['user_id'];
+            $model->{$this->_property} = $_SESSION['user_id'];
         }
     }
 }

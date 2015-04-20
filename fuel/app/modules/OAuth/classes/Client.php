@@ -32,13 +32,23 @@ class Client {
         static::$_config = \Config::load(static::$_name."::module");
         return static::$_config;
     }
-    public static function generateCookie($tokenInfo){
+    public static function encryptCookie($tokenInfo){
         $serializedToken = serialize($tokenInfo);
         $data = \Crypt::encode($serializedToken);
         \Cookie::set('unauth',$data);
     }
+    public static function decryptCookie(){
+        $unauth = \Cookie::get('unauth');
+        if ($unauth!==null) {
+            $serializeToken = \Crypt::decode($unauth);
+            $token = unserialize($serializeToken);
+            return $token;
+        }
+        return false;
+    }
 
     public function __construct(){
+        session_start();
         $this->setId();
         $this->setSecret();
         $this->setServer();
@@ -46,6 +56,14 @@ class Client {
         if ($this->_server=='localhost'){
             $this->server = Oauth::getInstance();
         }
+    }
+    public function setupSession($loggedIn){
+        $_SESSION['loggedIn'] = $loggedIn;
+        if ($loggedIn) {
+            $_SESSION['token'] = $this->_token;
+            $_SESSION['user_id'] = $this->_userId;
+        }
+        session_write_close();
     }
     public function setGrantType($grant){
         if (in_array($grant,$this->config['grant_types'])){
@@ -55,50 +73,65 @@ class Client {
         }
     }
     public function validateToken(){
-        $unauth = \Cookie::get('unauth');
-        if ($unauth!==null){
-            $tokenInfo = unserialize(\Crypt::decode($unauth));
-            $this->_token = $tokenInfo;
+        $token = static::decryptCookie();
+        \Log::debug(serialize($token));
+        $valid = false;
+        if (!($token==false||$token==null||empty($token))){
             if ($this->_server=='localhost'){
-                if (!$this->server->validateToken($tokenInfo['access_token'])){
-                    return false;
+                if ($this->server->validateToken($token['access_token'])){
+                    $this->_token = $token;
+                    $user = $this->getTokenUser();
+                    if ($user!==false){
+                        $this->_userId = $user;
+                    }
+                    $valid = true;
                 }
             }else{
-                $this->setupRequest("validate/".$tokenInfo['access_token'],"GET");
-                if ($this->sendRequest()!==false){
-                    $response = $this->request->getResponse();
-                    $this->_userId = $response['user'];
-                }else{
-                    return false;
+                $user = $this->getTokenUser($token['access_token']);
+                if ($user!==false){
+                    $this->_token = $token;
+                    $this->_userId = $user;
+                    $valid = true;
                 }
             }
-            return true;
-        }else{
-            return false;
+            if ($valid===false&&isset($token['refresh_token'])){
+                $newToken = $this->refreshToken($token['refresh_token']);
+                if ($newToken!==null){
+                    $user = $this->getTokenUser($newToken['access_token']);
+                    if ($user!==false) {
+                        $this->_token = $newToken;
+                        static::generateCookie($this->_token);
+                        $this->_userId = $user;
+                    }
+                    $valid = true;
+                }
+            }
         }
-    }
-    public function refreshToken($refresh_token=null){
-        $this->setGrantType("refresh_token");
-        if ($refresh_token==null){
-            $this->payload = array(
-                'refresh_token' => $this->_token['refresh_token']
-            );
-        }else{
-            $this->payload = array(
-                'refresh_token' => $refresh_token
-            );
-        }
-        $this->_token = $this->issueAccessToken();
-        return $this->_token;
-    }
-    public function getTokenUser(){
-        if ($this->_server=='localhost'){
-            $this->_userId = $this->server->getTokenUserId();
-        }
-        return $this->_userId;
+        $this->setupSession($valid);
+        return $valid;
     }
     public function getToken(){
         return $this->_token;
+    }
+    public function getUserId(){
+        return $this->_userId;
+    }
+    private function getTokenUser($accessToken=null){
+        $userId = false;
+        if ($this->_server=='localhost'){
+            $userId = $this->server->getTokenUserId();
+        }else{
+            $this->payload = array(
+                'access_token' => $accessToken
+            );
+            $this->setupPayload();
+            $this->setupRequest("me/","POST");
+            $response = $this->sendRequest();
+            if ($response['err']!==false){
+                $userId = $response['id'];
+            }
+        }
+        return $userId;
     }
     public function issueAccessToken(){
         $this->setupPayload();
@@ -118,8 +151,27 @@ class Client {
             return $this->server->issueAccessToken();
         }else{
             $this->setupRequest();
-            return $this->sendRequest();
+            $response = $this->sendRequest();
+            if (!isset($response['err'])){
+                return $response;
+            }else{
+                throw new \Exception("Access Token not issued. Server Response - ".$response['msg']);
+            }
         }
+    }
+    private function refreshToken($refresh_token=null){
+        $this->setGrantType("refresh_token");
+        if ($refresh_token==null){
+            $this->payload = array(
+                'refresh_token' => $this->_token['refresh_token']
+            );
+        }else{
+            $this->payload = array(
+                'refresh_token' => $refresh_token
+            );
+        }
+        $token = $this->issueAccessToken();
+        return $token;
     }
     private function setupPayload(){
         $clientAttributes = array(

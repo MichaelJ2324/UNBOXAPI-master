@@ -146,4 +146,7 @@ class Oauth {
     public function getTokenUserId(){
         return $this->resource_server->getAccessToken()->getSession()->getOwnerId();
     }
+    public function getTokenSessionId(){
+        return $this->resource_server->getAccessToken()->getSession();
+    }
 }
