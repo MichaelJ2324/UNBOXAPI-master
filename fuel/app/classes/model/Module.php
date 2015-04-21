@@ -132,6 +132,7 @@ class Module extends \Orm\Model_Soft{
             'events' => array('before_save'),
             'mysql_timestamp' => true,
             'property' => 'date_modified',
+            'overwrite' => true
         ),
         '\\UNBOXAPI\\Observer_Guid' => array(
             'events' => array('before_insert'),

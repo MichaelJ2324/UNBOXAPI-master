@@ -11,11 +11,21 @@ namespace UNBOXAPI;
 
 class Observer_ModifiedBy extends \Orm\Observer{
 
+
     /**
      * @var  string  default property to set the timestamp on
      */
     public static $property = 'modified_by';
 
+    /**
+     * @var  string  property to set the timestamp on
+     */
+    protected $_property;
+
+    /**
+     * @var  string  whether to overwrite an already set timestamp
+     */
+    protected $_overwrite;
 
     /**
      * Set the properties for this observer instance, based on the parent model's
@@ -26,7 +36,8 @@ class Observer_ModifiedBy extends \Orm\Observer{
     public function __construct($class)
     {
         $props = $class::observers(get_class($this));
-        $this->_property         = static::$property;
+        $this->_property         = isset($props['property']) ? $props['property'] : static::$property;
+        $this->_overwrite        = isset($props['overwrite']) ? $props['overwrite'] : false;
     }
 
     /**
@@ -36,6 +47,9 @@ class Observer_ModifiedBy extends \Orm\Observer{
      */
     public function before_save(\Orm\Model $model)
     {
-        $model->{$this->_property} = $_SESSION['user_id'];
+        if ($this->_overwrite or empty($model->{$this->_property}))
+        {
+            $model->{$this->_property} = $_SESSION['user_id'];
+        }
     }
 }

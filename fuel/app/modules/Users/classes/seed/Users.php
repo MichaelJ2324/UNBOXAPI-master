@@ -6,7 +6,7 @@
  * Time: 8:19 AM
  */
 
-namespace Users\seed;
+namespace Users\Seed;
 
 
 class Users extends \UNBOXAPI\Data\Seed\Seeder{

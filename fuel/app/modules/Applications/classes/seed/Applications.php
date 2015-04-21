@@ -6,7 +6,7 @@
  * Time: 10:09 PM
  */
 
-namespace Applications\seed;
+namespace Applications\Seed;
 
 
 class Applications extends \UNBOXAPI\Data\Seed\Seeder{
@@ -18,7 +18,9 @@ class Applications extends \UNBOXAPI\Data\Seed\Seeder{
         array(
             'description' => 'Seeded application for testing.',
             'version_id' => null,
-            'name' => 'UNBOX API Test'
+            'name' => 'UNBOX API Test',
+            'created_by' => '1',
+            'modified_by' => '1'
         )
     );
 

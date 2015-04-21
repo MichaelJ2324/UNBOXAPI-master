@@ -271,7 +271,8 @@ class Installer {
                         foreach ($TableObject->foreignKeys as $foreignKey => $definition) {
                             if ($definition['added'] !== true) {
                                 if (!(Data\DB\Table::addForeignKey($tableName, $definition))) {
-                                    print \Cli::color("Failed to add foreign key: {$definition['key']} on $tableName. Review Log for further details. Last error:" . \DB::error_info() . "\n", "red");
+                                    print \Cli::color("Failed to add foreign key: {$definition['key']} on $tableName. Review Log for further details. Last error: \n", "red");
+                                    print_r(\DB::error_info());
                                 } else {
                                     $tables[$tableName]->foreignKeys[$foreignKey]['added'] = true;
                                     $addedCount++;
