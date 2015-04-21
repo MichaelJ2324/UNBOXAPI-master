@@ -36,7 +36,8 @@ class RefreshTokens extends \Model\Oauth {
         ),
     );
     protected static $_relationships = array(
-        'belongs_to' => array(
+        'belongs_to' => array(),
+        'has_one' => array(
             'accessToken' => array(
                 'key_from' => 'access_token_id',
                 'model_to' => 'Oauth\\Model\\AccessTokens',
@@ -45,7 +46,6 @@ class RefreshTokens extends \Model\Oauth {
                 'cascade_delete' => true,
             )
         ),
-        'has_one' => array(),
         'has_many' => array(),
         'many_many' => array()
     );

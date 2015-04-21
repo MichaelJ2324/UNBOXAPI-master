@@ -36,14 +36,7 @@ class AccessTokens extends \Model\Oauth {
         ),
     );
     protected static $_relationships = array(
-        'has_one' => array(
-            'session' => array(
-                'key_from' => 'session_id',
-                'model_to' => 'Oauth\\Model\\Sessions',
-                'key_to' => 'id',
-                'cascade_save' => false,
-                'cascade_delete' => true,
-            ),
+        'belongs_to' => array(
             'refreshToken' => array(
                 'key_from' => 'id',
                 'model_to' => 'Oauth\\Model\\RefreshTokens',
@@ -52,6 +45,16 @@ class AccessTokens extends \Model\Oauth {
                 'cascade_delete' => true,
             )
         ),
+        'has_one' => array(
+            'session' => array(
+                'key_from' => 'session_id',
+                'model_to' => 'Oauth\\Model\\Sessions',
+                'key_to' => 'id',
+                'cascade_save' => false,
+                'cascade_delete' => true,
+            ),
+        ),
+        'has_many' => array(),
         'many_many' => array(
             'scopes' => array(
                 'key_from' => 'id',
