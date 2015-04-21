@@ -24,5 +24,13 @@ class Users extends \UNBOXAPI\Data\Seed\Seeder{
             'email' => 'email@example.com'
         )
     );
-
+    public static function run(){
+        $records = array();
+        foreach(static::$_records as $record){
+            $record['password'] = \Crypt::encode($record['password']);
+            $records[] = $record;
+        }
+        static::$_records = $records;
+        parent::run();
+    }
 }
