@@ -15,10 +15,10 @@ class HttpMethods extends Seeder{
 
     protected static $_module = 'HttpMethods';
 
-    public static function run(){
+    public static function records(){
         $Class = static::$_module."\\HttpMethod";
         static::$_records = $Class::get();
-        parent::run();
+        return parent::records();
     }
 
 }

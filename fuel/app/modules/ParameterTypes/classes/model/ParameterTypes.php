@@ -70,11 +70,14 @@ class ParameterTypes extends \Model\Module{
         )
     );
 
-    public static function findType($type=""){
-        if ($type!=="") {
-            return static::find('all',array('where'=>array(array('type',$type))));
-        }else{
-            return static::find('all');
+    public static function types($type=""){
+        return static::find('all',array('where'=>array(array('type',$type))));
+    }
+    public static function findByName($name,$type=""){
+        $query = static::query()->where(array('name',$name));
+        if ($type!==""){
+            $query->where(array("type",$type));
         }
+        return $query->get_one();
     }
 }

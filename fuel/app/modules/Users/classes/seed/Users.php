@@ -12,7 +12,6 @@ namespace Users\Seed;
 class Users extends \UNBOXAPI\Data\Seed\Seeder{
 
     protected static $_module = 'Users';
-    protected static $_model = 'Users';
 
     protected static $_records = array(
         array(
@@ -24,13 +23,13 @@ class Users extends \UNBOXAPI\Data\Seed\Seeder{
             'email' => 'email@example.com'
         )
     );
-    public static function run(){
+    protected static function records(){
         $records = array();
-        foreach(static::$_records as $record){
-            $record['password'] = \Crypt::encode($record['password']);
-            $records[] = $record;
+        foreach(static::$_records as $record=>$values){
+            $values['password'] = \Crypt::encode($values['password']);
+            $records[] = $values;
         }
         static::$_records = $records;
-        parent::run();
+        return parent::records();
     }
 }

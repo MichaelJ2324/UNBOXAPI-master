@@ -6,9 +6,9 @@
  * Time: 11:32 PM
  */
 
-namespace APIs\Model;
+namespace Apis\Model;
 
-class APIs extends \Model\Module{
+class Apis extends \Model\Module{
     private $db_conn = 'default';
     protected static $_table_name = 'apis';
     protected static $_fields = array(
@@ -129,7 +129,7 @@ class APIs extends \Model\Module{
         )
     );
 
-    public function getAPI($id=""){
+    public function getApi($id=""){
         $query = \DB::select('A.id','A.name','A.version',array(\DB::expr("CONCAT(A.name,' - (v',A.version,')')"),"value"),"A.url","A.login_required")->from(array('apis','A'));
         if ($id!==""){
             $query->where('A.id',$id);

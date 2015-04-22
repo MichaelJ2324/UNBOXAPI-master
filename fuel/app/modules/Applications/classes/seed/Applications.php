@@ -13,9 +13,9 @@ class Applications extends \UNBOXAPI\Data\Seed\Seeder{
 
     protected static $_module = 'Applications';
     protected static $_model = 'Applications';
-
     protected static $_records = array(
         array(
+            'id' => 'seed_application',
             'description' => 'Seeded application for testing.',
             'version_id' => null,
             'name' => 'UNBOX API Test',
@@ -23,5 +23,4 @@ class Applications extends \UNBOXAPI\Data\Seed\Seeder{
             'modified_by' => '1'
         )
     );
-
 }

@@ -13,19 +13,12 @@ class RelateTable extends Table{
 
     private $base_fields = array(
         'id' => array(
-            'type' => 'varchar',
-            'constraint' => 50,
+            'type' => 'int',
+            'constraint' => 11,
+            'auto_inc' => true,
+            'unsigned' => true,
             'null' => false,
-        ),
-        'date_created' => array(
-            'type' => 'datetime',
-            'null' => false,
-        ),
-
-        'date_modified' => array(
-            'type' => 'datetime',
-            'null' => false,
-        ),
+        )
     );
     private $user_fields = array(
         'created_by' => array(
@@ -51,7 +44,7 @@ class RelateTable extends Table{
             'null' => false,
         )
     );
-    public function setFields(array $custom_fields,$softDelete=true,$user_fields=true){
+    public function setFields(array $custom_fields,$softDelete=false,$user_fields=false){
         $fields = $this->base_fields;
         if ($user_fields) {
             $fields = array_merge($fields, $this->user_fields);

@@ -23,7 +23,7 @@ class Sessions extends \UNBOXAPI\Data\Seed\Seeder{
         )
     );
 
-    public static function run(){
+    protected static function records(){
         $records = array();
         foreach(static::$_records as $record => $values){
             $values['owner_id'] = \Config::get('unbox.oauth.client.id');
@@ -32,7 +32,7 @@ class Sessions extends \UNBOXAPI\Data\Seed\Seeder{
             $records[] = $values;
         }
         static::$_records = $records;
-        parent::run();
+        return parent::records();
     }
 
 }

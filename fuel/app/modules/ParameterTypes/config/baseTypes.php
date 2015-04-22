@@ -2,6 +2,7 @@
 return array(
     'data_types' => array(
         'string',
+        'text',
         'integer',
         'boolean',
         'array',
@@ -18,6 +19,12 @@ return array(
                         name='<%= _.escape(field['name']) %>'
                         required='<%= _.escape(field['required']) %>'
                     />",
+        'text' => "<textarea rows='5'
+                    class='form-control'
+                    id='parameter_<%= _.escape(field['name']) %>'
+                    name='<%= _.escape(field['name']) %>'
+                    required='<%= _.escape(field['required']) %>'
+                    ><%= _.escape(field['value']) %></textarea>",
         'integer' => "<input type='number'
                         class='form-control'
                         value='<%= _.escape(field['value']) %>'

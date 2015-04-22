@@ -38,7 +38,7 @@ class ParameterType extends \UNBOXAPI\Module{
         }
     }
     public static function get($type=""){
-        $pt = Model\ParameterTypes::findType($type);
+        $pt = Model\ParameterTypes::types($type);
         return static::formatResult($pt);
     }
 
