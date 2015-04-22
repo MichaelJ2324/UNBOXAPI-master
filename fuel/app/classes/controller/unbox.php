@@ -12,8 +12,12 @@ class Unbox extends \Controller
      */
     public function action_index()
     {
-        $OAuthClient = new \Oauth\Client();
-        $OAuthClient->validateToken();
+        try{
+            $OAuthClient = new \Oauth\Client();
+            $OAuthClient->validateToken();
+        }catch(\Exception $ex){
+            \Log::info("OAuth Exception: [".$ex->getCode()."]".$ex->getMessage());
+        }
         return \Response::forge(\View::forge('index'));
     }
     /**
