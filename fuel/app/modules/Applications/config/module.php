@@ -5,5 +5,11 @@ return array(
     'versioning' => true,
     'seed_models' => array(
         'Applications'
+    ),
+    'value' => array(
+        'name',
+        " - (",
+        'version',
+        ")"
     )
 );

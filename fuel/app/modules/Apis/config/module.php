@@ -5,5 +5,11 @@ return array(
     'versioning' => true,
     'seed_models' => array(
         'Apis'
+    ),
+    'value' => array(
+        'name',
+        " - (",
+        'version',
+        ")"
     )
 );

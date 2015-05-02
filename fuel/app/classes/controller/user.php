@@ -104,7 +104,7 @@ class User extends \Controller_Rest{
     }
     public function get_me(){
         try {
-            if ($this->oauth_client->validateToken()){
+            if ($this->oauth_client->validateAuth()){
                 $userId = $this->oauth_client->getUserId();
                 $response = \Users\User::me($userId);
                 $response['token'] = $this->oauth_client->getToken();

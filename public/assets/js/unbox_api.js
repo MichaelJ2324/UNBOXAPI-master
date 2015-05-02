@@ -258,10 +258,19 @@ UNBOXAPI.App = Backbone.Router.extend({
                         2,
                         UNBOXAPI.Views.Manager.Record.Panel,
                         {
-                            module: this.metadata.modules.current,
+                            modules: this.metadata.modules,
                             model: this.view.current
                         },
                         'open'
+                    );
+                    this.view.setContent(
+                        3,
+                        UNBOXAPI.Views.Manager.Record.Panel,
+                        {
+                            modules: this.metadata.modules,
+                            model: this.view.current,
+                            relate: true
+                        }
                     );
                 } else if (action == "list") {
 
@@ -444,57 +453,34 @@ UNBOXAPI.Views = {
         },
         initialize: function(options){
             this.options = options || {};
-            this.module = this.options.module;
-
-            this.collection = new UNBOXAPI.Collections.Records({
-                module: this.module.get('name')
-            });
-
-            _.bindAll(this, 'addOne', 'addAll','search');
-            this.collection.bind('reset', this.addAll);
-            if (this.collection.length>0){
-                this.addAll();
-            }
+            _.bindAll(this, 'disable');
         },
         render: function(){
-            this.$el.select2();
-            this.$search = $(this.$el.data('select2'));
+            this.$el.select2({
+                ajax: {
+                    url: this.model.url,
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            name: params.term,
+                            view: "select2"
+                        };
+                    },
+                    processResults: function (data, page) {
+                        return {
+                            results: data.items
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
             return this;
         },
-        addOne: function(model){
-            var selectView = new UNBOXAPI.Views.DynamicOption({ model: model });
-            this.selectViews.push(selectView);
-            $(this.el).append(selectView.render().el);
-        },
-        addAll: function(){
-            $(this.el).select2('destroy');
-            _.each(this.selectViews, function(selectView) {
-                selectView.remove();
-            });
-            this.selectViews = [];
-            this.collection.each(this.addOne);
-            if (this.selectedId) {
-                $(this.el).val(this.selectedId);
-            }
-        },
-        changeSelected: function(){
-            this.setSelectedId($(this.el).val());
-        },
-        search: function(){
-            this.collection.url
-        },
-        populateFrom: function(url) {
-            this.collection.url = UNBOXAPI.Global.ajaxURL + url;
-            UNBOXAPI.Collections.Utils.fetch({
-                collection: this.collection,
-                options: {
-                    reset: true
-                }
-            });
-            this.setDisabled(false);
-        },
-        setDisabled: function(disabled) {
-            $(this.el).attr('disabled', disabled);
+        disable: function(disable) {
+            disable = (typeof disable == 'undefined'|| disable==null ? "Disabled" : disable);
+            $(this.el).attr('disabled', disable);
         }
     }),
     Modal: Backbone.View.extend({
@@ -1930,9 +1916,11 @@ UNBOXAPI.Views.Manager = {
             initialize: function(options){
                 this.options = options || {};
                 this.panel = this.options.panel || {};
-                this.module = this.options.module || null;
                 this.layout = this.options.layout || {};
+                this.modules = this.options.modules || null;
                 this.related = this.options.related || false;
+
+                this.module = this.modules.current;
 
                 this.number = this.panel.get('number');
 
@@ -1964,11 +1952,13 @@ UNBOXAPI.Views.Manager = {
             },
             setup: function(){
                 if (this.module == null && this.related){
+                    this.module = new UNBOXAPI.Models
                     this.relate = new UNBOXAPI.Views.Manager.Record.RelateTo({
                         el: this.$relate,
-                        collection: this.module.relationships,
+                        module: this.module,
+                        modules: this.modules,
                         template: this.layout.templates.getTemplate("RelateTo")
-                    })
+                    });
                 }else{
                     this.actions = new UNBOXAPI.Views.Manager.Record.Actions({
                         el: this.$actions,
@@ -2111,6 +2101,31 @@ UNBOXAPI.Views.Manager = {
             }
         }),
         RelateTo: Backbone.View.extend({
+            events: {
+                "click .related_module": "relate"
+            },
+            initialize: function(options){
+                this.options = options || {};
+                this.modules = this.options.modules || null;
+                this.collection = this.modules.current.relationships;
+
+                this.module = new UNBOXAPI.Models.Modules;
+
+                this.template = this.options.template || {};
+            },
+            render: function(){
+                this.html = _.template(this.template, {
+                    fields: this.collection.models
+                });
+                this.$el.html(this.html);
+                return this;
+            },
+            relate: function(e){
+                var $selected = $(e.currentTarget);
+                var moduleName = $selected.data('relationship');
+                var action = $selected.parent().id;
+                this.module.set(this.modules.findWhere({ name: moduleName }).toJson());
+            }
 
         })
     }
@@ -2163,8 +2178,42 @@ UNBOXAPI.Models = {
     },
     //Modules
     Record: Backbone.Model.extend({
+        initialize: function(options){
+            this.options = options || {};
+            this.urlRoot = this.options.urlRoot || null;
+            this.module = this.options.module || new UNBOXAPI.Models.Modules;
 
+            this.name = this.module.get("name");
+
+            if (this.urlRoot == null){
+                this.urlRoot = UNBOXAPI.Global.ajaxURL + this.name;
+            }else{
+                this.urlRoot = UNBOXAPI.Global.ajaxURL + this.urlRoot;
+            }
+
+            _.bindAll(this, 'getValue');
+        },
+        getValue: function(){
+            var value = "";
+            var valueSetup = this.module.config.get('value');
+            if(valueSetup==null||typeof valueSetup == 'undefined'){
+                value = this.get('name');
+            }else{
+                for(var x=0;x<valueSetup.length;x++){
+                    if (this.has(valueSetup[x])){
+                        value += this.get(valueSetup[x]);
+                    }else{
+                        value += valueSetup[x];
+                    }
+                    if ((x+1)<valueSetup.length){
+                        value += " ";
+                    }
+                }
+            }
+            return value;
+        }
     }),
+    Records: Backbone.Model.extend({}),
     Applications: Backbone.Model.extend({
         initialize: function(){
             _.bindAll(this, 'getValue');
@@ -2567,9 +2616,9 @@ UNBOXAPI.Models = {
     User: Backbone.Model.extend({
         initialize: function(){
             _.bindAll(this, 'getValue','getToken');
-            setInterval(function() {
-                this.fetch();
-            }, 600000);
+            setInterval(function(model) {
+                model.fetch();
+            }, 600000,this);
         },
         urlRoot: "user/me",
         default: {
@@ -2666,7 +2715,19 @@ UNBOXAPI.Collections = {
         }
     },
     Records: Backbone.Collection.extend({
+        initialize: function(options){
+            this.options = options || {};
+            this.module = this.options.module || new UNBOXAPI.Models.Modules;
 
+            this.name = this.module.get("name");
+
+            if (this.urlRoot == null){
+                this.urlRoot = UNBOXAPI.Global.ajaxURL + this.name;
+            }else{
+                this.urlRoot = UNBOXAPI.Global.ajaxURL + this.urlRoot;
+            }
+        },
+        model: UNBOXAPI.Models.Records
     }),
     Applications: Backbone.Collection.extend({
         model: UNBOXAPI.Models.Applications,

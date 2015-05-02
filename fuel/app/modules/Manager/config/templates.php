@@ -123,13 +123,13 @@ return array(
     ",
     "RelateTo" => "
         <% _.each(relationships, function(relationship){
-                var listItems = \"<li><a href='' data-relationship='<%= relationship.get('module') %>'><%= relationship.get('module') %></a></li>\"
+                var listItems = \"<li><a class='related_module' data-relationship='<%= relationship.get('module') %>'><%= relationship.get('module') %></a></li>\"
             }) %>
         <div class='btn-group'>
             <button type='button' class='btn btn-default dropdown-toggle btn-block' data-toggle='dropdown' aria-expanded='false'>
             Create <span class='caret'></span>
             </button>
-            <ul class='dropdown-menu' role='menu'>
+            <ul class='dropdown-menu' id='create' role='menu'>
                 <%= listItems %>
             </ul>
         </div>
@@ -137,7 +137,7 @@ return array(
             <button type='button' class='btn btn-default dropdown-toggle btn-block' data-toggle='dropdown' aria-expanded='false'>
             Link <span class='caret'></span>
             </button>
-            <ul class='dropdown-menu' role='menu'>
+            <ul class='dropdown-menu' id='link' role='menu'>
                 <%= listItems %>
             </ul>
         </div>

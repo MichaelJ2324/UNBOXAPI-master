@@ -14,7 +14,7 @@ class Unbox extends \Controller
     {
         try{
             $OAuthClient = new \Oauth\Client();
-            $OAuthClient->validateToken();
+            $OAuthClient->validateAuth();
         }catch(\Exception $ex){
             \Log::info("OAuth Exception: [".$ex->getCode()."]".$ex->getMessage());
         }

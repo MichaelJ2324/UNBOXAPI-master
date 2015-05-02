@@ -9,7 +9,7 @@ class Api extends \Controller_Rest{
 
     private function loggedIn(){
         try{
-            $loggedIn = $this->oauth_client->validateToken();
+            $loggedIn = $this->oauth_client->validateAuth();
             return $loggedIn;
         }catch(\Exception $ex){
             \Log::debug("Exception:".$ex->getMessage());

@@ -62,6 +62,9 @@ class Client {
         if ($loggedIn) {
             $_SESSION['token'] = $this->_token;
             $_SESSION['user_id'] = $this->_userId;
+        }else{
+            unset($_SESSION['token']);
+            unset($_SESSION['user_id']);
         }
         session_write_close();
     }
@@ -72,38 +75,31 @@ class Client {
             return false;
         }
     }
-    public function validateToken(){
+    public function validateAuth(){
         $token = static::decryptCookie();
-        \Log::debug(serialize($token));
         $valid = false;
         if (!($token==false||$token==null||empty($token))){
-            if ($this->_server=='localhost'){
-                if ($this->server->validateToken($token['access_token'])){
-                    $this->_token = $token;
-                    $user = $this->getTokenUser();
-                    if ($user!==false){
-                        $this->_userId = $user;
-                    }
+            if ($this->validateToken($token['access_token'])){
+                $this->_token = $token;
+                if ($this->getTokenUser()!==false){
                     $valid = true;
                 }
             }else{
-                $user = $this->getTokenUser($token['access_token']);
-                if ($user!==false){
-                    $this->_token = $token;
-                    $this->_userId = $user;
-                    $valid = true;
-                }
-            }
-            if ($valid===false&&isset($token['refresh_token'])){
-                $newToken = $this->refreshToken($token['refresh_token']);
-                if ($newToken!==null){
-                    $user = $this->getTokenUser($newToken['access_token']);
-                    if ($user!==false) {
-                        $this->_token = $newToken;
-                        static::generateCookie($this->_token);
-                        $this->_userId = $user;
+                if ($valid===false&&isset($token['refresh_token'])){
+                    $newToken = $this->refreshToken($token['refresh_token']);
+                    if ($newToken!==null){
+                        if ($this->validateToken($newToken['access_token'])){
+                            $this->_token = $newToken;
+                            static::encryptCookie($this->_token);
+                            if ($this->_server=='localhost') {
+                                if ($this->getTokenUser($newToken['access_token'])!==false) {
+                                    $valid = true;
+                                }
+                            }else{
+                                $valid = true;
+                            }
+                        }
                     }
-                    $valid = true;
                 }
             }
         }
@@ -116,10 +112,27 @@ class Client {
     public function getUserId(){
         return $this->_userId;
     }
+    private function validateToken($accessToken){
+        $valid = false;
+        if ($this->_server=='localhost'){
+            if ($this->server->validateToken($accessToken)){
+                $valid = true;
+            }
+        }else{
+            $user = $this->getTokenUser($accessToken);
+            if ($user!==false){
+                $valid = true;
+            }
+        }
+        return $valid;
+    }
     private function getTokenUser($accessToken=null){
         $userId = false;
-        if ($this->_server=='localhost'){
+        if ($this->_server=='localhost') {
             $userId = $this->server->getTokenUserId();
+            if (!($userId == false || $userId == null)) {
+                $this->_userId = $userId;
+            }
         }else{
             $this->payload = array(
                 'access_token' => $accessToken
@@ -129,6 +142,7 @@ class Client {
             $response = $this->sendRequest();
             if ($response['err']!==false){
                 $userId = $response['id'];
+                $this->_userId = $userId;
             }
         }
         return $userId;
