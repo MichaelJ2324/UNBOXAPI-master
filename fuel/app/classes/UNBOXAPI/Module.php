@@ -71,9 +71,9 @@ class Module {
     }
     public static function seeds()
     {
-        $config = static::config();
-        if (isset($config['seed_models'])) {
-            return $config['seed_models'];
+        $seeds = \Config::load(static::$_name."::seed");
+        if (count($seeds)>0) {
+            return $seeds;
         }
         return false;
     }
@@ -93,14 +93,21 @@ class Module {
         static::$_config = \Config::load(static::$_name."::module");
         return static::$_config;
     }
-    protected static function formatResult($model){
-        $rows = array();
-        foreach ($model as $i => $obj) {
-            $rows[] = $obj->to_array();
-        }
-        return $rows;
-    }
+    protected static function formatResult($results){
+        $view = \Input::get('view');
+        $newResult = array();
+        if (isset($view)){
 
+        }else{
+            foreach ($results as $i => $obj) {
+                $newResult[] = $obj->to_array();
+            }
+        }
+        return $newResult;
+    }
+    protected static function getView($view){
+
+    }
     //CRUD Methods
     public static function create(Module $record = null){
         $model = static::model();
@@ -145,7 +152,7 @@ class Module {
         $record->delete();
         return $record;
     }
-    public static function filter(array $filters){
+    public static function filter(array $filters = array()){
         $model = static::model();
         $fields = static::fields();
         //TODO Add base filter method for Module

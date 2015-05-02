@@ -1,9 +1,9 @@
 <?php
 return array(
-    'enabled' => true,
+    'enabled' => false,
     'login' => true,
     'versioning' => false,
-    'seed_models' => array(
-        'HttpMethods'
+    'value' => array(
+        'method'
     )
 );

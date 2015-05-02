@@ -449,25 +449,29 @@ UNBOXAPI.Views = {
     }),
     RelateField: Backbone.View.extend({
         events: {
-            "change": "changeSelected"
+
         },
         initialize: function(options){
             this.options = options || {};
             _.bindAll(this, 'disable');
+            this.render();
         },
         render: function(){
             this.$el.select2({
                 ajax: {
-                    url: this.model.url,
+                    url: this.model.url()+"/filter",
                     dataType: 'json',
                     delay: 250,
-                    data: function (params) {
+                    data: function (term, page) {
                         return {
-                            name: params.term,
+                            filters: {
+                                name: term
+                            },
                             view: "select2"
                         };
                     },
-                    processResults: function (data, page) {
+                    results: function (data, page) {
+                        console.log(data);
                         return {
                             results: data.items
                         };
@@ -1970,7 +1974,7 @@ UNBOXAPI.Views.Manager = {
                     this.detail = new UNBOXAPI.Views.Manager.Record.Detail({
                         el: this.$detail,
                         model: this.model,
-                        module: this.module,
+                        modules: this.modules,
                         number: this.number,
                         template: this.layout.templates.getTemplate("RecordDetail")
                     });
@@ -2002,7 +2006,7 @@ UNBOXAPI.Views.Manager = {
             },
             initialize: function(options){
                 this.options = options || {};
-                this.module = this.options.module || null;
+                this.modules = this.options.modules || null;
                 this.template = this.options.template || {};
                 this.number = this.options.number || 2;
 
@@ -2012,7 +2016,6 @@ UNBOXAPI.Views.Manager = {
 
                 if ((!(this.model.get('id')==""||this.model.get('id')==null||typeof this.model.get('id')=='undefined'))
                     &&(typeof this.model.get('name')=='undefined'||this.model.get('name')==null||this.model.get('name')=="")){
-                    console.log()
                     UNBOXAPI.Models.Utils.fetch({
                         model: this.model
                     })
@@ -2023,7 +2026,7 @@ UNBOXAPI.Views.Manager = {
             render: function(){
                 this.html = _.template(this.template, {
                     model: this.model,
-                    fields: this.module.fields.models,
+                    fields: this.modules.current.fields.models,
                     number: this.number
                 });
                 this.$el.html(this.html);
@@ -2038,7 +2041,14 @@ UNBOXAPI.Views.Manager = {
                 var relateFields = this.$record.find(".select2.relate");
                 if (!(relateFields==null||typeof relateFields=='undefined'||relateFields.length==0)) {
                     for(var x=0;x<relateFields.length;x++){
-                        UNBOXAPI.Global.Utils.RelateField(relateFields[x]);
+                        var moduleName = $(relateFields[x]).data("module");
+                        var model = new UNBOXAPI.Models.Record({
+                            module: this.modules.findWhere({ name: moduleName })
+                        });
+                        var relatedField = new UNBOXAPI.Views.RelateField({
+                            el: $(relateFields[x]),
+                            model: model
+                        });
                     }
                 }
             },

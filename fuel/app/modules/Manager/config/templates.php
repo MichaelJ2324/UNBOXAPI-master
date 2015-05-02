@@ -2,7 +2,9 @@
 return array(
     'Actions' => "
         <div class='panel-group' id='admin_actions_accordion'>
-            <% _.each(modules,function(module){ %>
+            <% _.each(modules,function(module){
+                    if (module.config.getValue('enabled')==true){
+                %>
             <div class='panel panel-default'>
                 <div class='panel-heading'>
                     <h4 class='panel-title'>
@@ -25,7 +27,7 @@ return array(
                     </div>
                 </div>
             </div>
-            <% }) %>
+            <% } }) %>
         </div>",
     'Output' => "
         <div class='panel panel-default' id='filter_panel'>

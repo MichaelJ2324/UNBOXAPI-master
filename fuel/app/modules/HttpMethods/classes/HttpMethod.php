@@ -40,13 +40,43 @@ class HttpMethod extends \UNBOXAPI\Module{
     public static function get($id=""){
         $methods = array();
         $count=1;
-        foreach(static::$_available_methods as $method){
+        if ($id!==""){
             $methods[] = array(
-                'id' => $count,
-                'method' => $method
+                'id' => $id,
+                'method' => static::$_available_methods[($id-1)]
             );
-            $count++;
+        }else{
+            foreach(static::$_available_methods as $method){
+                $methods[] = array(
+                    'id' => $count,
+                    'method' => $method
+                );
+                $count++;
+            }
         }
         return $methods;
+    }
+    public static function filter(array $filters = array()){
+        if (count($filters)==0){
+            $filters = \Input::param("filters");
+        }
+        \Log::debug("You are here");
+        $methods = static::get();
+        $name = "";
+        foreach($filters as $field => $value){
+            if ($field=="name"){
+                $name = $value;
+                break;
+            }
+        }
+        if ($name!==""){
+            foreach($methods as $key => $record){
+                if (strpos($record['method'],$name)!==false){
+                    $methods = $methods[$key];
+                    break;
+                }
+            }
+        }
+        return static::formatResult($methods);;
     }
 } 

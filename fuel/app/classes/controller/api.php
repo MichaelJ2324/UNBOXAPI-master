@@ -333,16 +333,16 @@ class Api extends \Controller_Rest{
             if ($action==""||!isset($action)){
                 if ($id=="") {
                     $response = \HttpMethods\HttpMethod::get();
+                }else{
+                    if ($id=='filter'){
+                        $response = \HttpMethods\HttpMethod::filter();
+                    }else{
+                        $response = \HttpMethods\HttpMethod::get($id);
+                    }
                 }
             }else{
                 switch ($action){
-                    case 'params':
-                        $response = \EntryPoints\EntryPoint::getParams($id);
-                        break;
-                    case 'urlParams':
-                        break;
-                    case 'requestParams':
-                        break;
+
                 }
             }
             return $this->response(
