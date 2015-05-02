@@ -461,19 +461,20 @@ UNBOXAPI.Views = {
                 ajax: {
                     url: this.model.url()+"/filter",
                     dataType: 'json',
-                    delay: 250,
+                    delay: 500,
                     data: function (term, page) {
                         return {
                             filters: {
                                 name: term
                             },
-                            view: "select2"
+                            view: "select2",
+                            offset: page*20
                         };
                     },
                     results: function (data, page) {
-                        console.log(data);
+                        //TODO: Adding in pagination and auto-scroll
                         return {
-                            results: data.items
+                            results: data.records
                         };
                     },
                     cache: true
@@ -2002,7 +2003,8 @@ UNBOXAPI.Views.Manager = {
             events: {
                 "focusout input": "updateModel",
                 "focusout textarea": "updateModel",
-                "change select": "updateModel"
+                "change select": "updateModel",
+                "change .select2": "updateModel"
             },
             initialize: function(options){
                 this.options = options || {};
@@ -2059,9 +2061,12 @@ UNBOXAPI.Views.Manager = {
             updateModel: function(e) {
                 var changed = e.currentTarget;
                 var value = $(e.currentTarget).val();
+                console.log(value);
                 var obj = {};
-                obj[changed.name] = value;
-                this.model.set(obj);
+                if (changed.name!=="") {
+                    obj[changed.name] = value;
+                    this.model.set(obj);
+                }
             }
         }),
         Actions: Backbone.View.extend({
@@ -2191,7 +2196,7 @@ UNBOXAPI.Models = {
         initialize: function(options){
             this.options = options || {};
             this.urlRoot = this.options.urlRoot || null;
-            this.module = this.options.module || new UNBOXAPI.Models.Modules;
+            this.module = this.options.module || this.collection.module;
 
             this.name = this.module.get("name");
 
@@ -2737,7 +2742,7 @@ UNBOXAPI.Collections = {
                 this.urlRoot = UNBOXAPI.Global.ajaxURL + this.urlRoot;
             }
         },
-        model: UNBOXAPI.Models.Records
+        model: UNBOXAPI.Models.Record
     }),
     Applications: Backbone.Collection.extend({
         model: UNBOXAPI.Models.Applications,

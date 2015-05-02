@@ -97,16 +97,37 @@ class Module {
         $view = \Input::get('view');
         $newResult = array();
         if (isset($view)){
-
+            $viewConfig = static::getViews($view);
+            $c = 0;
+            foreach($results as $key => $model){
+                if (is_object($model)){
+                    $modelArray = $model->to_array();
+                }else{
+                    $modelArray = $model;
+                }
+                $newResult[$c] = array();
+                foreach($viewConfig as $returnKey => $modelKey){
+                    $newResult[$c][$returnKey] = $modelArray[$modelKey];
+                }
+                $c++;
+            }
         }else{
-            foreach ($results as $i => $obj) {
-                $newResult[] = $obj->to_array();
+            foreach ($results as $key => $model) {
+                if (is_object($model)){
+                    $newResult[] = $model->to_array();
+                }else{
+                    $newResult[] = $model;
+                }
             }
         }
         return $newResult;
     }
-    protected static function getView($view){
-
+    protected static function getViews($view=''){
+        $views = \Config::load(static::$_name."::views");
+        if ($view!==""){
+            return $views[$view];
+        }
+        return $views;
     }
     //CRUD Methods
     public static function create(Module $record = null){
@@ -155,6 +176,36 @@ class Module {
     public static function filter(array $filters = array()){
         $model = static::model();
         $fields = static::fields();
-        //TODO Add base filter method for Module
+        if (count($filters)==0){
+            $filters = \Input::param("filters");
+        }
+        $query = $model::query();
+        foreach($filters as $field => $value){
+            if (array_key_exists($field,$fields)){
+                if (array_key_exists('filter',$fields[$field])){
+                    if ($fields[$field]['filter']===true){
+                        switch ($fields[$field]['data_type']){
+                            case "varchar":
+                            case "text":
+                                $value = $value."%";
+                                $query->where(array($field,'LIKE',$value));
+                                break;
+                            default:
+                                $query->where(array($field,'=',$value));
+                        }
+                    }
+                }
+            }
+        }
+        $offset = \Input::param('offset')||0;
+
+        $total = $query->count();
+        $results = $query->limit(20)->offset($offset)->get();
+        $records = static::formatResult($results);
+        return array(
+            'total' => $total,
+            'records' => $records,
+            'page' => ($offset/20)
+        );
     }
 } 

@@ -20,8 +20,7 @@ class HttpMethods extends \Model\Module{
             'auto_inc' => true,
             'validation' => array(
                 'max_length' => 1
-            ),
-            'form' => array('type'=>'hidden')
+            )
         ),
         'method' => array(
             'data_type' => 'varchar',
@@ -32,6 +31,7 @@ class HttpMethods extends \Model\Module{
                 'min_length' => 3,
                 'max_length' => 20
             ),
+            'filter' => true,
             'form' => array('type'=>'select'),
         ),
     );
@@ -58,6 +58,7 @@ class HttpMethods extends \Model\Module{
     );
     protected static $_has_one = array();
     protected static $_has_many = array();
+    //TODO::Remove this relationship, as I don't think its used anymore
     protected static $_many_many = array(
         'apis' => array(
             'key_from' => 'id',
@@ -71,4 +72,5 @@ class HttpMethods extends \Model\Module{
         )
     );
     protected static $_observers = array();
+    protected static $_conditions = array();
 } 

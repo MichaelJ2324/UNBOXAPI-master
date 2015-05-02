@@ -38,6 +38,7 @@ class Module extends \Orm\Model_Soft{
                 'min_length' => 3,
                 'max_length' => 100
             ),
+            'filter' => true,
             'form' => array('type' => 'text'),
         ),
         'created_by' => array(
@@ -147,7 +148,12 @@ class Module extends \Orm\Model_Soft{
             'events' => array('before_delete'),
         ),
     );
-
+    protected static $_conditions = array(
+        'order_by' => array('name' => 'asc'),
+        'where' => array(
+            array('deleted', '=', 0)
+        ),
+    );
     public static function properties(){
         self::$_properties = array_merge(self::$_fields,static::$_fields);
         return parent::properties();

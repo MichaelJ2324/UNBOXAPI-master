@@ -60,7 +60,6 @@ class HttpMethod extends \UNBOXAPI\Module{
         if (count($filters)==0){
             $filters = \Input::param("filters");
         }
-        \Log::debug("You are here");
         $methods = static::get();
         $name = "";
         foreach($filters as $field => $value){
@@ -70,13 +69,20 @@ class HttpMethod extends \UNBOXAPI\Module{
             }
         }
         if ($name!==""){
+            $filteredMethods = array();
             foreach($methods as $key => $record){
                 if (strpos($record['method'],$name)!==false){
-                    $methods = $methods[$key];
-                    break;
+                    $filteredMethods[] = $methods[$key];
                 }
             }
+            $methods = $filteredMethods;
         }
-        return static::formatResult($methods);;
+        $records = static::formatResult($methods);
+
+        return array(
+            'total' => count($records),
+            'records' => $records,
+            'page' => 1
+        );
     }
 } 
