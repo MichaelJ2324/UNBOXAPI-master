@@ -28,9 +28,13 @@ PHP 5.4 (for now)
 4. Configure install.php file in fuel/app/config/
   * Setup database creds and database name
 
-5. Install Database
+5. Install Database and Seed Data
   * oil r Unbox:install
   * oil r Unbox:setupForeignKeys
   * oil r Unbox:seed
+  * oil r Unbox:seed all null true true
 
 6. Go to your localhost and view the site, a Login page should prompt you
+  * Login credentials
+    * Username: unbox_demo
+    * Password: unbox
