@@ -72,7 +72,7 @@ abstract class Module {
      * @return array
      */
     public static function fields(){
-        $model = static::model();
+        $model = static::model(true);
         return $model::fields();
     }
     /**
@@ -80,7 +80,7 @@ abstract class Module {
      * @return array
      */
     public static function relationships(){
-        $model = static::model();
+        $model = static::model(true);
         return $model::relationships();
     }
 
@@ -165,7 +165,7 @@ abstract class Module {
      * @return Model
      */
     public static function create(Module $record = null){
-        $model = static::model();
+        $model = static::model(true);
         if ($record==null) {
             $record = $model::forge(\Input::json());
         }else{
@@ -182,7 +182,7 @@ abstract class Module {
      * @return Model
      */
     public static function update($id,array $properties){
-        $model = static::model();
+        $model = static::model(true);
         $record = $model::find($id);
         foreach (\Input::json() as $key => $value) {
             if (!($key == "id" || $key == "date_created" || $key == "date_modified" || $key == "deleted_at" || $key == "created_by" )) {
@@ -200,7 +200,7 @@ abstract class Module {
      * @return array
      */
     public static function get($id="all"){
-        $model = static::model();
+        $model = static::model(true);
         $records = $model::find($id);
         $records = static::formatResult($records);
         return $records;
@@ -212,7 +212,7 @@ abstract class Module {
      * @return Deleted Model
      */
     public static function delete($id){
-        $model = static::model();
+        $model = static::model(true);
         $record = $model::find($id);
         $record->delete();
         return $record;
@@ -228,7 +228,7 @@ abstract class Module {
      * ]
      */
     public static function filter(array $filters = array()){
-        $model = static::model();
+        $model = static::model(true);
         $fields = static::fields();
         if (count($filters)==0){
             $filters = \Input::param("filters");
@@ -271,7 +271,7 @@ abstract class Module {
      * @return bool
      */
     public static function relate($record_id,$relationship,$related_id){
-        $model = static::model();
+        $model = static::model(true);
         $Relationship = $model::relations($relationship);
         if ($Relationship!==false){
             $relationshipModel = $Relationship->__get('model_to');
@@ -319,7 +319,7 @@ abstract class Module {
      * @return bool|void
      */
     public static function related($record_id,$relationship,$related_id=""){
-        $model = static::model();
+        $model = static::model(true);
         $Relationship = $model::relations($relationship);
         if ($Relationship!==false){
             $relationshipModel = $Relationship->__get('model_to');

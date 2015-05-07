@@ -40,11 +40,7 @@ class Metadata {
         $modules = \Module::loaded();
         foreach ($modules as $module=>$path){
             if (!in_array($module,static::$_excluded_modules)) {
-                if (substr($module, -1) === "s") {
-                    $class = substr($module, 0, -1);
-                } else {
-                    $class = $module;
-                }
+                $class = \UNBOXAPI\Data\Util\Module::classify($module);
                 $Class = "\\$module\\$class";
                 $moduleMeta = $Class::metadata();
                 if (get_parent_class($Class) == 'UNBOXAPI\Module') {
