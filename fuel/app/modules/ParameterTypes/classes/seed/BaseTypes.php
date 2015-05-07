@@ -25,8 +25,8 @@ class BaseTypes extends Seeder
                 'name' => $type,
                 'type' => 1,
                 'template' => $config['templates'][$type],
-                'created_by' => '1',
-                'modified_by' => '1'
+                'created_by' => 'unbox_demo_user',
+                'modified_by' => 'unbox_demo_user'
             );
         }
         foreach($apiTypes as $key => $type){
@@ -34,8 +34,8 @@ class BaseTypes extends Seeder
                 'name' => $type,
                 'type' => 2,
                 'template' => $config['templates'][$type],
-                'created_by' => '1',
-                'modified_by' => '1'
+                'created_by' => 'unbox_demo_user',
+                'modified_by' => 'unbox_demo_user'
             );
         }
         static::$_records = $records;

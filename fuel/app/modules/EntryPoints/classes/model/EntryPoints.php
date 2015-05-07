@@ -68,6 +68,22 @@ class EntryPoints extends \Model\Module{
         ),
     );
     protected static $_relationships = array(
+        'belongs_to' => array(
+            'login_entryPoint' => array(
+                'key_from' => 'id',
+                'model_to' => 'Logins\\Model\\Logins',
+                'key_to' => 'login_entryPoint_id',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            ),
+            'logout_entryPoint' => array(
+                'key_from' => 'id',
+                'model_to' => 'Logins\\Model\\Logins',
+                'key_to' => 'logout_entryPoint_id',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            ),
+        ),
         'has_one' => array(
             'httpMethod' => array(
                 'key_from' => 'method',
@@ -85,43 +101,21 @@ class EntryPoints extends \Model\Module{
             ),
         ),
         'has_many' => array(
-            'login_entryPoint' => array(
-                'key_from' => 'id',
-                'model_to' => 'Logins\\Model\\Logins',
-                'key_to' => 'login_entryPoint_id',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'logout_entryPoint' => array(
-                'key_from' => 'id',
-                'model_to' => 'Logins\\Model\\Logins',
-                'key_to' => 'logout_entryPoint_id',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-        ),
-        'many_many' => array(
-            'apis' => array(
-                'key_from' => 'id',
-                'key_through_from' => 'entryPoint_id',
-                'table_through' => 'api_entryPoints',
-                'key_through_to' => 'api_id',
-                'model_to' => 'Apis\\Model\\Apis',
-                'key_to' => 'id',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
             'parameters' => array(
                 'key_from' => 'id',
-                'key_through_from' => 'entryPoint_id',
-                'table_through' => 'entryPoint_parameters',
-                'key_through_to' => 'parameter_id',
-                'model_to' => 'Parameters\\Model\\Parameters',
-                'key_to' => 'id',
+                'model_to' => 'EntryPoints\\Model\\Parameters',
+                'key_to' => 'entryPoint_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-        )
+            'apis' => array(
+                'key_from' => 'id',
+                'model_to' => 'Apis\\Model\\EntryPoints',
+                'key_to' => 'entryPoint_id',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            )
+        ),
     );
 
     public function filterEntryPoints($data=""){

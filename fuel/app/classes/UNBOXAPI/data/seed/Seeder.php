@@ -9,7 +9,7 @@
 namespace UNBOXAPI\Data\Seed;
 
 
-class Seeder {
+abstract class Seeder {
 
     protected static $_module;
     protected static $_model;
@@ -18,32 +18,22 @@ class Seeder {
      *      'model_field' => 'value'
      * )
      */
-    protected static $_records;
+    protected static $_records = array();
     /**
      * @var = array(
      *      'id' => 'Model ID',
      *      'name' => 'Relationship Name',
-     *      'related_id' => 'Related ID'
+     *      'related_id' => 'Related ID',
+     *      'related_properties' => array(
+     *          'field' => 'value'
+     *      )
      * )
      */
-    protected static $_relationships;
+    protected static $_relationships = array();
 
     private $module;
     private $Model;
 
-    /**
-     * DEPRECATED
-     */
-    public static function run(){
-        $module = static::$_module;
-        $model = (isset(static::$_model)?"$module\\Model\\".static::$_model:"$module\\Model\\$module");
-        $recordArray = array();
-        foreach (static::$_records as $record => $values){
-            $Record = $model::forge($values);
-            $Record->save();
-            $recordArray[] = $Record;
-        }
-    }
     protected static function records(){
         return static::$_records;
     }
@@ -63,7 +53,7 @@ class Seeder {
             $this->insert($this->Model);
         }
         if ($relationships) {
-            $this->relate($this->Model);
+            $this->relate();
         }
     }
     public function insert($model){
@@ -73,20 +63,27 @@ class Seeder {
             $Record->save();
         }
     }
-    public function relate($model){
+    public function relate(){
         $relationships = static::relationships();
+        $class = \UNBOXAPI\Data\Util\Module::classify($this->module);
+        $Module = $this->module."\\".$class;
         $count = 1;
-        foreach ($relationships as $relationship => $properties){
-            //get record based on ID
-            $Record = $model::find($properties['id'],array('relations' => array($properties['name'])));
-            //Get relationship object
-            $Relationship = $model::relations($properties['name']);
-            $relatedModel = $Relationship->__get('model_to');
-            $RelatedRecord = $relatedModel::find($properties['related_id']);
-            //Find related Record for relationship
-            $Record->{$properties['name']}[] = $RelatedRecord;
-            $Record->save();
-            $count++;
+        if (count($relationships)>0) {
+            $previousId = "";
+            foreach ($relationships as $relationship => $properties) {
+                if ($properties['id']!==$previousId){
+                    $previousId = $properties['id'];
+                    $Module = new $Module();
+                    $Module->load($properties['id']);
+                }
+                //Get relationship object
+                if (!isset($properties['related_properties'])) {
+                    $properties['related_properties'] = array();
+                }
+                $Module->attach($properties['name'], $properties['related_id'], $properties['related_properties']);
+                $Module->save();
+                $count++;
+            }
         }
     }
 }

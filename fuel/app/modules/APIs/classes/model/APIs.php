@@ -85,47 +85,28 @@ class Apis extends \Model\Module{
                 'cascade_delete' => false,
             )
         ),
-        'many_many' => array(
+        'has_many' => array(
             'applications' => array(
                 'key_from' => 'id',
-                'key_through_from' => 'api_id', // column 1 from the table in between, should match a posts.id
-                'table_through' => 'application_apis', // both models plural without prefix in alphabetical order
-                'key_through_to' => 'appplication_id', // column 2 from the table in between, should match a users.id
-                'model_to' => 'Applications\\Model\\Applications',
-                'key_to' => 'id',
+                'model_to' => 'Applications\\Model\\Apis',
+                'key_to' => 'api_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
             'entryPointVersion' => array(
                 'key_from' => 'id',
-                'key_through_from' => 'api_id', // column 1 from the table in between, should match a posts.id
-                'table_through' => 'api_entryPoints', // both models plural without prefix in alphabetical order
-                'key_through_to' => 'entryPoint_id', // column 2 from the table in between, should match a users.id
-                'model_to' => 'EntryPoints\\Model\\EntryPoints',
-                'key_to' => 'id',
+                'model_to' => 'Apis\\Model\\EntryPoints',
+                'key_to' => 'api_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
             'logins' => array(
                 'key_from' => 'id',
-                'key_through_from' => 'api_id', // column 1 from the table in between, should match a posts.id
-                'table_through' => 'api_logins', // both models plural without prefix in alphabetical order
-                'key_through_to' => 'login_id', // column 2 from the table in between, should match a users.id
-                'model_to' => 'Logins\\Model\\Logins',
-                'key_to' => 'id',
+                'model_to' => 'Apis\\Model\\Logins',
+                'key_to' => 'api_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'httpMethods' => array(
-                'key_from' => 'id',
-                'key_through_from' => 'api_id', // column 1 from the table in between, should match a posts.id
-                'table_through' => 'api_httpMethods', // both models plural without prefix in alphabetical order
-                'key_through_to' => 'method_id', // column 2 from the table in between, should match a users.id
-                'model_to' => 'HttpMethods\\Model\\HttpMethods',
-                'key_to' => 'id',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            )
         )
     );
 

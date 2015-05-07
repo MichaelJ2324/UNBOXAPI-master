@@ -16,8 +16,9 @@ class Scopes extends \UNBOXAPI\Data\Seed\Seeder{
 
     protected static $_records = array(
         array(
-            'scope' => 'email',
-            'description' => 'Access to email address on account.',
+            'id' => 'unbox_demo_scope',
+            'scope' => 'demo_app',
+            'description' => 'Access to Demo API only.',
         ),
         array(
             'scope' => 'profile',

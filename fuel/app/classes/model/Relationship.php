@@ -2,18 +2,22 @@
 /**
  * Created by PhpStorm.
  * User: mrussell
- * Date: 3/17/15
- * Time: 12:40 AM
+ * Date: 11/3/14
+ * Time: 2:15 AM
  */
 
 namespace Model;
 
 
-class Oauth extends \Orm\Model{
+class Relationship extends \Orm\Model_Soft{
 
     protected static $_connection = 'default';
     protected static $_table_name;
     protected static $_primary_key = array('id');
+    protected static $_soft_delete = array(
+        'deleted_field' => 'deleted_at',
+        'mysql_timestamp' => true,
+    );
     //fields array is an override array for properties
     protected static $_fields = array(
         'id' => array(
@@ -29,24 +33,36 @@ class Oauth extends \Orm\Model{
             'data_type' => 'datetime',
             'label' => 'Date Created',
             'validation' => array(),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
-            ),
+            'form' => false,
         ),
         'date_modified' => array(
             'data_type' => 'datetime',
-            'label' => 'Date Created',
+            'label' => 'Date Modified',
             'validation' => array(),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
+            'form' => false,
+        ),
+        'deleted' => array(
+            'data_type' => 'tinyint',
+            'label' => 'Deleted',
+            'default' => 0,
+            'null' => false,
+            'validation' => array(
+                'required' => true,
+                'max_length' => 1
             ),
+            'form' => false
+        ),
+        'deleted_at' => array(
+            'data_type' => 'datetime',
+            'label' => 'Deleted At',
+            'validation' => array(
+                'required' => true,
+            ),
+            'form' => false
         ),
     );
     protected static $_properties = array();
-
-    //Some relatioships require extra properties on the table
+    //Some relationships require extra properties on the table
     // Define them in the $_relationship_properties array
     // Key = relationship name
     // Value = Array of field properties, similar to $_properties/$_fields
@@ -63,24 +79,31 @@ class Oauth extends \Orm\Model{
     protected static $_has_many = array();
     protected static $_many_many = array();
     //hooks is an override array for extra observers
-    protected static $_hooks = array();
     protected static $_observers = array(
         'Orm\\Observer_CreatedAt' => array(
             'events' => array('before_insert'),
             'mysql_timestamp' => true,
             'property' => 'date_created',
-            'overwrite' => false,
+            'overwrite' => true,
         ),
         'Orm\\Observer_UpdatedAt' => array(
             'events' => array('before_save'),
             'mysql_timestamp' => true,
-            'property' => 'date_modified'
+            'property' => 'date_modified',
+            'overwrite' => true
         ),
         '\\UNBOXAPI\\Observer_Guid' => array(
             'events' => array('before_insert'),
         ),
+        '\\UNBOXAPI\\Observer_DeleteFlag' => array(
+            'events' => array('before_delete'),
+        ),
     );
-
+    protected static $_conditions = array(
+        'where' => array(
+            array('deleted', '=', 0)
+        ),
+    );
     public static function properties(){
         self::$_properties = array_merge(self::$_fields,static::$_fields);
         return parent::properties();
@@ -108,5 +131,4 @@ class Oauth extends \Orm\Model{
         }
         return parent::relations($specific);
     }
-
-}
+} 

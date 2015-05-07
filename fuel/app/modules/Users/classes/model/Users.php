@@ -100,16 +100,30 @@ class Users extends \Model\Oauth{
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'created_entrypoints' => array(
+            'created_entryPoints' => array(
                 'key_from' => 'id',
                 'model_to' => '\\EntryPoints\\Model\\EntryPoints',
                 'key_to' => 'created_by',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'modified_entrypoints' => array(
+            'modified_entryPoints' => array(
                 'key_from' => 'id',
                 'model_to' => '\\EntryPoints\\Model\\EntryPoints',
+                'key_to' => 'modified_by',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            ),
+            'created_entryPoint_parameters' => array(
+                'key_from' => 'id',
+                'model_to' => '\\EntryPoints\\Model\\Parameters',
+                'key_to' => 'created_by',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            ),
+            'modified_entryPoint_parameters' => array(
+                'key_from' => 'id',
+                'model_to' => '\\EntryPoints\\Model\\Parameters',
                 'key_to' => 'modified_by',
                 'cascade_save' => true,
                 'cascade_delete' => false,
@@ -128,14 +142,14 @@ class Users extends \Model\Oauth{
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'created_parametertypes' => array(
+            'created_parameterTypes' => array(
                 'key_from' => 'id',
                 'model_to' => '\\ParameterTypes\\Model\\ParameterTypes',
                 'key_to' => 'created_by',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'modified_parametertypes' => array(
+            'modified_parameterTypes' => array(
                 'key_from' => 'id',
                 'model_to' => '\\ParameterTypes\\Model\\ParameterTypes',
                 'key_to' => 'modified_by',

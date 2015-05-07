@@ -24,7 +24,6 @@ class Applications extends \Model\Module{
             ),
             'form' => false,
         ),
-
     );
     protected static $_relationships = array(
         'has_one' => array(
@@ -36,14 +35,11 @@ class Applications extends \Model\Module{
                 'cascade_delete' => false,
             )
         ),
-        'many_many' => array(
+        'has_many' => array(
             'apis' => array(
                 'key_from' => 'id',
-                'key_through_from' => 'application_id', // column 1 from the table in between, should match a posts.id
-                'table_through' => 'application_apis', // both models plural without prefix in alphabetical order
-                'key_through_to' => 'api_id', // column 2 from the table in between, should match a users.id
-                'model_to' => "Apis\\Model\\Apis",
-                'key_to' => 'id',
+                'model_to' => "Applications\\Model\\Apis",
+                'key_to' => 'application_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             )

@@ -13,6 +13,11 @@ class Api extends \UNBOXApi\Module{
     protected static $_name = "Apis";
     protected static $_label = "API";
     protected static $_label_plural = "APIs";
+    protected static $_models = array(
+        'Apis',
+        'EntryPoints',
+        'Logins'
+    );
 
     public $version;
     public $web_address;
@@ -20,16 +25,6 @@ class Api extends \UNBOXApi\Module{
 
     private $response;
     private $request;
-
-    function __construct($url,$id=""){
-        $this->model = new Model\Apis();
-        $this->web_address = rtrim($url,"/");;
-        if ($id!==""){
-            if(!$this->retrieveApi($id)){
-                return false;
-            }
-        }
-    }
 
     public static function methods($id=""){
         $api = new Model\Apis();

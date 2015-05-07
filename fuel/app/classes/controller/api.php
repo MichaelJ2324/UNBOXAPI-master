@@ -91,13 +91,17 @@ class Api extends \Controller_Rest{
             if ($action==""||!isset($action)){
                 $response = \Applications\Application::get($id);
             }else{
-                switch ($action){
-                    case 'apis':
-                        $response = \Applications\Application::apis($id);
-                        break;
-                    case 'entryPoints':
-                        $response = \Applications\Application::entryPoints($id);
-                        break;
+                switch ($action) {
+                    case "link":
+                        \Applications\Application::related($id,$related_module,$related_id);
+                        switch ($related_module) {
+                            case 'apis':
+                                $response = \Applications\Application::apis($id);
+                                break;
+                            case 'entryPoints':
+                                $response = \Applications\Application::entryPoints($id);
+                                break;
+                        }
                 }
             }
             return $this->response(

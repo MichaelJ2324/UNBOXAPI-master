@@ -39,7 +39,7 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
             if (count($scopes) > 0) {
                 foreach ($scopes as $scope) {
                     $Scope = (new ScopeEntity($this->server))->hydrate([
-                        'id'            =>  $scope->id,
+                        'id'            =>  $scope->scope,
                         'description'   =>  $scope->description,
                     ]);
                     $response[] = $Scope;
@@ -70,7 +70,7 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
     public function associateScope(AccessTokenEntity $token, ScopeEntity $scope)
     {
         $access_token = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'));
-        $access_token->scopes[$scope->getId()] = \Oauth\Model\Scopes::find($scope->getId());
+        $access_token->scopes[] = \Oauth\Model\Scopes::query()->where('scope',$scope->getId())->get_one();
         $access_token->save();
     }
 

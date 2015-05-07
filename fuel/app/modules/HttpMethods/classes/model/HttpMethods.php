@@ -58,19 +58,7 @@ class HttpMethods extends \Model\Module{
     );
     protected static $_has_one = array();
     protected static $_has_many = array();
-    //TODO::Remove this relationship, as I don't think its used anymore
-    protected static $_many_many = array(
-        'apis' => array(
-            'key_from' => 'id',
-            'key_through_from' => 'method_id', // column 1 from the table in between, should match a posts.id
-            'table_through' => 'api_httpMethods', // both models plural without prefix in alphabetical order
-            'key_through_to' => 'api_id', // column 2 from the table in between, should match a users.id
-            'model_to' => 'Apis\\Model\\Apis',
-            'key_to' => 'id',
-            'cascade_save' => true,
-            'cascade_delete' => false,
-        )
-    );
+    protected static $_many_many = array();
     protected static $_observers = array();
     protected static $_conditions = array();
 } 

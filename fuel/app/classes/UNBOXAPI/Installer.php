@@ -143,25 +143,24 @@ class Installer {
     private function install_tables(){
         $modules = \Module::loaded();
         foreach ($modules as $module=>$path){
-            if (substr($module, -1) === "s"){
-                $class = substr($module,0,-1);
-            }else{
-                $class = $module;
-            }
-            if ($class !== 'Version') {
-                $Class = "\\$module\\$class";
-                if (get_parent_class($Class) == 'UNBOXAPI\Module') {
-                    $Model = $Class::model();
-                    $config = $Class::config();
-                    if (isset($config['versioning'])){
-                        if ($config['versioning']===true) {
-                            $this->versionedModules[] = $module;
-                        }
+            $class = \UNBOXAPI\Data\Util\Module::classify($module);
+            $Class = "\\$module\\$class";
+            if (get_parent_class($Class) == 'UNBOXAPI\Module') {
+                $models = $Class::model();
+                $config = $Class::config();
+                if (isset($config['versioning'])){
+                    if ($config['versioning']===true) {
+                        $this->versionedModules[] = $module;
                     }
-                    $Table = new Data\DB\Table($Model);
+                }
+                if (!is_array($models)){
+                    $models = array($models);
+                }
+                foreach($models as $model) {
+                    $Table = new Data\DB\Table($model);
                     $this->tables[$Table->name] = $Table;
                     if (!(Data\DB\Table::create($Table))) {
-                        throw new \Exception("Table " . $Table->name . " not created. Error:" . \DB::error_info());
+                        throw new \Exception("Table " . $Table->name . " not created. Error:" . serialize(\DB::error_info()));
                     }
                     if (is_array($Table->foreignKeys)) {
                         foreach ($Table->foreignKeys as $key => $definition) {
@@ -178,81 +177,21 @@ class Installer {
                     unset($Model);
                     unset($Table);
                     sleep(1);
-                }else{
-                    if ($class=='Oauth'){
-                        $models = $Class::models();
-                        foreach($models as $modelName){
-                            $Model = "$module\\Model\\$modelName";
-                            $Table = new Data\DB\Table($Model);
-                            $this->tables[$Table->name] = $Table;
-                            if (!(Data\DB\Table::create($Table))) {
-                                throw new \Exception("Table " . $Table->name . " not created. Error:" . \DB::error_info());
-                            }
-                            if (is_array($Table->foreignKeys)) {
-                                foreach ($Table->foreignKeys as $key => $definition) {
-                                    if ($definition['added'] == false) {
-                                        $foreignKeys[$Table->name][] = $definition;
-                                    }
-                                }
-                            }
-                            $relatedTables = $Table->getRelatedTables();
-                            if (is_array($relatedTables)) {
-                                $this->relatedTables = array_merge_recursive($this->relatedTables, $relatedTables);
-                            }
-                            unset($Model);
-                            unset($Table);
-                            unset($relatedTables);
-                            sleep(1);
-                        }
-                    }
                 }
             }
         }
-        //versioning
-        $Class = "\\Versions\\Version";
-        foreach($this->versionedModules as $key => $module){
-            $Model = $Class::model($module);
-            $Table = new Data\DB\Table($Model);
-            $this->tables[$Table->name] = $Table;
-            if (!(Data\DB\Table::create($Table))) {
-                throw new \Exception("Table " . $Table->name . " not created. Error:" . \DB::error_info());
-            }
-            if (is_array($Table->foreignKeys)) {
-                foreach ($Table->foreignKeys as $key => $definition) {
-                    if ($definition['added'] == false) {
-                        $foreignKeys[$Table->name][] = $definition;
-                    }
-                }
-            }
-            $relatedTables = $Table->getRelatedTables();
-            if (is_array($relatedTables)) {
-                $this->relatedTables = array_merge_recursive($this->relatedTables, $relatedTables);
-            }
-            unset($relatedTables);
-            unset($Model);
-            unset($Table);
-            sleep(1);
-        }
-        //Oauth
 
         //related tables
         foreach($this->relatedTables as $tableName=>$properties){
             $RelateTable = new Data\DB\RelateTable();
             $RelateTable->name = $tableName;
-            if (strpos($RelateTable->name,"oauth")!==FALSE){
-                $softDelete = false;
-                $user_fields = false;
-            }else{
-                $softDelete = true;
-                $user_fields = true;
-            }
-            $RelateTable->setFields($properties['fields'],$softDelete,$user_fields);
+            $RelateTable->setFields($properties['fields']);
             $RelateTable->primaryKeys = array('id');
             $RelateTable->setForeignKeys($properties['foreign_keys']);
             $this->tables[$RelateTable->name] = $RelateTable;
 
             if (!(Data\DB\Table::create($RelateTable))){
-                throw new \Exception("Table ".$RelateTable->name." not created. Error:".\DB::error_info());
+                throw new \Exception("Table ".$RelateTable->name." not created. Error:".serialize(\DB::error_info()));
             }
             unset($RelateTable);
             sleep(1);
@@ -300,27 +239,25 @@ class Installer {
                 $modules = \Module::loaded();
             }
             foreach ($modules as $module=>$path){
-                if (substr($module, -1) === "s"){
-                    $class = substr($module,0,-1);
-                }else{
-                    $class = $module;
-                }
+                $class = \UNBOXAPI\Data\Util\Module::classify($module);
                 $Class = "\\$module\\$class";
                 if (get_parent_class($Class) !== 'UNBOXAPI\Layout') {
                     $ModelNS = "\\$module\\Seed\\";
                     $seedModels = $Class::seeds();
-                    if ($model!==null){
-                        if (!in_array($model,$seedModels)) {
-                            print \Cli::color("Model has not seeder defined.\n","red");
-                            break;
+                    if ($seedModels!==false) {
+                        if ($model!==null){
+                            if (!in_array($model,$seedModels)) {
+                                print \Cli::color("Model has no seeder defined.\n","red");
+                                break;
+                            }
+                            $seedModels = array($model);
                         }
-                        $seedModels = array($model);
-                    }
-                    foreach ($seedModels as $modelName) {
-                        print("Seeding $modelName in Module $module\n");
-                        $SeedModel = $ModelNS . $modelName;
-                        $Seeder = new $SeedModel();
-                        $Seeder->seed($relationships,$relationshipsOnly);
+                        foreach ($seedModels as $modelName) {
+                            print("Seeding $modelName in Module $module\n");
+                            $SeedModel = $ModelNS . $modelName;
+                            $Seeder = new $SeedModel();
+                            $Seeder->seed($relationships, $relationshipsOnly);
+                        }
                     }
                 }
             }

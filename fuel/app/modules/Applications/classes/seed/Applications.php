@@ -15,12 +15,12 @@ class Applications extends \UNBOXAPI\Data\Seed\Seeder{
     protected static $_model = 'Applications';
     protected static $_records = array(
         array(
-            'id' => 'seed_application',
-            'description' => 'Seeded application for testing.',
+            'id' => 'unbox_demo_app',
+            'description' => 'UNBOX Demo Application for testing.',
             'version_id' => null,
-            'name' => 'UNBOX API Test',
-            'created_by' => '1',
-            'modified_by' => '1'
+            'name' => 'UNBOX API Demo',
+            'created_by' => 'unbox_demo_user',
+            'modified_by' => 'unbox_demo_user'
         )
     );
 }

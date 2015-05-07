@@ -53,14 +53,14 @@ class ParameterTypes extends \Model\Module{
     );
     protected static $_relationships = array(
         'has_many' => array(
-            'data_type_parameters' => array(
+            'dataType_parameters' => array(
                 'key_from' => 'id',
                 'model_to' => 'Parameters\\Model\\Parameters',
                 'key_to' => 'data_type',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'api_type_parameters' => array(
+            'apiType_parameters' => array(
                 'key_from' => 'id',
                 'model_to' => 'Parameters\\Model\\Parameters',
                 'key_to' => 'api_type',

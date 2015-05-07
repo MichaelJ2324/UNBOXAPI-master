@@ -9,10 +9,18 @@
 namespace Oauth;
 
 
-class Oauth {
+class Oauth extends \UNBOXAPI\Module {
 
     protected static $_name = 'Oauth';
-    protected static $_config;
+    protected static $_models = array(
+                        'AccessTokens',
+                        'AuthCodes',
+                        'Clients',
+                        'RedirectUris',
+                        'RefreshTokens',
+                        'Scopes',
+                        'Sessions'
+                    );
 
     protected $authorization_server;
     protected $resource_server;
@@ -24,29 +32,6 @@ class Oauth {
     private $scopeStorage;
     private $sessionStorage;
 
-    public static function models(){
-        return array(
-            'AccessTokens',
-            'AuthCodes',
-            'Clients',
-            'RedirectUris',
-            'RefreshTokens',
-            'Scopes',
-            'Sessions'
-        );
-    }
-    public static function config(){
-        static::$_config = \Config::load(static::$_name."::module");
-        return static::$_config;
-    }
-    public static function seeds()
-    {
-        $config = static::config();
-        if (isset($config['seed_models'])) {
-            return $config['seed_models'];
-        }
-        return false;
-    }
     public static function getInstance()
     {
         static $instance = null;
@@ -55,7 +40,16 @@ class Oauth {
         }
         return $instance;
     }
-    protected function __construct(){
+    public function __construct(){
+        unset($this->id);
+        unset($this->name);
+        unset($this->deleted);
+        unset($this->deleted_at);
+        unset($this->date_created);
+        unset($this->created_by);
+        unset($this->date_modified);
+        unset($this->modified_by);
+
         $this->initStorage();
         $this->initAuthServer();
         $this->initResourceServer();

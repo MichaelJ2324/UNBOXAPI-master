@@ -6,7 +6,8 @@ return array(
         'integer',
         'boolean',
         'array',
-        'date'
+        'date',
+        'datetime'
     ),
     'api_types' => array(
         'password'
@@ -47,6 +48,14 @@ return array(
                     required='<%= _.escape(field['required']) %>'
                     ><%= _.escape(field['value']) %></textarea>",
         'date' => "<input type='text'
+                        class='form-control datepicker'
+                        value='<%= _.escape(field['value']) %>'
+                        id='parameter_<%= _.escape(field['name']) %>'
+                        name='<%= _.escape(field['name']) %>'
+                        required='<%= _.escape(field['required']) %>'
+                    />",
+        //TODO::DateTime picker template
+        'datetime' => "<input type='text'
                         class='form-control datepicker'
                         value='<%= _.escape(field['value']) %>'
                         id='parameter_<%= _.escape(field['name']) %>'

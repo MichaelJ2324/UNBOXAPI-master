@@ -14,41 +14,44 @@ class Logins extends \Model\Module{
     protected static $_table_name = 'logins';
     protected static $_fields = array(
         'login_entryPoint_id' => array(
-            'data_type' => 'int',
-            'label' => 'Login Entry Point ID',
+            'data_type' => 'varchar',
+            'label' => 'Login Entry Point',
             'null' => false,
-            'auto_inc' => false,
             'validation' => array(
-                'required' => true
+                'required' => true,
+                'max_length' => 50
             ),
-            'form' => false,
+            'form' => array(
+                'type' => 'relate',
+                'module' => 'EntryPoints'
+            ),
         ),
         'logout_entryPoint_id' => array(
-            'data_type' => 'int',
-            'label' => 'Logout Entry Point ID',
+            'data_type' => 'varchar',
+            'label' => 'Logout Entry Point',
             'null' => false,
-            'auto_inc' => false,
             'validation' => array(
-                'required' => true
+                'required' => true,
+                'max_length' => 50
             ),
-            'form' => false,
+            'form' => array(
+                'type' => 'relate',
+                'module' => 'EntryPoints'
+            ),
         ),
         'deprecated' => array(
             'data_type' => 'tinyint',
-            'label' => 'Description',
-            'null' => false,
-            'auto_inc' => false,
+            'label' => 'Deprecated',
             'validation' => array(
-                'required' => true,
+                'required' => false,
             ),
             'form' => array(
-                'type' => 'checkbox',
-                'disabled' => 'disabled'
+                'type' => 'checkbox'
             ),
         ),
     );
     protected static $_relationships = array(
-        'belongs_to' => array(
+        'has_one' => array(
             'login_entryPoint' => array(
                 'key_from' => 'login_entryPoint_id',
                 'model_to' => 'EntryPoints\\Model\\EntryPoints',
@@ -64,14 +67,11 @@ class Logins extends \Model\Module{
                 'cascade_delete' => false,
             ),
         ),
-        'many_many' => array(
+        'has_many' => array(
             'apis' => array(
                 'key_from' => 'id',
-                'key_through_from' => 'login_id', // column 1 from the table in between, should match a posts.id
-                'table_through' => 'api_logins', // both models plural without prefix in alphabetical order
-                'key_through_to' => 'api_id', // column 2 from the table in between, should match a users.id
-                'model_to' => 'Apis\\Model\\Apis',
-                'key_to' => 'id',
+                'model_to' => 'Apis\\Model\\Logins',
+                'key_to' => 'login_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
