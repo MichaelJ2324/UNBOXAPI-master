@@ -126,7 +126,9 @@ abstract class Module {
      * @return array
      */
     protected static function formatResult($results,$view=null){
-        $view = ($view||\Input::get('view'));
+        if ($view==null){
+            $view = \Input::get('view');
+        }
         $newResult = array();
         if (isset($view)){
             $viewConfig = static::views($view);
@@ -137,7 +139,7 @@ abstract class Module {
                 }else{
                     $modelArray = $model;
                 }
-                $newResult[$c] = array();
+                $newResult[] = array();
                 foreach($viewConfig as $returnKey => $modelKey){
                     $newResult[$c][$returnKey] = $modelArray[$modelKey];
                 }
@@ -153,7 +155,11 @@ abstract class Module {
                     }
                 }
             }else{
-                $newResult = $results->to_array();
+                if (is_object($results)){
+                    $newResult = $results->to_array();
+                }else{
+                    $newResult = $results;
+                }
             }
         }
         return $newResult;
@@ -228,8 +234,10 @@ abstract class Module {
      * ]
      */
     public static function filter(array $filters = array()){
+        \Log::debug("Filter Method");
         $model = static::model(true);
         $fields = static::fields();
+
         if (count($filters)==0){
             $filters = \Input::param("filters");
         }
@@ -251,7 +259,7 @@ abstract class Module {
                 }
             }
         }
-        $offset = \Input::param('offset')||0;
+        $offset = \Input::param('offset')||1;
 
         $total = $query->count();
         $results = $query->limit(20)->offset($offset)->get();

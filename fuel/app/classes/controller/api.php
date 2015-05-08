@@ -334,6 +334,7 @@ class Api extends \Controller_Rest{
         try
         {
             $response = "";
+
             if ($action==""||!isset($action)){
                 if ($id=="") {
                     $response = \HttpMethods\HttpMethod::get();
