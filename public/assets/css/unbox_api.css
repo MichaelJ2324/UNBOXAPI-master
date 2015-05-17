@@ -43,6 +43,14 @@ body,html{
     margin-left: auto;
     margin-right: auto;
 }
+#layout{
+    display: block;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+}
 #notices{
     position: fixed;
     display: block;
@@ -79,6 +87,12 @@ body,html{
 }
 .un-color3{
     background-color: #888888;
+}
+.un-text-black{
+    color: #000000;
+}
+.un-text-white{
+    color: #FFFFFF;
 }
 .un-panel{
     display: block;
@@ -135,6 +149,7 @@ body,html{
     padding-top: 4px;
     color: #FFFFFF;
     z-index: 800;
+    cursor: pointer;
 }
 .un-panel-toggle:hover{
     color: #AAAAAA;
@@ -349,4 +364,13 @@ button.notice-close{
 }
 .panel{
     border-radius: 0px;
+}
+.panel-group .panel{
+    border-radius: 0px;
+}
+.panel-group .panel+.panel{
+    margin-top: 0px;
+}
+label {
+    font-weight: normal;
 }

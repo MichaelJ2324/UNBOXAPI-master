@@ -3,34 +3,78 @@ UNBOX API
 
 API Management, Testing, and Documentation.
 
-Dev Environment:
+Prerequisites:
+* PHP 5.4
+* MySQL
+* Composer
+  * Please follow the installation guide [here](https://getcomposer.org/doc/00-intro.md#installation-nix) if you do not have composer installed already.
 
-1. Pull down this Repo to some working folder
-- Repo does not contain Core FuelPHP files, so, edit your code and push it to your server for testing, overwriting the stock FuelPHP App and Public directories
+Steps to Install:
 
-Hurray you can now edit the code....now to setup your webserver to actually use and test it
+Fork UNBOXAPI-master repo.
+```
+$ cd <webroot>
+$ git clone https://github.com/<username>/UNBOXAPI-master.git
+$ cd UNBOXAPI-master/
+```
 
-Web Server:
-Prereqs:
-PHP 5.4 (for now)
+Change to the alpha branch
+```
+$ git checkout alpha
+```
 
-1. In WebServer directory install FuelPHP
-  * curl get.fuelphp.com/oil | sh
-  * oil create [directory]
+Ignore any local file permission changes
+```
+$ git config --global core.filemode false
+```
 
-2. Copy/Push the above Repo to this folder, overwrite fuel/app and public directories
+Add Upstream for easy fetch capabilities
+```
+$ git remote add upstream https://github.com/MichaelJ2324/UNBOXAPI-master.git
+```
 
-3. In fuel/app directory
-  * composer.phar update
-    * Only needed after initial push of App directory
-    * This will pull required PHP Libraries used by UNBOX API
+Install Fuel
+```
+$ cd ..
+$ curl get.fuelphp.com/oil | sh
+$ oil create UNBOXAPI
+$ cd UNBOXAPI
+$ cp -R ../UNBOXAPI-master/fuel/app fuel/app
+$ cp -R ../UNBOXAPI-master/public/ public/
+```
 
-4. Configure install.php file in fuel/app/config/
-  * Setup database creds and database name
+Install Fuel Dependencies
+```
+$ cd fuel/app/
+$ composer update
+```
 
-5. Install Database
-  * oil r Unbox:install
-  * oil r Unbox:setupForeignKeys
-  * oil r Unbox:seed
+Configure Settings
+```
+$ cd config/
+$ vi install.php
+    //Update hostname, port, database, username, and password to match your local mysql settings.
+```
 
-6. Go to your localhost and view the site, a Login page should prompt you
+Navigate back to the Root UNBOX directory
+```
+$ cd ../../..
+```
+
+Reset File Permissions
+```
+$ sudo chmod -R 775 ../UNBOXAPI
+$ sudo chown -R www:www ../UNBOXAPI
+```
+
+Install the Database
+```
+$ oil r Unbox:install
+$ oil r Unbox:setupForeignKeys
+$ oil r Unbox:seed
+$ oil r Unbox:seed all null true true
+```
+Navigate to where UNBOX is installed, http://localhost/UNBOX/public/
+ * Login credentials
+  * Username: unbox_demo
+  * Password: unbox

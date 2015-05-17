@@ -32,7 +32,6 @@ class Table {
             $this->setFieldsFromModel();
             $this->primaryKeys = $model::primary_key();
             $this->relationships = $model::relations();
-            $this->relationship_properties = $model::relationship_properties();
             $this->setForeignKeysFromModel();
             $this->setRelationshipTablesFromModel();
         }
@@ -151,19 +150,21 @@ class Table {
     private function setForeignKeysFromModel(){
         $foreignKeys = array();
         foreach($this->relationships as $relationshipName => $relationshipObject) {
-            if (strpos(get_class($relationshipObject),"HasOne")>0) {
+            if (strpos(get_class($relationshipObject),"HasOne")>0||strpos(get_class($relationshipObject),"BelongsTo")>0) {
                 $relatedModel = $relationshipObject->__get("model_to");
                 $keyFrom = $relationshipObject->__get("key_from");
                 $keyTo = $relationshipObject->__get("key_to");
-                $foreignKeys[] = array(
-                    'key' => $keyFrom[0],
-                    'reference' => array(
-                        'table' => $relatedModel::table(),
-                        'column' => $keyTo[0],
-                    ),
-                    'on_update' => ($relationshipObject->__get("cascade_save") ? 'CASCADE' : 'NO ACTION'),
-                    'on_delete' => ($relationshipObject->__get("cascade_delete") ? 'CASCADE' : 'NO ACTION')
-                );
+                if (!(in_array($keyFrom, $this->primaryKeys)||$keyFrom==$this->primaryKeys)){
+                    $foreignKeys[] = array(
+                        'key' => $keyFrom[0],
+                        'reference' => array(
+                            'table' => $relatedModel::table(),
+                            'column' => $keyTo[0],
+                        ),
+                        'on_update' => ($relationshipObject->__get("cascade_save") ? 'CASCADE' : 'NO ACTION'),
+                        'on_delete' => ($relationshipObject->__get("cascade_delete") ? 'CASCADE' : 'NO ACTION')
+                    );
+                }
             }
         }
         $this->setForeignKeys($foreignKeys);
@@ -192,9 +193,6 @@ class Table {
                     'constraint' => 50,
                     'null' => false,
                 );
-                if (isset($this->relationship_properties[$relationshipName])) {
-                    $this->relatedTables[$tableName]['fields'] = array_merge_recursive($this->relatedTables[$tableName]['fields'],$this->relationship_properties[$relationshipName]);
-                }
             }
         }
     }

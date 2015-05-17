@@ -1,6 +1,70 @@
 <?php
 return array(
-    'LoginInfo' => "
+    "Panel1" => "
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                Build Test
+            </div>
+            <div class='panel-body'>
+                <div class='col-lg-12'>
+                    <form id='Tester_Setup'>
+                        <div class='row'>
+                            <label>Application</label>
+                            <input type='hidden' class='form-control select2 relate' id='application' name='application_id' data-module='Applications'>
+                        </div>
+                        <div class='row'>
+                            <label>API</label>
+                            <input type='hidden' class='form-control select2 relate' id='api' name='api_id' data-module='Apis'>
+                        </div>
+                        <div class='row'>
+                            <label>HTTP Method</label>
+                            <input type='hidden' class='form-control select2 relate' id='http_method' name='http_method_id' data-module='HttpMethods'>
+                        </div>
+                        <div class='row'>
+                            <label>Entry Point</label>
+                            <input type='hidden' class='form-control select2 relate' id='entry_point' name='entry_point_id' data-module='EntryPoints'>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                API Login
+            </div>
+            <div class='panel-body'>
+                <label for='login_id'>Login Method</label>
+                <input type='hidden' class='form-control select2 relate' id='login' name='login_id' data-module='Logins'>
+                <div class='col-md-12' id='api_login'>
+
+                </div>
+            </div>
+        </div>
+    ",
+    "LoginInfo" => "
+        <ul class='nav nav-tabs'>
+            <li role='presentation' class='active'><a href='#login_form_container'>Form</a></li>
+            <li role='presentation' class='disabled'><a href='#login_info'>Login Info</a></li>
+        </ul>
+        <div class='tab-content'>
+            <div role='tabpanel' class='tab-pane' id='login_form_container'>
+                <form id='login_form' class='form-horizontal hidden' role='form'>
+                </form>
+            </div>
+            <div role='tabpanel' class='tab-pane' id='token_info'>
+            </div>
+        </div>
+    ",
+    "LoginForm" => "
+        <div id='login_normal'>
+        </div>
+        <div id='login_advanced' class='panel-collapse collapse'>
+        </div>
+        <a id='login_advanced_btn' data-toggle='collapse' data-target='#login_advanced'>Advanced+</a>
+        <br>
+        <button type='button' id='loginBtn' class='btn btn-primary'>Login</button>
+    ",
+    'TokenInfo' => "
         <div class='row'>
             <button type='button' class='btn btn-primary pull-left logout' id='logOutBtn2'>Logout</button>
             <button type='button' class='btn btn-link pull-right' id='return_LoginForm'>Return to Form</button>
@@ -25,7 +89,7 @@ return array(
             <label class='control-label'><%= param.escape('name') %></label>
             <%= param.get('html') %>
         <% }) %>",
-    'EntryPointOverview' => "
+    'Panel2' => "
         <div class='entry-point-overview'>
             <div class='ep-logo circle'>
                 <span class='ep-logo-text'>
@@ -188,49 +252,7 @@ return array(
                 </div>
             </div>
         <% }); %>
-    ",
-    "Output" => "
-        <div class='panel panel-default' style='height: 100%; display: block;'>
-            <div class='panel-body'>
-                <ul class='nav nav-tabs' role='tablist'>
-                    <li role='presentation' class=''><a href='#request' aria-controls='request' role='tab' data-toggle='tab'>Request</a></li>
-                    <li role='presentation' class='active'><a href='#response' aria-controls='response' role='tab' data-toggle='tab'>Response</a></li>
-                    <li role='presentation' class='dropdown'>
-                        <a class='dropdown-toggle' data-toggle='dropdown' href='#' role='button' aria-expanded='false'>
-                          Format <span class='caret'></span>
-                        </a>
-                        <ul class='dropdown-menu' role='menu'>
-                            <li><a href='#' class='format_type' data-format='pretty'>Pretty</a></li>
-                            <li><a href='#' class='format_type' data-format='raw'>Raw</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <div class='tab-content'>
-                    <div role='tabpanel' class='tab-pane' id='request'>
-                        <% if (request.get('request')==''||request.get('request')==null) {
-                        }else{
-                            if (style.get('name')=='pretty'){ %>
-                                <%= '<pre>'+_.escape(JSON.stringify(jQuery.parseJSON(request.get('request')),undefined,2))+'</pre>' %>
-                            <%      }else if (style.get('name')=='raw') { %>
-                                <%= '<pre>'+request.escape('request')+'</pre>' %>
-                            <%      }
-                        } %>
-                    </div>
-                    <div role='tabpanel' class='tab-pane active' id='response'>
-                        <% if (request.get('response')==''||request.get('response')==null) {
-                            }else{
-                                if (style.get('name')=='pretty'){ %>
-                                    <%= '<pre>'+_.escape(JSON.stringify(jQuery.parseJSON(request.get('response')),undefined,2))+'</pre>' %>
-                                <%      }else if (style.get('name')=='raw') { %>
-                                    <%= '<pre>'+request.escape('response')+'</pre>' %>
-                                <%      }
-                            } %>
-                    </div>
-                </div>
-            </div>
-        </div>
-    ",
-    "ParameterForm" => "
+    ",    "Panel3" => "
         <div class='parameter-setup'>
             <form id='ParameterForm'>
                 <div class='panel-group' id='ep_params_accordion'>
@@ -274,73 +296,46 @@ return array(
             <span class='help-block'><%= param.escape('description') %></span>
         <% }) %>
     ",
-    "Setup" => "
-        <div class='panel panel-default'>
-            <div class='panel-heading'>
-                Choose Entry Point
-            </div>
+    "Main" => "
+        <div class='panel panel-default' style='height: 100%; display: block;'>
             <div class='panel-body'>
-                <div class='col-lg-12'>
-                    <form id='Tester_Setup'>
-                        <div class='row'>
-                            <label>Application</label>
-                            <select id='application' name='application' class='form-control select2' placeholder='Choose Application' >
-                                <option value='NULL'></option>
-                            </select>
-                        </div>
-                        <div class='row'>
-                            <label>API</label>
-                            <select id='api' name='api' class='form-control select2' placeholder='Choose API' disabled='disabled' >
-                                <option value='NULL'></option>
-                            </select>
-                        </div>
-                        <div class='row'>
-                            <label>HTTP Method</label>
-                            <select id='httpMethod' name='httpMethod' class='form-control select2' placeholder='Choose Method' disabled='disabled' >
-                                <option value='NULL'></option>
-                            </select>
-                        </div>
-                        <div class='row'>
-                            <label>Entry Point</label>
-                            <select id='entryPoint_select' name='entryPoint_select' class='form-control select2' placeholder='Choose EntryPoint' disabled='disabled' >
-                                <option value='NULL'></option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <div class='panel panel-default'>
-            <div class='panel-heading'>
-                API Login
-            </div>
-            <div class='panel-body' id='api_login'>
-                <div class='flipper'>
-                    <div class='front'>
-                        <button type='button' class='btn btn-link pull-right hidden' id='logged_in_info'>View Login Token</button>
-                        <label for='web_address'>Web Address</label>
-                        <input id='web_address' name='web_address' class='form-control' placeholder='http://www.example.com' >
-                        <label for='login_method'>Login Method</label>
-                        <select id='login_method' name='login_method' class='form-control select2' placeholder='Choose Login Method' disabled='disabled' >
-                            <option value='NULL'></option>
-                        </select>
-                        <form id='API_Login_form' class='form-horizontal hidden' role='form'>
-                            <div id='login_normal'>
-                            </div>
-                            <div id='login_advanced' class='panel-collapse collapse'>
-                            </div>
-                            <a id='login_advanced_btn' data-toggle='collapse' data-target='#login_advanced'>Advanced+</a>
-                            <br>
-                            <button type='button' id='loginBtn' class='btn btn-primary'>Login</button>
-                            <button type='button' id='logOutBtn1' class='btn btn-default logout' disabled='true'>Logout</button>
-                        </form>
+                <ul class='nav nav-tabs' role='tablist'>
+                    <li role='presentation' class=''><a href='#request' aria-controls='request' role='tab' data-toggle='tab'>Request</a></li>
+                    <li role='presentation' class='active'><a href='#response' aria-controls='response' role='tab' data-toggle='tab'>Response</a></li>
+                    <li role='presentation' class='dropdown'>
+                        <a class='dropdown-toggle' data-toggle='dropdown' href='#' role='button' aria-expanded='false'>
+                          Format <span class='caret'></span>
+                        </a>
+                        <ul class='dropdown-menu' role='menu'>
+                            <li><a href='#' class='format_type' data-format='pretty'>Pretty</a></li>
+                            <li><a href='#' class='format_type' data-format='raw'>Raw</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class='tab-content'>
+                    <div role='tabpanel' class='tab-pane' id='request'>
+                        <% if (request.get('request')==''||request.get('request')==null) {
+                        }else{
+                            if (style.get('name')=='pretty'){ %>
+                                <%= '<pre>'+_.escape(JSON.stringify(jQuery.parseJSON(request.get('request')),undefined,2))+'</pre>' %>
+                            <%      }else if (style.get('name')=='raw') { %>
+                                <%= '<pre>'+request.escape('request')+'</pre>' %>
+                            <%      }
+                        } %>
                     </div>
-                    <div class='back' id='api_login_info'>
-
+                    <div role='tabpanel' class='tab-pane active' id='response'>
+                        <% if (request.get('response')==''||request.get('response')==null) {
+                            }else{
+                                if (style.get('name')=='pretty'){ %>
+                                    <%= '<pre>'+_.escape(JSON.stringify(jQuery.parseJSON(request.get('response')),undefined,2))+'</pre>' %>
+                                <%      }else if (style.get('name')=='raw') { %>
+                                    <%= '<pre>'+request.escape('response')+'</pre>' %>
+                                <%      }
+                            } %>
                     </div>
                 </div>
             </div>
         </div>
-    "
+    ",
 );
 ?>

@@ -9,10 +9,18 @@
 namespace Oauth;
 
 
-class Oauth {
+class Oauth extends \UNBOXAPI\Module {
 
     protected static $_name = 'Oauth';
-    protected static $_config;
+    protected static $_models = array(
+                        'AccessTokens',
+                        'AuthCodes',
+                        'Clients',
+                        'RedirectUris',
+                        'RefreshTokens',
+                        'Scopes',
+                        'Sessions'
+                    );
 
     protected $authorization_server;
     protected $resource_server;
@@ -24,29 +32,6 @@ class Oauth {
     private $scopeStorage;
     private $sessionStorage;
 
-    public static function models(){
-        return array(
-            'AccessTokens',
-            'AuthCodes',
-            'Clients',
-            'RedirectUris',
-            'RefreshTokens',
-            'Scopes',
-            'Sessions'
-        );
-    }
-    public static function config(){
-        static::$_config = \Config::load(static::$_name."::module");
-        return static::$_config;
-    }
-    public static function seeds()
-    {
-        $config = static::config();
-        if (isset($config['seed_models'])) {
-            return $config['seed_models'];
-        }
-        return false;
-    }
     public static function getInstance()
     {
         static $instance = null;
@@ -55,7 +40,16 @@ class Oauth {
         }
         return $instance;
     }
-    protected function __construct(){
+    public function __construct(){
+        unset($this->id);
+        unset($this->name);
+        unset($this->deleted);
+        unset($this->deleted_at);
+        unset($this->date_created);
+        unset($this->created_by);
+        unset($this->date_modified);
+        unset($this->modified_by);
+
         $this->initStorage();
         $this->initAuthServer();
         $this->initResourceServer();
@@ -114,7 +108,7 @@ class Oauth {
                 });
                 $this->authorization_server->addGrantType($Grant);
                 break;
-            case 'refreshToken':
+            case 'refresh_token':
                 $Grant = new \League\OAuth2\Server\Grant\RefreshTokenGrant();
                 $this->authorization_server->addGrantType($Grant);
                 break;
@@ -131,18 +125,22 @@ class Oauth {
     public function issueAccessToken(){
         return $this->authorization_server->issueAccessToken();
     }
-    public function validToken(){
-        \Log::info("Checking Access Token.");
-        $token = \Input::headers('Authorization');
-        if (strpos($token,"Bearer ")!==false){
-            $token = str_replace("Bearer ","",$token);
-            \Log::info("token:".$token);
-            //TODO: League's Symphony Request object does not recognize Authorization header, so I force their check to use my token that Fuel recognizes in header. Figure out wtf is up with that
-            return $this->resource_server->isValidRequest(true,$token);
+    public function validateToken($token=null){
+        try{
+            if ($token!==null){
+                return $this->resource_server->isValidRequest(true,$token);
+            }
+            return $this->resource_server->isValidRequest();
+        }catch(\Exception $ex){
+            \Log::error("Invalid Token: $token - Exception ".$ex->getMessage());
+            return false;
         }
-        return $this->resource_server->isValidRequest();
+
     }
-    public function getUserId(){
+    public function getTokenUserId(){
         return $this->resource_server->getAccessToken()->getSession()->getOwnerId();
+    }
+    public function getTokenSessionId(){
+        return $this->resource_server->getAccessToken()->getSession();
     }
 }

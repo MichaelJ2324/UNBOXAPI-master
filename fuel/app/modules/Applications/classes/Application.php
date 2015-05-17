@@ -15,7 +15,10 @@ class Application extends \UNBOXAPI\Module{
     protected static $_name = "Applications";
     protected static $_label = "Application";
     protected static $_label_plural = "Applications";
-    protected static $_enabled = true;
+    protected static $_models = array(
+        'Applications',
+        'Apis'
+    );
 
     public $version_id;
     public $description;

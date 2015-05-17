@@ -13,27 +13,17 @@ class Parameter extends \UNBOXAPI\Module{
     protected static $_name = "Parameters";
     protected static $_label = "Parameter";
     protected static $_label_plural = "Parameters";
-    protected static $_enabled = true;
 
     public $data_type;
     public $api_type;
     public $description;
     public $html;
+    public $default;
     public $required;
     public $order;
     public $login_pane;
     public $url;
     public $related_entryPoint;
-
-    function __construct($entryPoint,$param_id=""){
-        $this->model = new Model\Parameters();
-        $this->related_entryPoint = $entryPoint;
-        if (isset($param_id)&&$param_id!==""){
-            if($this->retrieve_Param($entryPoint,$param_id)===false){
-                return false;
-            }
-        }
-    }
 
     private function retrieve_Param($entryPoint,$param_id){
         $param = $this->model->getEntryPointParam($param_id,$entryPoint);

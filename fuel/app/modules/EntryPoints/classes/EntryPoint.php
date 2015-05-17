@@ -13,7 +13,10 @@ class EntryPoint extends \UNBOXAPI\Module{
     protected static $_name = "EntryPoints";
     protected static $_label = "Entry Point";
     protected static $_label_plural = "Entry Points";
-    protected static $_enabled = true;
+    protected static $_models = array(
+        'EntryPoints',
+        'Parameters'
+    );
 
     public $description;
     public $url;
@@ -24,53 +27,6 @@ class EntryPoint extends \UNBOXAPI\Module{
 
     private $urlParams = array();
     private $requestParams = array();
-
-
-    function __construct($id=null){
-        $this->model = new Model\EntryPoints();
-        if (isset($id)&&$id!==""){
-            if($this->retrieve_EntryPoint($id)===false){
-                return false;
-            }else{
-                if ($this->retrieve_Params($id)===false){
-                    return false;
-                }else{
-                    if ($this->retrive_ApiVersions($id)===false){
-                        return false;
-                    }
-                }
-            }
-        }
-    }
-
-    public static function get($id=""){
-        if ($id==""){
-            $id='all';
-            $ep = Model\EntryPoints::find($id,array("related"=>array("httpMethod")));
-            $ep = static::formatResult($ep);
-        }else{
-            $ep = Model\EntryPoints::find($id,array("related"=>array("httpMethod")));
-        }
-        return $ep;
-    }
-
-    public static function related($id,$relationship){
-        $relatedRecords = array();
-        switch ($relationship){
-            case "parameters":
-                $records = Model\EntryPoints::getParameters($id);
-                foreach($records as $row){
-                    $row['data_type'] = new \ParameterTypes\ParameterType($row['data_type_name']);
-                    $row['api_type'] = new \ParameterTypes\ParameterType($row['api_type_name']);
-                    $relatedRecords[]=$row;
-                }
-                break;
-            default:
-                throw new \Exception("Invalid Relationship");
-        }
-        return $relatedRecords;
-
-    }
 
 
     public static function getParams($id){

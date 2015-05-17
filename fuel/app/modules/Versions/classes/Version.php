@@ -14,8 +14,12 @@ class Version extends \UNBOXAPI\Module {
     protected static $_name = "Versions";
     protected static $_label = 'Version';
     protected static $_label_plural = 'Versions';
-    protected static $_enabled = false;
-    protected static $_options = "";
+    protected static $_models = array(
+        'Applications',
+        'Apis',
+        'EntryPoints',
+        'Parameters'
+    );
 
     public $version;
     public $related_module;
@@ -24,13 +28,5 @@ class Version extends \UNBOXAPI\Module {
     function __construct($module){
         $model = static::model($module);
         $this->model = new $model();
-    }
-
-    public static function model($module = null){
-        if ($module == null){
-            return "Model\\Versions";
-        }
-        $name = static::$_name;
-        return "$name\\Model\\$module";
     }
 }

@@ -13,10 +13,12 @@ class Metadata {
 
     protected static $_excluded_modules = array(
         'Oauth',
-        'Users'
+        'Users',
+        'Request',
+        'Versions'
     );
 
-    public static function get_metaData($loggedIn){
+    public static function get_metaData(){
         $metadata = array(
             array(
                 'key' => 'config',
@@ -38,37 +40,32 @@ class Metadata {
         $modules = \Module::loaded();
         foreach ($modules as $module=>$path){
             if (!in_array($module,static::$_excluded_modules)) {
-                if (substr($module, -1) === "s") {
-                    $class = substr($module, 0, -1);
-                } else {
-                    $class = $module;
-                }
+                $class = \UNBOXAPI\Data\Util\Module::classify($module);
                 $Class = "\\$module\\$class";
                 $moduleMeta = $Class::metadata();
                 if (get_parent_class($Class) == 'UNBOXAPI\Module') {
-                    if ($moduleMeta['enabled'] == true) {
-                        if ($moduleMeta['config']['login']===true && $loggedIn===true){
-                            $metadata[1]['value'][] = $moduleMeta;
-                        }else if ($moduleMeta['config']['login']===false){
-                            $metadata[1]['value'][] = $moduleMeta;
-                        }
+                    if ($moduleMeta['config']['login']===true && $_SESSION['loggedIn']===true){
+                        $metadata[1]['value'][] = $moduleMeta;
+                    }else if ($moduleMeta['config']['login']===false){
+                        $metadata[1]['value'][] = $moduleMeta;
                     }
                 } else if (get_parent_class($Class) == 'UNBOXAPI\Layout') {
-                    if ($moduleMeta['enabled'] == true) {
-                        if ($moduleMeta['config']['login']===true && $loggedIn===true){
-                            $metadata[2]['value'][] = $moduleMeta;
-                        }else if ($moduleMeta['config']['login']===false){
-                            $metadata[2]['value'][] = $moduleMeta;
-                        }
+                    if ($moduleMeta['config']['login']===true && $_SESSION['loggedIn']===true){
+                        $metadata[2]['value'][] = $moduleMeta;
+                    }else if ($moduleMeta['config']['login']===false){
+                        $metadata[2]['value'][] = $moduleMeta;
                     }
                 }
-                unset($object);
+                unset($Class);
             }
         }
         return $metadata;
     }
     public static function get_config(){
-        return \Config::get("unbox");
+        $config = \Config::get("unbox");
+        unset($config['oauth']);
+        unset($config['google']);
+        return $config;
     }
 
     public function install($config){

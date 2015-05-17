@@ -60,14 +60,43 @@ class Users extends \Model\Oauth{
         ),
         'email' => array(
             'data_type' => 'varchar',
-            'label' => 'email',
+            'label' => 'Email',
             'null' => false,
             'auto_inc' => false,
             'validation' => array(
                 'required' => true,
-                'max_length' => 75
+                'max_length' => 100
             ),
             'form' => array('type' => 'text'),
+        ),
+        'default_module' => array(
+            'data_type' => 'varchar',
+            'label' => 'Default Module',
+            'validation' => array(
+                'required' => true,
+                'max_length' => 25
+            ),
+            'form' => array(
+                'type' => 'select',
+                'options' => array(
+                    array(
+                        'key' => 'Home',
+                        'value' => 'Home'
+                    ),
+                    array(
+                        'key' => 'Profile',
+                        'value' => 'Profile'
+                    ),
+                    array(
+                        'key' => 'Tester',
+                        'value' => 'Tester'
+                    ),
+                    array(
+                        'key' => 'Manager',
+                        'value' => 'Manager'
+                    )
+                ),
+            ),
         ),
     );
     protected static $_relationships = array(
@@ -100,16 +129,30 @@ class Users extends \Model\Oauth{
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'created_entrypoints' => array(
+            'created_entryPoints' => array(
                 'key_from' => 'id',
                 'model_to' => '\\EntryPoints\\Model\\EntryPoints',
                 'key_to' => 'created_by',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'modified_entrypoints' => array(
+            'modified_entryPoints' => array(
                 'key_from' => 'id',
                 'model_to' => '\\EntryPoints\\Model\\EntryPoints',
+                'key_to' => 'modified_by',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            ),
+            'created_entryPoint_parameters' => array(
+                'key_from' => 'id',
+                'model_to' => '\\EntryPoints\\Model\\Parameters',
+                'key_to' => 'created_by',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            ),
+            'modified_entryPoint_parameters' => array(
+                'key_from' => 'id',
+                'model_to' => '\\EntryPoints\\Model\\Parameters',
                 'key_to' => 'modified_by',
                 'cascade_save' => true,
                 'cascade_delete' => false,
@@ -128,14 +171,14 @@ class Users extends \Model\Oauth{
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'created_parametertypes' => array(
+            'created_parameterTypes' => array(
                 'key_from' => 'id',
                 'model_to' => '\\ParameterTypes\\Model\\ParameterTypes',
                 'key_to' => 'created_by',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'modified_parametertypes' => array(
+            'modified_parameterTypes' => array(
                 'key_from' => 'id',
                 'model_to' => '\\ParameterTypes\\Model\\ParameterTypes',
                 'key_to' => 'modified_by',

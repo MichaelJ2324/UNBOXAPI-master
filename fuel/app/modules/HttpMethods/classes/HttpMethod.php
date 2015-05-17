@@ -12,7 +12,8 @@ namespace HttpMethods;
 class HttpMethod extends \UNBOXAPI\Module{
 
     protected static $_name = "HttpMethods";
-    protected static $_enabled = true;
+    protected static $_label = "Http Method";
+    protected static $_label_plural = "Http Methods";
 
     protected static $_available_methods = array(
         'GET',
@@ -39,13 +40,49 @@ class HttpMethod extends \UNBOXAPI\Module{
     public static function get($id=""){
         $methods = array();
         $count=1;
-        foreach(static::$_available_methods as $method){
+        if ($id!==""){
             $methods[] = array(
-                'id' => $count,
-                'method' => $method
+                'id' => $id,
+                'method' => static::$_available_methods[($id-1)]
             );
-            $count++;
+        }else{
+            foreach(static::$_available_methods as $method){
+                $methods[] = array(
+                    'id' => $count,
+                    'method' => $method
+                );
+                $count++;
+            }
         }
         return $methods;
+    }
+    public static function filter(array $filters = array()){
+        if (count($filters)==0){
+            $filters = \Input::param("filters");
+        }
+        $methods = static::get();
+        $name = "";
+        foreach($filters as $field => $value){
+            if ($field=="name"){
+                $name = $value;
+                break;
+            }
+        }
+        if ($name!==""){
+            $filteredMethods = array();
+            foreach($methods as $key => $record){
+                if (strpos($record['method'],$name)!==false){
+                    $filteredMethods[] = $methods[$key];
+                }
+            }
+            $methods = $filteredMethods;
+        }
+        $records = static::formatResult($methods);
+
+        return array(
+            'total' => count($records),
+            'records' => $records,
+            'page' => 1
+        );
     }
 } 

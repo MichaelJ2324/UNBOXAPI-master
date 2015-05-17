@@ -52,8 +52,9 @@ class AccessTokens extends \Model\Oauth {
                 'key_to' => 'id',
                 'cascade_save' => false,
                 'cascade_delete' => true,
-            )
+            ),
         ),
+        'has_many' => array(),
         'many_many' => array(
             'scopes' => array(
                 'key_from' => 'id',

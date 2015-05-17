@@ -108,53 +108,5 @@ class Oauth extends \Orm\Model{
         }
         return parent::relations($specific);
     }
-    public static function relationship_properties($relationship = null){
-        if ($relationship!==null){
-            return static::$_relationship_properties[$relationship];
-        }
-        return static::$_relationship_properties;
-    }
-    public static function fields(){
-        $properties = static::properties();
-        $fields = array();
-        foreach ($properties as $field=>$attributes){
-            $fields[$field] = array(
-                'data_type' => $attributes['data_type'],
-                'label' => $attributes['label'],
-                'auto_inc' => isset($attributes['auto_inc'])?$attributes['auto_inc']:false,
-                'required' => isset($attributes['validation']['required'])?$attributes['validation']['required']:false,
-                'validation' => isset($attributes['validation'])?$attributes['validation']:array(),
-                'form' => isset($attributes['form'])?$attributes['form']:array()
-            );
-        }
-        return $fields;
-    }
-    public static function relationships(){
-        $relations = static::relations();
-        $relationships = array();
-        foreach ($relations as $relationshipName=>$relationshipObject){
-            if (strpos(get_class($relationshipObject),"ManyMany")) {
-                $type = "ManyMany";
-            }else if (strpos(get_class($relationshipObject),"HasMany")) {
-                $type = "HasMany";
-            }else if (strpos(get_class($relationshipObject),"HasOne")) {
-                $type = "HasOne";
-            }else if (strpos(get_class($relationshipObject),"BelongsTo")) {
-                $type = "BelongsTo";
-            }
-            $model = $relationshipObject->__get("model_to");
-            $arr = explode($model,'\\');
-            $module = $arr[0];
-            $relationships[$relationshipName] = array(
-                'type' => $type,
-                'module' => $module
-            );
-            if (isset(static::$_relationship_properties[$relationshipName])) {
-                $relationships[$relationshipName]['fields'] = static::$_relationship_properties[$relationshipName];
-            }
-            unset($arr);
-        }
-        return $relationships;
-    }
 
 }

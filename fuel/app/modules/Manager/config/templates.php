@@ -1,58 +1,33 @@
 <?php
 return array(
-    'Actions' => "
+    'Menu' => "
         <div class='panel-group' id='admin_actions_accordion'>
-            <% _.each(modules,function(module){ %>
+            <% _.each(modules,function(module){
+                    if (module.config.getValue('enabled')==true){
+                %>
             <div class='panel panel-default'>
                 <div class='panel-heading'>
                     <h4 class='panel-title'>
                         <a data-toggle='collapse' data-parent='#admin_actions_accordion' href='#<%= module.get('name') %>_actions'>
-                            <%= module.get('name') %>
+                            <%= module.escape('label_plural') %>
                         </a>
                     </h4>
                 </div>
-                <div class='panel-collapse collapse <%  if (default_module===false){
-                                                            var options = module.get('options');
-                                                            if (options!=null) {
-                                                                var manager_default = typeof options['manager_default'] !== 'undefined' ? options['manager_default'] : '';
-                                                                if (manager_default==true){
-                                                                    var open='in';
-                                                                }else{
-                                                                    var open='';
-                                                                }
-                                                            }
-                                                        }else{
-                                                            if (module.get('name')==default_module){
-                                                                var open='in';
-                                                            }
-                                                        }%>
-                               <%= open %> ' id='<%= module.get('name') %>_actions'>
+                <div class='panel-collapse collapse <%= (module.get('name')==current ? 'in' :'') %>' id='<%= module.get('name') %>_actions'>
                     <div class='panel-body'>
                         <div class='col-xs-4 text-center'>
-                            <button type='button' class='btn btn-primary ' data-module='<%= module.get('name') %>' data-action='list'>List <span class='glyphicon glyphicon-th-list'></span></button>
+                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/list' >List <span class='glyphicon glyphicon-th-list'></span></a>
                         </div>
                         <div class='col-xs-4 text-center'>
-                            <button type='button' class='btn btn-primary ' data-module='<%= module.get('name') %>' data-action='create'>Create <span class='glyphicon glyphicon-plus'></span></button>
+                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/create' >Create <span class='glyphicon glyphicon-plus'></span></a>
                         </div>
                         <div class='col-xs-4 text-center'>
-                            <button type='button' class='btn btn-primary ' data-module='<%= module.get('name') %>' data-action='import'>Import <span class='glyphicon glyphicon-upload'></span></button>
+                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/import' >Import <span class='glyphicon glyphicon-upload'></span></a>
                         </div>
                     </div>
                 </div>
             </div>
-            <% }) %>
-            <div class='panel panel-default'>
-                <div class='panel-heading'>
-                    <b>System</b>
-                </div>
-                <div class='panel-body'>
-                    <div class='col-lg-12'>
-                        <div class='row btn-row'>
-                            <button class='btn btn-primary btn-block'>Load Package (.zip)</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <% } }) %>
         </div>",
     'Output' => "
         <div class='panel panel-default' id='filter_panel'>
@@ -138,39 +113,67 @@ return array(
             </tr>
         <% }) %>",
     'Record' => "
-        <div class='panel panel-default'>
-            <div class='panel-heading'>
-                <h4 class='panel-title'> <%= currentModule.get('label') %></h4>
-            </div>
-            <div class='panel-body'>
-                <div class='col-lg-12'>
-                    <form id='quickRecord'>
-                        <div class='row'>
-                            <%= actions %>
-                        </div>
-                        <% _.each(fields, function(field){ %>
-                            <div class='row'>
-                                <%= field %>
-                            </div>
-                        <% }) %>
-                    </form>
-                </div>
-            </div>
+        <div class='col-lg-12 pull-right un-text-white' id='Relate_<%= number %>' >
+
+        </div>
+        <div class='col-lg-12 pull-right un-text-white' id='RecordActions_<%= number %>' >
+
+        </div>
+        <div class='col-lg-12 pull-right un-text-white' id='RecordDetail_<%= number %>' >
+
         </div>
     ",
+    "RelateTo" => "
+        <% _.each(relationships, function(relationship){
+                var listItems = \"<li><a class='related_module' data-relationship='<%= relationship.get('module') %>'><%= relationship.get('module') %></a></li>\"
+            }) %>
+        <div class='btn-group'>
+            <button type='button' class='btn btn-default dropdown-toggle btn-block' data-toggle='dropdown' aria-expanded='false'>
+            Create <span class='caret'></span>
+            </button>
+            <ul class='dropdown-menu' id='create' role='menu'>
+                <%= listItems %>
+            </ul>
+        </div>
+        <div class='btn-group'>
+            <button type='button' class='btn btn-default dropdown-toggle btn-block' data-toggle='dropdown' aria-expanded='false'>
+            Link <span class='caret'></span>
+            </button>
+            <ul class='dropdown-menu' id='link' role='menu'>
+                <%= listItems %>
+            </ul>
+        </div>
+    ",
+    'RecordDetail' => "
+            <form class='form' id='recordDetail_<%= number %>'>
+                <% _.each(fields, function(field){ %>
+                        <% var html = field.getHTML(model.get(field.get('name')));
+                           if (html!==false ){ %>
+                        <div class=''><%= html %></div>
+                        <% } %>
+                <% }) %>
+            </form>
+    ",
     "RecordActions" => "
+        <span class='pull-left' style='font-size: 26px;'>
+            <span class='un-text-black'><%= (isNew==true?'CREATE':'EDIT') %></span>&nbsp<%= module.escape('label') %>
+        </span>
         <span class='pull-right'>
+            <button type='button' class='btn btn-default clear-record' data-panel='<%= number %>'>Clear</button>
             <div class='btn-group'>
-              <button type='button' class='btn btn-primary' id='save'>Save</button>
+              <button type='button' class='btn btn-primary save-record' data-panel='<%= number %>'>Save</button>
+              <% if (isNew==false){ %>
               <button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown' aria-expanded='false'>
                 <span class='caret'></span>
               </button>
-              <ul class='dropdown-menu' role='menu' style='right: 0px;'>
-                <li><a href='#' id='fullForm'>Full Form</a></li>
-                <li><a href='#' id='clear'>Clear Form</a></li>
-                <li class='divider'></li>
-                <li><a href='#' id=''>Quick Relate</a></li>
+              <ul class='dropdown-menu pull-right' role='menu' style='min-width: 100px;'>
+
+                <li><a class='relate-record' data-panel='<%= number %>' style='text-align: right;'>Relate Record</a></li>
+                    <% if (module.config.getValue('versioning')==true){ %>
+                <li><a class='version-record' data-panel='<%= number %>' style='text-align: right;'>Version</a></li>
+                    <% } %>
               </ul>
+              <% } %>
             </div>
         </span>
     "

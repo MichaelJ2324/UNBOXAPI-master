@@ -9,22 +9,81 @@
 namespace UNBOXAPI\Data\Seed;
 
 
-class Seeder {
+abstract class Seeder {
 
     protected static $_module;
     protected static $_model;
-    protected static $_records;
-    protected static $_relationships;
+    /**
+     * @var = array(
+     *      'model_field' => 'value'
+     * )
+     */
+    protected static $_records = array();
+    /**
+     * @var = array(
+     *      'id' => 'Model ID',
+     *      'name' => 'Relationship Name',
+     *      'related_id' => 'Related ID',
+     *      'related_properties' => array(
+     *          'field' => 'value'
+     *      )
+     * )
+     */
+    protected static $_relationships = array();
 
-    public static function run(){
+    private $module;
+    private $Model;
+
+    protected static function records(){
+        return static::$_records;
+    }
+    protected static function relationships(){
+        return static::$_relationships;
+    }
+    protected static function model(){
         $module = static::$_module;
-        $model = (isset(static::$_model)?"$module\\Model\\".static::$_model:"$module\\Model\\$module");
-
-        $recordArray = array();
-        foreach (static::$_records as $record => $values){
+        return (isset(static::$_model)?"{$module}\\Model\\".static::$_model:"{$module}\\Model\\{$module}");
+    }
+    public function __construct(){
+        $this->module = static::$_module;
+        $this->Model = static::model();
+    }
+    public function seed($relationships=false,$relationshipsOnly=false){
+        if (!$relationshipsOnly) {
+            $this->insert($this->Model);
+        }
+        if ($relationships) {
+            $this->relate();
+        }
+    }
+    public function insert($model){
+        $records = static::records();
+        foreach ($records as $record => $values){
             $Record = $model::forge($values);
             $Record->save();
-            $recordArray[] = $Record;
+        }
+    }
+    public function relate(){
+        $relationships = static::relationships();
+        $class = \UNBOXAPI\Data\Util\Module::classify($this->module);
+        $Module = $this->module."\\".$class;
+        $count = 1;
+        if (count($relationships)>0) {
+            $previousId = "";
+            foreach ($relationships as $relationship => $properties) {
+                if ($properties['id']!==$previousId){
+                    $previousId = $properties['id'];
+                    $Module = new $Module();
+                    $Module->load($properties['id']);
+                }
+                //Get relationship object
+                if (!isset($properties['related_properties'])) {
+                    $properties['related_properties'] = array();
+                }
+                $Module->attach($properties['name'], $properties['related_id'], $properties['related_properties']);
+                $Module->save();
+                $count++;
+            }
         }
     }
 }

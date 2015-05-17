@@ -16,22 +16,20 @@ class Clients extends \UNBOXAPI\Data\Seed\Seeder{
 
     protected static $_records = array(
         array(
-            'client_id' => '',
-            'secret' => '',
-            'name' => ''
+            'client_id' => 'unbox_demo_api_client',
+            'secret' => 'unbox_demo_api_secret',
+            'name' => 'UNBOX Demo Client'
         )
     );
 
-    public static function run(){
-        $records = array();
-        foreach(static::$_records as $record => $values){
-            $values['client_id'] = \Config::get('unbox.oauth.client.id');
-            $values['secret'] = \Config::get('unbox.oauth.client.secret');
-            $values['name'] = \Config::get('unbox.oauth.client.name');
-            $records[] = $values;
-        }
-        static::$_records = $records;
-        parent::run();
+    protected static function records(){
+        $record = array(
+            'client_id' => \Config::get('unbox.oauth.client.id'),
+            'secret' => \Config::get('unbox.oauth.client.secret'),
+            'name' => \Config::get('unbox.oauth.client.name')
+        );
+        static::$_records[] = $record;
+        return static::$_records;
     }
 
 }

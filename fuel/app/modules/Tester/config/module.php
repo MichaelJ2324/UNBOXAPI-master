@@ -1,11 +1,12 @@
 <?php
 
 return array(
+    'enabled' => true,
     'bootstrap' => 	array(
-        0 => 'httpMethods',
-        1 => 'dataTypes',
-        2 => 'apiTypes',
-        3 => 'applications'
+        0 => 'HttpMethods'
     ),
-    'login' => true
+    'login' => true,
+    'panels' => 3,
+    'max_panels' => 3,
+    'overlay_main' => false
 );

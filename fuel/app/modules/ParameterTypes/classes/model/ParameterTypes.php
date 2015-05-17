@@ -53,14 +53,14 @@ class ParameterTypes extends \Model\Module{
     );
     protected static $_relationships = array(
         'has_many' => array(
-            'data_type_parameters' => array(
+            'dataType_parameters' => array(
                 'key_from' => 'id',
                 'model_to' => 'Parameters\\Model\\Parameters',
                 'key_to' => 'data_type',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'api_type_parameters' => array(
+            'apiType_parameters' => array(
                 'key_from' => 'id',
                 'model_to' => 'Parameters\\Model\\Parameters',
                 'key_to' => 'api_type',
@@ -70,11 +70,14 @@ class ParameterTypes extends \Model\Module{
         )
     );
 
-    public static function findType($type=""){
-        if ($type!=="") {
-            return static::find('all',array('where'=>array(array('type',$type))));
-        }else{
-            return static::find('all');
+    public static function types($type=""){
+        return static::find('all',array('where'=>array(array('type',$type))));
+    }
+    public static function findByName($name,$type=""){
+        $query = static::query()->where(array('name',$name));
+        if ($type!==""){
+            $query->where(array("type",$type));
         }
+        return $query->get_one();
     }
 }

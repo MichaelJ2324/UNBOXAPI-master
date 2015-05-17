@@ -38,6 +38,7 @@ class Module extends \Orm\Model_Soft{
                 'min_length' => 3,
                 'max_length' => 100
             ),
+            'filter' => true,
             'form' => array('type' => 'text'),
         ),
         'created_by' => array(
@@ -46,19 +47,13 @@ class Module extends \Orm\Model_Soft{
             'validation' => array(
                 'max_length' => 50
             ),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
-            ),
+            'form' => false,
         ),
         'date_created' => array(
             'data_type' => 'datetime',
             'label' => 'Date Created',
             'validation' => array(),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
-            ),
+            'form' => false,
         ),
         'modified_by' => array(
             'data_type' => 'varchar',
@@ -66,19 +61,13 @@ class Module extends \Orm\Model_Soft{
             'validation' => array(
                 'max_length' => 50
             ),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
-            ),
+            'form' => false,
         ),
         'date_modified' => array(
             'data_type' => 'datetime',
             'label' => 'Date Modified',
             'validation' => array(),
-            'form' => array(
-                'type' => 'text',
-                'disabled' => 'disabled'
-            ),
+            'form' => false,
         ),
         'deleted' => array(
             'data_type' => 'tinyint',
@@ -144,6 +133,7 @@ class Module extends \Orm\Model_Soft{
             'events' => array('before_save'),
             'mysql_timestamp' => true,
             'property' => 'date_modified',
+            'overwrite' => true
         ),
         '\\UNBOXAPI\\Observer_Guid' => array(
             'events' => array('before_insert'),
@@ -158,7 +148,12 @@ class Module extends \Orm\Model_Soft{
             'events' => array('before_delete'),
         ),
     );
-
+    protected static $_conditions = array(
+        'order_by' => array('name' => 'asc'),
+        'where' => array(
+            array('deleted', '=', 0)
+        ),
+    );
     public static function properties(){
         self::$_properties = array_merge(self::$_fields,static::$_fields);
         return parent::properties();
@@ -221,11 +216,13 @@ class Module extends \Orm\Model_Soft{
                 $type = "BelongsTo";
             }
             $model = $relationshipObject->__get("model_to");
-            $arr = explode($model,'\\');
+            $arr = explode("\\",$model);
             $module = $arr[0];
+            $model = end($arr);
             $relationships[$relationshipName] = array(
                 'type' => $type,
-                'module' => $module
+                'module' => $module,
+                'model' => $model
             );
             if (isset(static::$_relationship_properties[$relationshipName])) {
                 $relationships[$relationshipName]['fields'] = static::$_relationship_properties[$relationshipName];

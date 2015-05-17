@@ -11,4 +11,7 @@ php:
 branches:
   only:
     - master
-    - alpha
+
+
+ before_install:
+

@@ -9,5 +9,3 @@ fuel/app/vendor/league
 fuel/vendor
 fuel/core
 fuel/packages
-fuel/.htaccess
-fuel/LICENSE

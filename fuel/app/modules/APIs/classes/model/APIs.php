@@ -6,9 +6,9 @@
  * Time: 11:32 PM
  */
 
-namespace APIs\Model;
+namespace Apis\Model;
 
-class APIs extends \Model\Module{
+class Apis extends \Model\Module{
     private $db_conn = 'default';
     protected static $_table_name = 'apis';
     protected static $_fields = array(
@@ -85,51 +85,32 @@ class APIs extends \Model\Module{
                 'cascade_delete' => false,
             )
         ),
-        'many_many' => array(
+        'has_many' => array(
             'applications' => array(
                 'key_from' => 'id',
-                'key_through_from' => 'api_id', // column 1 from the table in between, should match a posts.id
-                'table_through' => 'application_apis', // both models plural without prefix in alphabetical order
-                'key_through_to' => 'appplication_id', // column 2 from the table in between, should match a users.id
-                'model_to' => 'Applications\\Model\\Applications',
-                'key_to' => 'id',
+                'model_to' => 'Applications\\Model\\Apis',
+                'key_to' => 'api_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'entryPointVersion' => array(
+            'entrypoints' => array(
                 'key_from' => 'id',
-                'key_through_from' => 'api_id', // column 1 from the table in between, should match a posts.id
-                'table_through' => 'api_entryPoints', // both models plural without prefix in alphabetical order
-                'key_through_to' => 'entryPoint_id', // column 2 from the table in between, should match a users.id
-                'model_to' => 'EntryPoints\\Model\\EntryPoints',
-                'key_to' => 'id',
+                'model_to' => 'Apis\\Model\\EntryPoints',
+                'key_to' => 'api_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
             'logins' => array(
                 'key_from' => 'id',
-                'key_through_from' => 'api_id', // column 1 from the table in between, should match a posts.id
-                'table_through' => 'api_logins', // both models plural without prefix in alphabetical order
-                'key_through_to' => 'login_id', // column 2 from the table in between, should match a users.id
-                'model_to' => 'Logins\\Model\\Logins',
-                'key_to' => 'id',
+                'model_to' => 'Apis\\Model\\Logins',
+                'key_to' => 'api_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'httpMethods' => array(
-                'key_from' => 'id',
-                'key_through_from' => 'api_id', // column 1 from the table in between, should match a posts.id
-                'table_through' => 'api_httpMethods', // both models plural without prefix in alphabetical order
-                'key_through_to' => 'method_id', // column 2 from the table in between, should match a users.id
-                'model_to' => 'HttpMethods\\Model\\HttpMethods',
-                'key_to' => 'id',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            )
         )
     );
 
-    public function getAPI($id=""){
+    public function getApi($id=""){
         $query = \DB::select('A.id','A.name','A.version',array(\DB::expr("CONCAT(A.name,' - (v',A.version,')')"),"value"),"A.url","A.login_required")->from(array('apis','A'));
         if ($id!==""){
             $query->where('A.id',$id);

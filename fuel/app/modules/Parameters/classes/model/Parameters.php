@@ -21,10 +21,11 @@ class Parameters extends \Model\Module{
                 'max_length' => 50
             ),
             'form' => array(
-                'type' => 'select',
-                'class' => 'select2',
-                'options' => array(),
-                'collection' => 'dataTypes'
+                'type' => 'relate',
+                'module' => 'ParameterTypes',
+                'filter' => array(
+                    'type' => 2
+                )
             )
         ),
         'api_type' => array(
@@ -35,10 +36,11 @@ class Parameters extends \Model\Module{
                 'max_length' => 50
             ),
             'form' => array(
-                'type' => 'select',
-                'class' => 'select2',
-                'options' => array(),
-                'collection' => 'apiTypes'
+                'type' => 'relate',
+                'module' => 'ParameterTypes',
+                'filter' => array(
+                    'type' => 2
+                )
             )
         ),
         'description' => array(
@@ -59,19 +61,16 @@ class Parameters extends \Model\Module{
                 'required' => true,
             ),
             'form' => array(
-                'type' => 'checkbox'
+                'type' => 'checkbox',
+                'help' => 'If API uses URL rewriting, is this parameter a dynamic portion of URL.'
             ),
         ),
         'deprecated' => array(
             'data_type' => 'tinyint',
             'label' => 'Deprecated',
             'default' => 0,
-            'validation' => array(
-                'required' => true,
-            ),
             'form' => array(
-                'type' => 'checkbox',
-                'disabled' => 'disabled'
+                'type' => 'checkbox'
             ),
         ),
         'version_id' => array(
@@ -83,61 +82,18 @@ class Parameters extends \Model\Module{
             'form' => false,
         ),
     );
-    protected static $_relationship_properties = array(
-        'entryPoints' => array(
-            'required' => array(
-                'data_type' => 'tinyint',
-                'label' => 'Required',
-                'default' => 0,
-                'validation' => array(),
-                'form' => array(
-                    'type' => 'checkbox'
-                ),
-            ),
-            'order' => array(
-                'data_type' => 'int',
-                'label' => 'Order',
-                'default' => 0,
-                'validation' => array(),
-                'form' => array(
-                    'type' => 'text'
-                ),
-            ),
-            'login_pane' => array(
-                'data_type' => 'varchar',
-                'label' => 'URL Parameter?',
-                'default' => "normal",
-                'validation' => array(
-                    'max_length' => 10,
-                ),
-                'form' => array(
-                    'type' => 'select',
-                    'options' => array(
-                        array(
-                            'key' => 'normal',
-                            'value' => 'normal'
-                        ),
-                        array(
-                            'key' => 'advanced',
-                            'value' => 'advanced'
-                        )
-                    )
-                ),
-            )
-        )
-    );
     protected static $_relationships = array(
         'belongs_to' => array(
-            'data_type' => array(
+            'dataType' => array(
                 'key_from' => 'data_type',
-                'model_to' => 'ParameterTypes\\Model\\ParameterTypes',
+                'model_to' => 'ParameterTypes\\Model\\DataTypes',
                 'key_to' => 'id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'api_type' => array(
+            'apiType' => array(
                 'key_from' => 'api_type',
-                'model_to' => 'ParameterTypes\\Model\\ParameterTypes',
+                'model_to' => 'ParameterTypes\\Model\\ApiTypes',
                 'key_to' => 'id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
@@ -152,14 +108,11 @@ class Parameters extends \Model\Module{
                 'cascade_delete' => false,
             ),
         ),
-        'many_many' => array(
+        'has_many' => array(
             'entryPoints' => array(
                 'key_from' => 'id',
-                'key_through_from' => 'parameter_id',
-                'table_through' => 'entryPoint_parameters',
-                'key_through_to' => 'entryPoint_id',
-                'model_to' => 'EntryPoints\\Model\\EntryPoints',
-                'key_to' => 'id',
+                'model_to' => 'EntryPoints\\Model\\Parameters',
+                'key_to' => 'parameter_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),

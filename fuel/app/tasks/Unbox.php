@@ -20,16 +20,20 @@ class Unbox
             \UNBOXAPI\Installer::installForeignKeys();
         }
     }
-    public static function seed($examples=false){
+    public static function seed($module='all',$model=null,$relationships=false,$relationshipsOnly=false){
         $installConfig = \Config::load('install');
+        if ($model=='null'){
+            $model = null;
+        }
+        if ($relationships=='true'||$relationships=="1"||$relationships==1){
+            $relationships = true;
+        }
+        if ($relationshipsOnly=='true'||$relationshipsOnly=="1"||$relationshipsOnly==1){
+            $relationshipsOnly = true;
+        }
         if ($installConfig['locked']==true){
             print \Cli::color("Seeding Database.\n","blue");
-            if ($examples) print "Adding example seed data.\n";
-            \UNBOXAPI\Installer::installSeedData($examples);
+            \UNBOXAPI\Installer::installSeedData($module,$relationships,$model,$relationshipsOnly);
         }
-    }
-    public static function seedModel($module,$model){
-        print \Cli::color("Seeding $module.\n","blue");
-        \UNBOXAPI\Installer::seedModule($module,$model);
     }
 }

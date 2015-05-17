@@ -62,7 +62,7 @@ return array(
 	),
 	'cookie' => array(
 		// Number of seconds before the cookie expires
-		'expiration'  => 0,
+		'expiration'  => 86400,
 		// Restrict the path that the cookie is available to
 		'path'        => '/',
 		// Restrict the domain that the cookie is available to
@@ -70,7 +70,7 @@ return array(
 		// Only transmit cookies over secure connections
 		'secure'      => false,
 		// Only transmit cookies over HTTP, disabling Javascript access
-		'http_only'   => false,
+		'http_only'   => true,
 	),
 	'validation' => array(
 		'global_input_fallback' => true,
@@ -93,19 +93,25 @@ return array(
 			'orm',
 		),
 		'modules'  => array(
+            //User Stuff first
             'Users',
 			'Oauth',
+            //Modules
             'Applications',
             'Apis',
             'HttpMethods',
             'EntryPoints',
+            'ParameterTypes',
             'Parameters',
-			'ParameterTypes',
             'Logins',
-			'Home',
 			'Versions',
+            'Tests',
+            //Layouts
+            'Home',
             'Manager',
-            'Tester'
+            'Tester',
+            //Objects
+			'Request'
         ),
 		'classes'  => array(
 		),
