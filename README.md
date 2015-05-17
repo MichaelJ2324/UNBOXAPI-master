@@ -18,9 +18,10 @@ $ git clone https://github.com/<username>/UNBOXAPI-master.git
 $ cd UNBOXAPI-master/
 ```
 
-Change to the alpha branch
+[Optional]
+Change to a branch
 ```
-$ git checkout alpha
+$ git checkout [branch]
 ```
 
 Ignore any local file permission changes
