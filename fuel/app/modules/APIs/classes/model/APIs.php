@@ -93,7 +93,7 @@ class Apis extends \Model\Module{
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'entryPointVersion' => array(
+            'entrypoints' => array(
                 'key_from' => 'id',
                 'model_to' => 'Apis\\Model\\EntryPoints',
                 'key_to' => 'api_id',

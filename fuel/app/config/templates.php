@@ -77,17 +77,27 @@ return array(
             </li>
             <% }) %>",
     "panel" => "
-            <span data-panel='<%= num %>' class='un-panel-toggle un-open-panel opaque un-color<%= num %>' id='panel<%= num %>_toggle'>
-                <span class='glyphicon glyphicon-chevron-right'></span>
-                <span class='glyphicon glyphicon-chevron-right'></span>
-            </span>
-            <div class='un-panel-content' id='panel<%= num %>_content'>
+            <div class='un-color<%= num %> opaque un-panel un-panel-closed hidden' id='panel<%= num %>'>
+                <span data-panel='<%= num %>' class='un-panel-toggle un-open-panel opaque un-color<%= num %>' id='panel<%= num %>_toggle'>
+                    <span class='glyphicon glyphicon-chevron-right'></span>
+                    <span class='glyphicon glyphicon-chevron-right'></span>
+                </span>
+                <div class='un-panel-content' id='panel<%= num %>_content'>
 
+                </div>
             </div>",
+    "main" => "
+        <div class='un-panel' id='main' style='width: 100%;'>
+            <div class='un-panel-content' style='padding-right: 10px;'>
+
+            </div>
+        </div>
+    ",
     "notice" => "
             <span class='notice notice-<%= notice.get('type') %> alert-dismissible' role='alert' id='notice_<%= id %>' >
                 <button type='button' class='notice-close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
                 <span class='notice-text'><%= notice.get('message') %></span>
             </span>
-    "
+    ",
+
 );

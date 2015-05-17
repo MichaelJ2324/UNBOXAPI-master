@@ -41,7 +41,7 @@ class EntryPoints extends \Model\Relationship {
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'entryPoint' => array(
+            'entrypoint' => array(
                 'key_from' => 'entryPoint_id',
                 'model_to' => 'EntryPoints\\Model\\EntryPoints',
                 'key_to' => 'id',

@@ -133,6 +133,7 @@ abstract class Module {
         if (isset($view)){
             $viewConfig = static::views($view);
             $c = 0;
+            \Log::debug("Results:". serialize($results));
             foreach($results as $key => $model){
                 if (is_object($model)){
                     $modelArray = $model->to_array();
@@ -141,7 +142,19 @@ abstract class Module {
                 }
                 $newResult[] = array();
                 foreach($viewConfig as $returnKey => $modelKey){
-                    $newResult[$c][$returnKey] = $modelArray[$modelKey];
+                    $value = "";
+                    if (is_array($modelKey)){
+                        foreach($modelKey as $arrayKey => $key){
+                            if (array_key_exists($key,$modelArray)){
+                                $value .= $modelArray[$key];
+                            }else{
+                                $value .= $key;
+                            }
+                        }
+                    }else {
+                        $value = $modelArray[$modelKey];
+                    }
+                    $newResult[$c][$returnKey] = $value;
                 }
                 $c++;
             }
@@ -259,7 +272,7 @@ abstract class Module {
                 }
             }
         }
-        $offset = \Input::param('offset')||1;
+        $offset = \Input::param('offset')||0;
 
         $total = $query->count();
         $results = $query->limit(20)->offset($offset)->get();
@@ -328,9 +341,11 @@ abstract class Module {
      */
     public static function related($record_id,$relationship,$related_id=""){
         $model = static::model(true);
+        $relationship = strtolower($relationship);
         $Relationship = $model::relations($relationship);
         if ($Relationship!==false){
             $relationshipModel = $Relationship->__get('model_to');
+            $records = array();
             if (strpos(get_parent_class($relationshipModel),'Relationship')!==false){
                 //Many to Many relationship handling
                 $pivotRelationship = substr($relationship, 0, -1);
@@ -340,10 +355,11 @@ abstract class Module {
                 if ($related_id!==""){
                     $query->where("$relationship.$relatedKey",$related_id);
                 }
-                $record = $query->get();
-                $records = array();
-                foreach($record->{$relationship} as $relateRecord => $relationModel){
-                    $records[] = $relationModel->$pivotRelationship;
+                $results = $query->get();
+                foreach($results as $record => $Model){
+                    foreach($Model->{$relationship} as $relateRecord => $RelationModel){
+                        $records[] = $RelationModel->$pivotRelationship;
+                    }
                 }
             }else{
                 $query = $model::query()->related($relationship);
@@ -351,11 +367,22 @@ abstract class Module {
                 if ($related_id!==""){
                     $query->where("$relationship.id",$related_id);
                 }
-                $record = $query->get();
-                $records = $record->{$relationship};
+                $results = $query->get();
+                foreach($results as $record => $Model){
+                    foreach($Model->{$relationship} as $relateRecord => $RelationModel){
+                        $records[] = $RelationModel;
+                    }
+                }
             }
             if (count($records)>0) {
-                return static::formatResult($records);
+                $records = static::formatResult($records);
+                $offset = \Input::param('offset')||0;
+                return array(
+                    'total' => count($records),
+                    'records' => $records,
+                    'page' => ($offset/20)
+                );
+
             }
             \Log::debug("No related records found for $record_id".($related_id==""?"":" and $related_id")." on relationship $relationship");
         }else{

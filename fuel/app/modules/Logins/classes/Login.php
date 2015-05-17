@@ -14,6 +14,11 @@ class Login extends \UNBOXAPI\Module{
     protected static $_label = "Login";
     protected static $_label_plural = "Logins";
 
+    protected static $_models = array(
+        'Logins',
+        'Settings'
+    );
+
     public $deprecated;
     public $login_entryPoint_id;
     public $logout_entryPoint_id;

@@ -89,19 +89,20 @@ class Api extends \Controller_Rest{
         {
             $response = "";
             if ($action==""||!isset($action)){
-                $response = \Applications\Application::get($id);
+                if ($id=="") {
+                    $response = \Applications\Application::get();
+                }else{
+                    if ($id=='filter'){
+                        $response = \Applications\Application::filter();
+                    }else{
+                        $response = \Applications\Application::get($id);
+                    }
+                }
             }else{
                 switch ($action) {
                     case "link":
-                        \Applications\Application::related($id,$related_module,$related_id);
-                        switch ($related_module) {
-                            case 'apis':
-                                $response = \Applications\Application::apis($id);
-                                break;
-                            case 'entryPoints':
-                                $response = \Applications\Application::entryPoints($id);
-                                break;
-                        }
+                        $response = \Applications\Application::related($id,$related_module,$related_id);
+                        break;
                 }
             }
             return $this->response(
@@ -126,7 +127,7 @@ class Api extends \Controller_Rest{
             }else{
                 switch ($action){
                     case 'link':
-                        $response = \Applications\Application::relate($id,$related_id);
+                        $response = \Applications\Application::relate($id,$related_module,$related_id);
                         break;
                 }
             }
@@ -208,22 +209,24 @@ class Api extends \Controller_Rest{
      * ENTRY POINTS for Apis
      *
      ******************************************/
-    public function get_apis($id="",$related="",$filter=""){
+    public function get_apis($id="",$action="",$related_module="",$related_id=""){
         try
         {
             $response = "";
-            if ($related==""||!isset($related)){
-                $response = \APIs\API::get($id);
+            if ($action==""||!isset($action)){
+                if ($id=="") {
+                    $response = \APIs\API::get();
+                }else{
+                    if ($id=='filter'){
+                        $response = \APIs\API::filter();
+                    }else{
+                        $response = \APIs\API::get($id);
+                    }
+                }
             }else{
-                switch ($related){
-                    case 'methods':
-                        $response = \APIs\API::methods($id);
-                        break;
-                    case 'logins':
-                        $response = \APIs\API::logins($id);
-                        break;
-                    case 'entryPoints':
-                        $response = \APIs\API::entryPoints($id,$filter);
+                switch ($action){
+                    case 'link':
+                        $response = \APIs\API::related($id,$related_module,$related_id);
                         break;
                 }
             }

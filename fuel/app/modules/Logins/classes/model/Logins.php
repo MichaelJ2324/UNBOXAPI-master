@@ -75,6 +75,13 @@ class Logins extends \Model\Module{
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
+            'settings' => array(
+                'key_from' => 'id',
+                'model_to' => 'Logins\\Model\\Settings',
+                'key_to' => 'login_id',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            )
         )
     );
 } 

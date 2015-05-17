@@ -60,14 +60,43 @@ class Users extends \Model\Oauth{
         ),
         'email' => array(
             'data_type' => 'varchar',
-            'label' => 'email',
+            'label' => 'Email',
             'null' => false,
             'auto_inc' => false,
             'validation' => array(
                 'required' => true,
-                'max_length' => 75
+                'max_length' => 100
             ),
             'form' => array('type' => 'text'),
+        ),
+        'default_module' => array(
+            'data_type' => 'varchar',
+            'label' => 'Default Module',
+            'validation' => array(
+                'required' => true,
+                'max_length' => 25
+            ),
+            'form' => array(
+                'type' => 'select',
+                'options' => array(
+                    array(
+                        'key' => 'Home',
+                        'value' => 'Home'
+                    ),
+                    array(
+                        'key' => 'Profile',
+                        'value' => 'Profile'
+                    ),
+                    array(
+                        'key' => 'Tester',
+                        'value' => 'Tester'
+                    ),
+                    array(
+                        'key' => 'Manager',
+                        'value' => 'Manager'
+                    )
+                ),
+            ),
         ),
     );
     protected static $_relationships = array(

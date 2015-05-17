@@ -12,13 +12,20 @@ class Unbox extends \Controller
      */
     public function action_index()
     {
+        $loggedIn = false;
         try{
             $OAuthClient = new \Oauth\Client();
-            $OAuthClient->validateAuth();
+            $loggedIn = $OAuthClient->validateAuth();
         }catch(\Exception $ex){
             \Log::info("OAuth Exception: [".$ex->getCode()."]".$ex->getMessage());
         }
-        return \Response::forge(\View::forge('index'));
+        $data = array(
+            'user' => "null"
+        );
+        if ($loggedIn){
+            $data['user'] = $OAuthClient->getUserId();
+        }
+        return \Response::forge(\View::forge('index',$data));
     }
     /**
      * The 404 action for the application.

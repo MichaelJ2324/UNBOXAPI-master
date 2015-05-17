@@ -8,5 +8,8 @@ return array(
         2 => 'ApiTypes',
     ),
     'default' => 'EntryPoints',
-    'login' => true
+    'login' => true,
+    'panels' => 3,
+    'max_panels' => 3,
+    'overlay_main' => true
 );

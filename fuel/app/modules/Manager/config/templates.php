@@ -1,6 +1,6 @@
 <?php
 return array(
-    'Actions' => "
+    'Menu' => "
         <div class='panel-group' id='admin_actions_accordion'>
             <% _.each(modules,function(module){
                     if (module.config.getValue('enabled')==true){

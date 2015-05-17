@@ -93,8 +93,10 @@ return array(
 			'orm',
 		),
 		'modules'  => array(
+            //User Stuff first
             'Users',
 			'Oauth',
+            //Modules
             'Applications',
             'Apis',
             'HttpMethods',
@@ -102,10 +104,13 @@ return array(
             'ParameterTypes',
             'Parameters',
             'Logins',
-			'Home',
 			'Versions',
+            'Tests',
+            //Layouts
+            'Home',
             'Manager',
             'Tester',
+            //Objects
 			'Request'
         ),
 		'classes'  => array(

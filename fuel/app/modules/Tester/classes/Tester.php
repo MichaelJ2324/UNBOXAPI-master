@@ -16,15 +16,15 @@ class Tester extends \UNBOXAPI\Layout{
     protected static $_label_plural = "Tester";
     protected static $_link = "#test";
     protected static $_icon = "<i class='fa fa-check-square'></i>";
-    /*protected static $_links = array(
+    protected static $_links = array(
         'tutorial' => array(
-            'name' => 'Tutorial',
-            'link' => "#tutorial",
+            'name' => 'Save',
+            'link' => "#save",
             'icon' => "",
             'type' => "",
             'layout' => "",
             'enabled' => true
         )
-    );*/
+    );
 
 } 

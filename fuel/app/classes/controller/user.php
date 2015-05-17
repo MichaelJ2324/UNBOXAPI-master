@@ -107,7 +107,6 @@ class User extends \Controller_Rest{
             if ($this->oauth_client->validateAuth()){
                 $userId = $this->oauth_client->getUserId();
                 $response = \Users\User::me($userId);
-                $response['token'] = $this->oauth_client->getToken();
             }else {
                 throw new \Exception("Access denied.");
             }

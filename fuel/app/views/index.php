@@ -22,21 +22,6 @@
     </style>
 </head>
 <body>
-<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" id="modalDiaglog">
-        <div class="modal-content" id="modalContent">
-            <div class="modal-header">
-                <button type="button" class="close" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="modalHead">
-                </h4>
-            </div>
-            <div class="modal-body" id="modalBody">
-            </div>
-            <div class="modal-footer" id="modalFoot">
-            </div>
-        </div>
-    </div>
-</div>
 <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
     <div>
         <div class="navbar-header pull-left">
@@ -74,37 +59,8 @@
 <div id="notices">
 
 </div>
-<div class='un-color1 opaque un-panel un-panel-closed hidden' id='panel1'>
-    <span data-panel='1' class='un-panel-toggle un-open-panel opaque un-color1' id='panel1_toggle'>
-        <span class='glyphicon glyphicon-chevron-right'></span>
-        <span class='glyphicon glyphicon-chevron-right'></span>
-    </span>
-    <div class='un-panel-content hidden' id='panel1_content'>
+<div id="layout">
 
-    </div>
-</div>
-<div class='un-color2 opaque un-panel un-panel-closed hidden' id='panel2'>
-    <span data-panel='2' class='un-panel-toggle un-open-panel opaque un-color2' id='panel2_toggle'>
-        <span class='glyphicon glyphicon-chevron-right'></span>
-        <span class='glyphicon glyphicon-chevron-right'></span>
-    </span>
-    <div class='un-panel-content hidden' id='panel2_content'>
-
-    </div>
-</div>
-<div class='un-color3 opaque un-panel un-panel-closed hidden' id='panel3'>
-    <span data-panel='3' class='un-panel-toggle un-open-panel opaque un-color3' id='panel3_toggle'>
-        <span class='glyphicon glyphicon-chevron-right'></span>
-        <span class='glyphicon glyphicon-chevron-right'></span>
-    </span>
-    <div class='un-panel-content hidden' id='panel3_content'>
-
-    </div>
-</div>
-<div class='un-panel' id='main' style="width: 100%;">
-    <div class='un-panel-content' style="padding-right: 15px;">
-
-    </div>
 </div>
 <?php echo Asset::js('jquery-1.11.1.min.js'); ?>
 <?php echo Asset::js('underscore-min.js'); ?>
@@ -115,6 +71,14 @@
 <script src="https://www.google.com/recaptcha/api.js?&render=explicit" async defer></script>
 <!--<script src="https://plus.google.com/js/client:platform.js" async defer></script>-->
 <?php echo Asset::js('unbox_api.js'); ?>
+
+<script type="text/javascript">
+    UNBOX = new UNBOXAPI.App({
+        user: <?php echo ($user=="null"?$user:"'$user'"); ?>
+    });
+    UNBOX.start();
+
+</script>
 
 </body>
 </html>
