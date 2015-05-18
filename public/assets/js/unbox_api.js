@@ -784,7 +784,7 @@ UNBOXAPI.Views.Global.DependentRelateField = UNBOXAPI.Views.Global.RelateField.e
         console.log("Updating URL");
         console.log(this.parent);
         var id = this.parent.get('id');
-        this.url = UNBOXAPI.Global.ajaxURL + this.parent.name + "/"+id+"/link/" + this.model.name;
+        this.url = UNBOXAPI.Global.ajaxURL + this.parent.name + "/"+id+"/related/" + this.model.name + "/filter";
         this.defaultDisabled = false;
         $(this.el).select2("destroy");
         this.render();
@@ -1117,7 +1117,7 @@ UNBOXAPI.Views.Tester = {
                     model: this.entryPoint,
                     parent: this.api,
                     filters: {
-                        httpMethod: this.httpMethod
+                        method: this.httpMethod
                     }
                 });
 

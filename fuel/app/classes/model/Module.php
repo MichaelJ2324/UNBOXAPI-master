@@ -38,8 +38,8 @@ class Module extends \Orm\Model_Soft{
                 'min_length' => 3,
                 'max_length' => 100
             ),
-            'filter' => true,
             'form' => array('type' => 'text'),
+            'filter' => true
         ),
         'created_by' => array(
             'data_type' => 'varchar',
@@ -194,10 +194,10 @@ class Module extends \Orm\Model_Soft{
             $fields[$field] = array(
                 'data_type' => $attributes['data_type'],
                 'label' => $attributes['label'],
-                'auto_inc' => isset($attributes['auto_inc'])?$attributes['auto_inc']:false,
                 'required' => isset($attributes['validation']['required'])?$attributes['validation']['required']:false,
                 'validation' => isset($attributes['validation'])?$attributes['validation']:array(),
-                'form' => isset($attributes['form'])?$attributes['form']:array()
+                'form' => isset($attributes['form'])?$attributes['form']:array(),
+                'filter' => isset($attributes['filter'])?$attributes['filter']:false,
             );
         }
         return $fields;

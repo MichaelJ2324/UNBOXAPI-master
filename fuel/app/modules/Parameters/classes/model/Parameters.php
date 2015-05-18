@@ -84,14 +84,14 @@ class Parameters extends \Model\Module{
     );
     protected static $_relationships = array(
         'belongs_to' => array(
-            'dataType' => array(
+            'datatype' => array(
                 'key_from' => 'data_type',
                 'model_to' => 'ParameterTypes\\Model\\DataTypes',
                 'key_to' => 'id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'apiType' => array(
+            'apitype' => array(
                 'key_from' => 'api_type',
                 'model_to' => 'ParameterTypes\\Model\\ApiTypes',
                 'key_to' => 'id',
@@ -109,7 +109,7 @@ class Parameters extends \Model\Module{
             ),
         ),
         'has_many' => array(
-            'entryPoints' => array(
+            'entrypoints' => array(
                 'key_from' => 'id',
                 'model_to' => 'EntryPoints\\Model\\Parameters',
                 'key_to' => 'parameter_id',

@@ -145,38 +145,40 @@ class Installer {
         foreach ($modules as $module=>$path){
             $class = \UNBOXAPI\Data\Util\Module::classify($module);
             $Class = "\\$module\\$class";
-            if (get_parent_class($Class) == 'UNBOXAPI\Module') {
-                $models = $Class::model();
-                $config = $Class::config();
-                if (isset($config['versioning'])){
-                    if ($config['versioning']===true) {
-                        $this->versionedModules[] = $module;
-                    }
-                }
-                if (!is_array($models)){
-                    $models = array($models);
-                }
-                foreach($models as $model) {
-                    $Table = new Data\DB\Table($model);
-                    $this->tables[$Table->name] = $Table;
-                    if (!(Data\DB\Table::create($Table))) {
-                        throw new \Exception("Table " . $Table->name . " not created. Error:" . serialize(\DB::error_info()));
-                    }
-                    if (is_array($Table->foreignKeys)) {
-                        foreach ($Table->foreignKeys as $key => $definition) {
-                            if ($definition['added'] == false) {
-                                $foreignKeys[$Table->name][] = $definition;
-                            }
+            if (class_exists($Class)) {
+                if (get_parent_class($Class) == 'UNBOXAPI\Module') {
+                    $models = $Class::model();
+                    $config = $Class::config();
+                    if (isset($config['versioning'])) {
+                        if ($config['versioning'] === true) {
+                            $this->versionedModules[] = $module;
                         }
                     }
-                    $relatedTables = $Table->getRelatedTables();
-                    if (is_array($relatedTables)) {
-                        $this->relatedTables = array_merge_recursive($this->relatedTables, $relatedTables);
+                    if (!is_array($models)) {
+                        $models = array($models);
                     }
-                    unset($relatedTables);
-                    unset($Model);
-                    unset($Table);
-                    sleep(1);
+                    foreach ($models as $model) {
+                        $Table = new Data\DB\Table($model);
+                        $this->tables[$Table->name] = $Table;
+                        if (!(Data\DB\Table::create($Table))) {
+                            throw new \Exception("Table " . $Table->name . " not created. Error:" . serialize(\DB::error_info()));
+                        }
+                        if (is_array($Table->foreignKeys)) {
+                            foreach ($Table->foreignKeys as $key => $definition) {
+                                if ($definition['added'] == false) {
+                                    $foreignKeys[$Table->name][] = $definition;
+                                }
+                            }
+                        }
+                        $relatedTables = $Table->getRelatedTables();
+                        if (is_array($relatedTables)) {
+                            $this->relatedTables = array_merge_recursive($this->relatedTables, $relatedTables);
+                        }
+                        unset($relatedTables);
+                        unset($Model);
+                        unset($Table);
+                        sleep(1);
+                    }
                 }
             }
         }
@@ -241,22 +243,24 @@ class Installer {
             foreach ($modules as $module=>$path){
                 $class = \UNBOXAPI\Data\Util\Module::classify($module);
                 $Class = "\\$module\\$class";
-                if (get_parent_class($Class) !== 'UNBOXAPI\Layout') {
-                    $ModelNS = "\\$module\\Seed\\";
-                    $seedModels = $Class::seeds();
-                    if ($seedModels!==false) {
-                        if ($model!==null){
-                            if (!in_array($model,$seedModels)) {
-                                print \Cli::color("Model has no seeder defined.\n","red");
-                                break;
+                if (class_exists($Class)) {
+                    if (get_parent_class($Class) !== 'UNBOXAPI\Layout') {
+                        $ModelNS = "\\$module\\Seed\\";
+                        $seedModels = $Class::seeds();
+                        if ($seedModels !== false) {
+                            if ($model !== null) {
+                                if (!in_array($model, $seedModels)) {
+                                    print \Cli::color("Model has no seeder defined.\n", "red");
+                                    break;
+                                }
+                                $seedModels = array($model);
                             }
-                            $seedModels = array($model);
-                        }
-                        foreach ($seedModels as $modelName) {
-                            print("Seeding $modelName in Module $module\n");
-                            $SeedModel = $ModelNS . $modelName;
-                            $Seeder = new $SeedModel();
-                            $Seeder->seed($relationships, $relationshipsOnly);
+                            foreach ($seedModels as $modelName) {
+                                print("Seeding $modelName in Module $module\n");
+                                $SeedModel = $ModelNS . $modelName;
+                                $Seeder = new $SeedModel();
+                                $Seeder->seed($relationships, $relationshipsOnly);
+                            }
                         }
                     }
                 }

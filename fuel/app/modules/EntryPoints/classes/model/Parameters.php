@@ -102,7 +102,7 @@ class Parameters extends \Model\Relationship {
     );
     protected static $_relationships = array(
         'belongs_to' => array(
-            'entryPoint' => array(
+            'entrypoint' => array(
                 'key_from' => 'entryPoint_id',
                 'model_to' => 'EntryPoints\\Model\\EntryPoints',
                 'key_to' => 'id',

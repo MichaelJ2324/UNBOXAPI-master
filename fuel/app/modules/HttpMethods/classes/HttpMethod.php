@@ -56,7 +56,7 @@ class HttpMethod extends \UNBOXAPI\Module{
         }
         return $methods;
     }
-    public static function filter(array $filters = array()){
+    public static function filter(array $filters = array(),$relationship="",$related_id=""){
         if (count($filters)==0){
             $filters = \Input::param("filters");
         }

@@ -12,5 +12,7 @@ return array(
 		'server' => array(
 			'host' => 'localhost',
 		)
-	)
+	),
+    //Listview and AJAX Request limit
+    'record_limit' => 20
 );

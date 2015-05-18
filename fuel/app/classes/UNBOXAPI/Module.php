@@ -200,12 +200,14 @@ abstract class Module {
      * @param array $properties
      * @return Model
      */
-    public static function update($id,array $properties){
+    public static function update($id,array $properties = array()){
         $model = static::model(true);
         $record = $model::find($id);
-        foreach (\Input::json() as $key => $value) {
-            if (!($key == "id" || $key == "date_created" || $key == "date_modified" || $key == "deleted_at" || $key == "created_by" )) {
-                $properties[$key] = $value;
+        if (count($properties)==0){
+            foreach (\Input::json() as $key => $value) {
+                if (!($key == "id" || $key == "date_created" || $key == "date_modified" || $key == "deleted_at" || $key == "created_by" )) {
+                    $properties[$key] = $value;
+                }
             }
         }
         $record->set($properties);
@@ -220,11 +222,65 @@ abstract class Module {
      */
     public static function get($id="all"){
         $model = static::model(true);
-        $records = $model::find($id);
+        if ($id!=='all'){
+            $records = $model::find($id);
+        }else{
+            $offset = \Input::param("offset")||0;
+            $limit = \Config::get("unbox.record_limit")||20;
+            $records = $model::query()->limit($limit)->offset($offset)->get();
+        }
         $records = static::formatResult($records);
         return $records;
     }
 
+    /**
+     * Get records based on related Module and Related ID
+     * @param $related_module
+     * @param $related_id
+     */
+    public static function getByRelated($relationship,$related_id,$record_id=""){
+        $model = static::model(true);
+        $results = array(
+            'total' => 0,
+            'records' => array(),
+            'page' => 1
+        );
+        $relationship = strtolower($relationship);
+        $Relationship = $model::relations($relationship);
+        if ($Relationship!==false){
+            $records = array();
+            $offset = \Input::param("offset") || 0;
+            $limit = \Config::get('unbox.record_limit') || 20;
+            $total = 0;
+            $query = $model::query();
+
+            $relationshipModel = $Relationship->__get('model_to');
+            if (strpos(get_parent_class($relationshipModel),'Relationship')!==false){
+                $relatedKey = substr($relationship, 0, -1)."_id";
+            }else{
+                $relatedKey = $Relationship->__get('key_through_to');
+            }
+            $query->related($relationship,array('where' => array(array($relatedKey, '=', $related_id))));
+            if ($record_id!==""){
+                $query->where("id",$record_id);
+            }
+            $total = $query->count();
+            $records = $query->limit($limit)->offset($offset)->get();
+            if (count($records)>0) {
+                $records = static::formatResult($records);
+                $results = array(
+                    'total' => $total,
+                    'records' => $records,
+                    'page' => ($offset % $offset)
+                );
+            }else{
+                \Log::debug("No records found in relation to $relationship with $related_id");
+            }
+        }else{
+            \Log::error("Invalid relationship [$relationship] passed to Module::Relate");
+        }
+        return $results;
+    }
     /**
      * Delete a record based on ID
      * @param $id
@@ -246,15 +302,42 @@ abstract class Module {
      *      int 'page' => current page number
      * ]
      */
-    public static function filter(array $filters = array()){
-        \Log::debug("Filter Method");
+    public static function filter(array $filters = array(),$relationship="",$related_id=""){
         $model = static::model(true);
+        $results = array(
+            'total' => 0,
+            'records' => array(),
+            'page' => 1
+        );
         $fields = static::fields();
 
-        if (count($filters)==0){
+        if (count($filters)===0){
             $filters = \Input::param("filters");
         }
+        \Log::debug(serialize($fields));
+        $offset = \Input::param('offset')||0;
+        $limit = \Config::get("unbox.record_limit")||20;
+        //TODO::Bug $limit is not getting pulled from Config
+        $limit = 20;
+
         $query = $model::query();
+        if ($relationship!==""&&$related_id!==""){
+            $Relationship = $model::relations($relationship);
+            if ($Relationship!==false){
+                $relationshipModel = $Relationship->__get('model_to');
+                if (strpos(get_parent_class($relationshipModel),'Relationship')!==false){
+                    $relatedKey = substr($relationship, 0, -1)."_id";
+                }else{
+                    $relatedKey = $Relationship->__get('key_through_to');
+                }
+                $query->related($relationship);
+                $query->where("$relationship.$relatedKey",$related_id);
+            }else{
+                \Log::error("Invalid relationship passed to Filter. Filtering without Related record $related_id on $relationship");
+            }
+        }else{
+            \Log::error("Relationship and Related ID are both required if filtering on with Related Records");
+        }
         foreach($filters as $field => $value){
             if (array_key_exists($field,$fields)){
                 if (array_key_exists('filter',$fields[$field])){
@@ -272,20 +355,26 @@ abstract class Module {
                 }
             }
         }
-        $offset = \Input::param('offset')||0;
 
         $total = $query->count();
-        $results = $query->limit(20)->offset($offset)->get();
-        $records = static::formatResult($results);
-        return array(
-            'total' => $total,
-            'records' => $records,
-            'page' => ($offset/20)
-        );
+        \Log::debug("Limit:".$limit);
+        $query->rows_limit($limit)->rows_offset($offset);
+        $records = $query->get();
+        \Log::debug(\DB::last_query());
+        if (count($records)>0) {
+            $records = static::formatResult($records);
+            $results = array(
+                'total' => $total,
+                'records' => $records,
+                'page' => ($offset % 20)
+            );
+        }else{
+            \Log::debug("Filter returned no results");
+        }
+        return $results;
     }
-
     /**
-     * Relate a record to another
+     * Relate a record to another (HasMany and ManyMany relationship)
      * @param $record_id
      * @param $relationship
      * @param $related_id
@@ -333,7 +422,7 @@ abstract class Module {
     }
 
     /**
-     * Gets the Model(s) from the related module
+     * Get the related Model(s) from the Related Module
      * @param $record_id
      * @param $relationship
      * @param string $related_id
@@ -341,56 +430,116 @@ abstract class Module {
      */
     public static function related($record_id,$relationship,$related_id=""){
         $model = static::model(true);
+        $results = array(
+            'total' => 0,
+            'records' => array(),
+            'page' => 1
+        );
+        $Relationship = $model::relations(strtolower($relationship));
+        if ($Relationship!==false){
+            /**
+             * We build out the query from the other side of relationship
+             *  - Get Related Module
+             *  - static::getByRelated
+             * */
+            $class = \UNBOXAPI\Data\Util\Module::classify($relationship);
+            $Class = $relationship."\\".$class;
+            return $Class::getByRelated(strtolower(static::$_name),$record_id,$related_id);
+        }else{
+            \Log::error("Invalid relationship [$relationship] passed to Module::Relate");
+        }
+        return $results;
+    }
+
+    /**
+     * Filter the related models on the Related Module
+     * @param $record_id
+     * @param $relationship
+     * @param string $related_id
+     * @return array|bool
+     */
+    public static function filterRelated($record_id,$relationship){
+        $model = static::model(true);
+        $results = array(
+            'total' => 0,
+            'records' => array(),
+            'page' => 1
+        );
+        $Relationship = $model::relations(strtolower($relationship));
+        if ($Relationship!==false){
+            /**
+             * We build out the query from the other side of relationship
+             *  - Get Related Module
+             *  - static::filter
+             * */
+            $class = \UNBOXAPI\Data\Util\Module::classify($relationship);
+            $Class = $relationship."\\".$class;
+            return $Class::filter(array(),strtolower(static::$_name),$record_id);
+        }else{
+            \Log::error("Invalid relationship [$relationship] passed to Module::Relate");
+        }
+        return $results;
+    }
+
+
+    /**
+     * Get the current Record, including the related models associated with the related Module
+     * @param $record_id
+     * @param $relationship
+     * @param string $related_id
+     * @return array|bool
+     */
+    public static function recordRelated($record_id,$relationship,$related_id=""){
+        $model = static::model(true);
+        $results = array(
+            'total' => 0,
+            'records' => array(),
+            'page' => 1
+        );
         $relationship = strtolower($relationship);
         $Relationship = $model::relations($relationship);
         if ($Relationship!==false){
-            $relationshipModel = $Relationship->__get('model_to');
             $records = array();
+            $offset = \Input::param("offset") || 0;
+            $limit = \Config::get('unbox.record_limit') || 20;
+            $total = 0;
+            $query = $model::query();
+
+            $relationshipModel = $Relationship->__get('model_to');
             if (strpos(get_parent_class($relationshipModel),'Relationship')!==false){
                 //Many to Many relationship handling
                 $pivotRelationship = substr($relationship, 0, -1);
                 $relatedKey = $pivotRelationship."_id";
-                $query = $model::query()->related($relationship)->related("$relationship.$pivotRelationship");
+                $query->related($relationship)->related("$relationship.$pivotRelationship");
                 $query->where('id',$record_id);
                 if ($related_id!==""){
                     $query->where("$relationship.$relatedKey",$related_id);
                 }
-                $results = $query->get();
-                foreach($results as $record => $Model){
-                    foreach($Model->{$relationship} as $relateRecord => $RelationModel){
-                        $records[] = $RelationModel->$pivotRelationship;
-                    }
-                }
             }else{
-                $query = $model::query()->related($relationship);
+                $query->related($relationship);
                 $query->where('id',$record_id);
                 if ($related_id!==""){
                     $query->where("$relationship.id",$related_id);
                 }
-                $results = $query->get();
-                foreach($results as $record => $Model){
-                    foreach($Model->{$relationship} as $relateRecord => $RelationModel){
-                        $records[] = $RelationModel;
-                    }
-                }
             }
-            if (count($records)>0) {
+            $total = $query->count();
+            $query->rows_limit($limit)->rows_offset($offset);
+            $records = $query->get();
+            if (count($records)>0){
                 $records = static::formatResult($records);
-                $offset = \Input::param('offset')||0;
-                return array(
-                    'total' => count($records),
-                    'records' => $records,
-                    'page' => ($offset/20)
+                $results = array(
+                    'total' => $total,
+                    'records' => $results,
+                    'page' => ($offset%20)
                 );
-
+            }else{
+                \Log::debug("No related records found for $record_id".($related_id==""?"":" and $related_id")." on relationship $relationship");
             }
-            \Log::debug("No related records found for $record_id".($related_id==""?"":" and $related_id")." on relationship $relationship");
         }else{
             \Log::error("Invalid relationship [$relationship] passed to Module::Relate");
-            return false;
         }
+        return $results;
     }
-
 
     //Module Object Methods
     function __construct(){
@@ -453,8 +602,9 @@ abstract class Module {
      */
     public function attach($relationship,$related_id,$related_properties = array()){
         if (isset($this->id)){
+            $relationship = strtolower($relationship);
             $Relationship = $this->model->relations($relationship);
-            if ($relationship!==false){
+            if ($Relationship!==false){
                 $relationshipModel = $Relationship->__get('model_to');
                 if (!$this->model->is_fetched($relationship)){
                     $this->model->get($relationship);
