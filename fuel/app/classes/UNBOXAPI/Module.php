@@ -480,8 +480,6 @@ abstract class Module {
         }
         return $results;
     }
-
-
     /**
      * Get the current Record, including the related models associated with the related Module
      * @param $record_id
@@ -539,6 +537,36 @@ abstract class Module {
             \Log::error("Invalid relationship [$relationship] passed to Module::Relate");
         }
         return $results;
+    }
+
+    public static function createRelated($record_id,$relationship){
+        $model = static::model(true);
+        $relationship = strtolower($relationship);
+        $Relationship = $model::relations(strtolower($relationship));
+        if ($Relationship!==false){
+            $relationshipModel = $Relationship->__get('model_to');
+            $related_id = false;
+            if (strpos(get_parent_class($relationshipModel),'Relationship')!==false){
+                //Many to Many relationship handling
+                /**
+                 * TODO: Finish this function
+                 * - Build related record to pass ID to relate function
+                 */
+            }else{
+
+            }
+            if ($related_id!==false) {
+                return static::relate($record_id, $relationship, $related_id);
+            }
+        }else{
+            \Log::error("Invalid relationship [$relationship] passed to Module::createRelated");
+        }
+        return true;
+    }
+
+    public static function unrelate($record_id,$relationship,$related_id){
+        //TODO::Build this function
+        return true;
     }
 
     //Module Object Methods

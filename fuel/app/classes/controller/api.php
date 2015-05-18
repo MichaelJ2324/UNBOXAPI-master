@@ -212,7 +212,7 @@ class Api extends \Controller_Rest{
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \Applications\Application::deleteRelationship($id,$related_module,$related_id);
+                        $response = \Applications\Application::unrelate($id,$related_module,$related_id);
                         break;
                     default:
                         throw new \Exception("Unknown action provided for parameter 3 of request");
@@ -352,7 +352,7 @@ class Api extends \Controller_Rest{
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \Apis\Api::deleteRelationship($id,$related_module,$related_id);
+                        $response = \Apis\Api::unrelate($id,$related_module,$related_id);
                         break;
                     default:
                         throw new \Exception("Unknown action provided for parameter 3 of request");
@@ -539,7 +539,7 @@ class Api extends \Controller_Rest{
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \EntryPoints\EntryPoint::deleteRelationship($id,$related_module,$related_id);
+                        $response = \EntryPoints\EntryPoint::unrelate($id,$related_module,$related_id);
                         break;
                     default:
                         throw new \Exception("Unknown action provided for parameter 3 of request");
@@ -679,7 +679,7 @@ class Api extends \Controller_Rest{
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \Parameters\Parameter::deleteRelationship($id,$related_module,$related_id);
+                        $response = \Parameters\Parameter::unrelate($id,$related_module,$related_id);
                         break;
                     default:
                         throw new \Exception("Unknown action provided for parameter 3 of request");
@@ -820,7 +820,7 @@ class Api extends \Controller_Rest{
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \ParameterTypes\ParameterType::deleteRelationship($id,$related_module,$related_id);
+                        $response = \ParameterTypes\ParameterType::unrelate($id,$related_module,$related_id);
                         break;
                     default:
                         throw new \Exception("Unknown action provided for parameter 3 of request");
@@ -962,7 +962,7 @@ class Api extends \Controller_Rest{
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \Logins\Login::deleteRelationship($id,$related_module,$related_id);
+                        $response = \Logins\Login::unrelate($id,$related_module,$related_id);
                         break;
                     default:
                         throw new \Exception("Unknown action provided for parameter 3 of request");
@@ -1104,7 +1104,7 @@ class Api extends \Controller_Rest{
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \Tests\Test::deleteRelationship($id,$related_module,$related_id);
+                        $response = \Tests\Test::unrelate($id,$related_module,$related_id);
                         break;
                     default:
                         throw new \Exception("Unknown action provided for parameter 3 of request");
