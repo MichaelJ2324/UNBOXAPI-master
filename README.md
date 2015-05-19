@@ -18,8 +18,8 @@ Steps to Install:
 Fork UNBOXAPI-master repo.
 ```
 $ cd <webroot>
-$ git clone https://github.com/<username>/UNBOXAPI-master.git
-$ cd UNBOXAPI-master/
+$ git clone https://github.com/<username>/UNBOX_API.git
+$ cd UNBOX_API/
 ```
 
 [Optional]
@@ -35,19 +35,13 @@ $ git config --global core.filemode false
 
 Add Upstream for easy fetch capabilities
 ```
-$ git remote add upstream https://github.com/MichaelJ2324/UNBOXAPI-master.git
+$ git remote add upstream https://github.com/MichaelJ2324/UNBOX_API.git
 ```
 
 Configure Settings
 ```
-$ cd config/
-$ vi install.php
+$ vi fuel/app/config/install.php
     //Update hostname, port, database, username, and password to match your local mysql settings.
-```
-
-Navigate back to the Root UNBOX directory
-```
-$ cd ../../..
 ```
 
 Reset File Permissions
