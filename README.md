@@ -34,22 +34,6 @@ Add Upstream for easy fetch capabilities
 $ git remote add upstream https://github.com/MichaelJ2324/UNBOXAPI-master.git
 ```
 
-Install Fuel
-```
-$ cd ..
-$ curl get.fuelphp.com/oil | sh
-$ oil create UNBOXAPI
-$ cd UNBOXAPI
-$ cp -R ../UNBOXAPI-master/fuel/app fuel/app
-$ cp -R ../UNBOXAPI-master/public/ public/
-```
-
-Install Fuel Dependencies
-```
-$ cd fuel/app/
-$ composer update
-```
-
 Configure Settings
 ```
 $ cd config/
@@ -68,12 +52,9 @@ $ sudo chmod -R 775 ../UNBOXAPI
 $ sudo chown -R www:www ../UNBOXAPI
 ```
 
-Install the Database
+Install and Seed Data
 ```
-$ oil r Unbox:install
-$ oil r Unbox:setupForeignKeys
-$ oil r Unbox:seed
-$ oil r Unbox:seed all null true true
+$ composer install
 ```
 Navigate to where UNBOX is installed, http://localhost/UNBOX/public/
  * Login credentials

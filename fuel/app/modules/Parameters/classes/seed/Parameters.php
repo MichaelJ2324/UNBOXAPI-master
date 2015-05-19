@@ -121,19 +121,18 @@ class Parameters extends \UNBOXAPI\Data\Seed\Seeder{
     protected static $_relationships = array(
         array(
             'id' => 'unbox_demo_param',
-            'name' => 'entryPoints',
+            'name' => 'entrypoints',
             'related_id' => 'unbox_demo_ep2',
             'related_properties' => array(
                 'created_by' => 'unbox_demo_user',
                 'modified_by' => 'unbox_demo_user',
                 'required' => '0',
-                'order' => '0',
-                'login_pane' => null
+                'order' => '0'
             )
         ),
         array(
             'id' => 'unbox_demo_oauth_client_id',
-            'name' => 'entryPoints',
+            'name' => 'entrypoints',
             'related_id' => 'unbox_demo_oauth1',
             'related_properties' => array(
                 'created_by' => 'unbox_demo_user',
@@ -146,7 +145,7 @@ class Parameters extends \UNBOXAPI\Data\Seed\Seeder{
         ),
         array(
             'id' => 'unbox_demo_oauth_secret',
-            'name' => 'entryPoints',
+            'name' => 'entrypoints',
             'related_id' => 'unbox_demo_oauth1',
             'related_properties' => array(
                 'created_by' => 'unbox_demo_user',
@@ -159,7 +158,7 @@ class Parameters extends \UNBOXAPI\Data\Seed\Seeder{
         ),
         array(
             'id' => 'unbox_demo_oauth_grant',
-            'name' => 'entryPoints',
+            'name' => 'entrypoints',
             'related_id' => 'unbox_demo_oauth1',
             'related_properties' => array(
                 'created_by' => 'unbox_demo_user',
@@ -172,7 +171,7 @@ class Parameters extends \UNBOXAPI\Data\Seed\Seeder{
         ),
         array(
             'id' => 'unbox_demo_oauth_scope',
-            'name' => 'entryPoints',
+            'name' => 'entrypoints',
             'related_id' => 'unbox_demo_oauth1',
             'related_properties' => array(
                 'created_by' => 'unbox_demo_user',
@@ -185,7 +184,7 @@ class Parameters extends \UNBOXAPI\Data\Seed\Seeder{
         ),
         array(
             'id' => 'unbox_demo_oauth_username',
-            'name' => 'entryPoints',
+            'name' => 'entrypoints',
             'related_id' => 'unbox_demo_oauth1',
             'related_properties' => array(
                 'created_by' => 'unbox_demo_user',
@@ -197,7 +196,7 @@ class Parameters extends \UNBOXAPI\Data\Seed\Seeder{
         ),
         array(
             'id' => 'unbox_demo_oauth_password',
-            'name' => 'entryPoints',
+            'name' => 'entrypoints',
             'related_id' => 'unbox_demo_oauth1',
             'related_properties' => array(
                 'created_by' => 'unbox_demo_user',

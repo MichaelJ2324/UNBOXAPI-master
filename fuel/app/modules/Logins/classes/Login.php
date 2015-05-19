@@ -20,7 +20,7 @@ class Login extends \UNBOXAPI\Module{
     );
 
     public $deprecated;
-    public $login_entryPoint_id;
-    public $logout_entryPoint_id;
+    public $login_entrypoint_id;
+    public $logout_entrypoint_id;
 
 } 

@@ -16,8 +16,8 @@ class Logins extends \UNBOXAPI\Data\Seed\Seeder {
     protected static $_records = array(
         array(
             'id' => 'unbox_demo_oauth_login',
-            'login_entryPoint_id' => 'unbox_demo_oauth1',
-            'logout_entryPoint_id' => 'unbox_demo_oauth4',
+            'login_entrypoint_id' => 'unbox_demo_oauth1',
+            'logout_entrypoint_id' => 'unbox_demo_oauth4',
             'name' => 'OAuth 2.0',
             'created_by' => 'unbox_demo_user',
             'modified_by' => 'unbox_demo_user'

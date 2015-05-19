@@ -1,0 +1,127 @@
+{
+    "name": "fuel/fuel",
+    "type": "project",
+    "description" : "FuelPHP is a simple, flexible, community driven PHP 5.3+ framework, based on the best ideas of other frameworks, with a fresh start!",
+    "keywords": ["application", "website", "development", "framework", "PHP"],
+    "license": "MIT",
+    "repositories": [
+      {
+        "type": "package",
+        "package": {
+          "name": "fuel/email",
+          "type": "fuel-package",
+          "version": "1.7.2",
+          "dist": {
+            "url": "https://github.com/fuel/email/archive/1.7/master.zip",
+            "type": "zip"
+          },
+          "source": {
+            "url": "https://github.com/fuel/email.git",
+            "type": "git",
+            "reference": "1.8/develop"
+          }
+        }
+      },
+      {
+        "type": "package",
+        "package": {
+          "name": "fuel/oil",
+          "type": "fuel-package",
+          "version": "1.7.2",
+          "dist": {
+            "url": "https://github.com/fuel/oil/archive/1.7/master.zip",
+            "type": "zip"
+          },
+          "source": {
+            "url": "https://github.com/fuel/oil.git",
+            "type": "git",
+            "reference": "1.8/develop"
+          }
+        }
+      },
+      {
+        "type": "package",
+        "package": {
+          "name": "fuel/orm",
+          "type": "fuel-package",
+          "version": "1.7.2",
+          "dist": {
+            "url": "https://github.com/fuel/orm/archive/1.7/master.zip",
+            "type": "zip"
+          },
+          "source": {
+            "url": "https://github.com/fuel/orm.git",
+            "type": "git",
+            "reference": "1.8/develop"
+          }
+        }
+      },
+      {
+        "type": "package",
+        "package": {
+          "name": "fuel/parser",
+          "type": "fuel-package",
+          "version": "1.7.2",
+          "dist": {
+            "url": "https://github.com/fuel/parser/archive/1.7/master.zip",
+            "type": "zip"
+          },
+          "source": {
+            "url": "https://github.com/fuel/parser.git",
+            "type": "git",
+            "reference": "1.8/develop"
+          }
+        }
+      },
+      {
+        "type": "package",
+        "package": {
+          "name": "fuel/core",
+          "type": "fuel-package",
+          "version": "1.7.2",
+          "dist": {
+            "url": "https://github.com/fuel/core/archive/1.7/master.zip",
+            "type": "zip"
+          },
+          "source": {
+            "url": "https://github.com/fuel/core.git",
+            "type": "git",
+            "reference": "1.8/develop"
+          }
+        }
+      }
+    ],
+    "require": {
+      "php": ">=5.4",
+      "composer/installers": "~1.0",
+      "fuel/core": "1.7.2",
+      "fuel/email": "1.7.2",
+      "fuel/oil": "1.7.2",
+      "fuel/orm": "1.7.2",
+      "fuel/parser": "1.7.2",
+      "monolog/monolog": "1.5.*",
+      "google/recaptcha": "~1.1",
+      "league/oauth2-server": "4.1.3"
+    },
+    "suggest": {
+        "mustache/mustache": "Allow Mustache templating with the Parser package"
+    },
+    "config": {
+        "vendor-dir": "fuel/vendor"
+    },
+    "extra": {
+        "installer-paths": {
+            "fuel/{$name}": ["fuel/core"]
+        }
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "php oil r install",
+            "php oil r Unbox:install",
+            "php oil r Unbox:setupForeignkeys",
+            "php oil r Unbox:seed",
+            "php oil r Unbox:seed all null true true"
+        ]
+    },
+    "minimum-stability": "dev"
+}

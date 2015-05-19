@@ -5,9 +5,9 @@
  * Date: 7/4/14
  * Time: 10:03 PM
  */
-namespace EntryPoints\Model;
+namespace Entrypoints\Model;
 
-class EntryPoints extends \Model\Module{
+class Entrypoints extends \Model\Module{
 
     protected static $_table_name = 'entry_points';
     protected static $_fields = array(
@@ -69,17 +69,17 @@ class EntryPoints extends \Model\Module{
     );
     protected static $_relationships = array(
         'belongs_to' => array(
-            'login_entryPoint' => array(
+            'login_entrypoint' => array(
                 'key_from' => 'id',
                 'model_to' => 'Logins\\Model\\Logins',
-                'key_to' => 'login_entryPoint_id',
+                'key_to' => 'login_entrypoint_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'logout_entryPoint' => array(
+            'logout_entrypoint' => array(
                 'key_from' => 'id',
                 'model_to' => 'Logins\\Model\\Logins',
-                'key_to' => 'logout_entryPoint_id',
+                'key_to' => 'logout_entrypoint_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
@@ -94,7 +94,7 @@ class EntryPoints extends \Model\Module{
             ),
             'version' => array(
                 'key_from' => 'version_id',
-                'model_to' => 'Versions\\Model\\EntryPoints',
+                'model_to' => 'Versions\\Model\\Entrypoints',
                 'key_to' => 'id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
@@ -103,26 +103,26 @@ class EntryPoints extends \Model\Module{
         'has_many' => array(
             'parameters' => array(
                 'key_from' => 'id',
-                'model_to' => 'EntryPoints\\Model\\Parameters',
-                'key_to' => 'entryPoint_id',
+                'model_to' => 'Entrypoints\\Model\\Parameters',
+                'key_to' => 'entrypoint_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
             'apis' => array(
                 'key_from' => 'id',
-                'model_to' => 'Apis\\Model\\EntryPoints',
-                'key_to' => 'entryPoint_id',
+                'model_to' => 'Apis\\Model\\Entrypoints',
+                'key_to' => 'entrypoint_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             )
         ),
     );
 
-    public function filterEntryPoints($data=""){
+    public function filterEntrypoints($data=""){
         $query = \DB::select('EP.id','EP.name','EP.url','EP.method',array('HM.method','method_name'),'EP.description',array(\DB::expr("CONCAT(EP.name,' [',EP.url,']')"),"value"))->from(array('applications','A'));
         $query->join(array('application_apis','AA'),'INNER')->on('AA.application_id','=','A.id');
         $query->join(array('apis','API'),'INNER')->on('AA.api_id','=','API.id');
-        $query->join(array("api_entryPoints","AEP"),"INNER")->on("API.id","=","AEP.api_id");
+        $query->join(array("api_entrypoints","AEP"),"INNER")->on("API.id","=","AEP.api_id");
         $query->join(array("entry_points","EP"),"INNER")->on("EP.id","=","AEP.entry_point_id");
         $query->join(array('http_methods','HM'),'INNER')->on('EP.method','=','HM.id');
         $query->distinct();
@@ -150,7 +150,7 @@ class EntryPoints extends \Model\Module{
         }
         return $query->execute(self::$_connection)->as_array();
     }
-    public function getEntryPoint($id=""){
+    public function getEntrypoint($id=""){
         $query = \DB::select('EP.id','EP.name','EP.url','EP.method',array('HM.method','method_name'),'EP.description')->from(array('entry_points','EP'));
         $query->join(array('http_methods','HM'),'INNER')->on('EP.method','=','HM.id');
         if ($id!=""){
@@ -166,10 +166,10 @@ class EntryPoints extends \Model\Module{
     }
     public static function getParameters($id){
         $query = \DB::select('P.id',array('PTD.name','data_type_name'),array('PTA.name','api_type_name'),'P.name','P.description','P.url_param','EPP.required','EPP.order','EPP.login_pane')->from(array('parameters','P'));
-        $query->join(array('entryPoint_parameters','EPP'),'INNER')->on('P.id','=','EPP.parameter_id');
+        $query->join(array('entrypoint_parameters','EPP'),'INNER')->on('P.id','=','EPP.parameter_id');
         $query->join(array('parameter_types','PTD'),'INNER')->on('P.data_type','=','PTD.id');
         $query->join(array('parameter_types','PTA'),'LEFT OUTER')->on('P.api_type','=','PTA.id');
-        $query->where('EPP.entryPoint_id',$id);
+        $query->where('EPP.entrypoint_id',$id);
         if (\Input::param("limit")) {
             $query->limit(\Input::param("limit"));
         }
@@ -178,9 +178,9 @@ class EntryPoints extends \Model\Module{
         }
         return $query->execute(self::$_connection)->as_array();
     }
-    public function getEntryPointAPIs($id){
+    public function getEntrypointAPIs($id){
         $query = \DB::select('AEP.api_id')->from(array('entry_points','EP'));
-        $query->join(array('api_entryPoints','AEP'),'INNER')->on('EP.id','=','AEP.entryPoint_id');
+        $query->join(array('api_entrypoints','AEP'),'INNER')->on('EP.id','=','AEP.entrypoint_id');
         $query->where('EP.id',$id);
         return $query->execute(self::$_connection)->as_array();
     }

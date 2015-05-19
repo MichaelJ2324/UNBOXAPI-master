@@ -129,30 +129,30 @@ class Users extends \Model\Oauth{
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'created_entryPoints' => array(
+            'created_entrypoints' => array(
                 'key_from' => 'id',
-                'model_to' => '\\EntryPoints\\Model\\EntryPoints',
+                'model_to' => '\\Entrypoints\\Model\\Entrypoints',
                 'key_to' => 'created_by',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'modified_entryPoints' => array(
+            'modified_entrypoints' => array(
                 'key_from' => 'id',
-                'model_to' => '\\EntryPoints\\Model\\EntryPoints',
+                'model_to' => '\\Entrypoints\\Model\\Entrypoints',
                 'key_to' => 'modified_by',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'created_entryPoint_parameters' => array(
+            'created_entrypoint_parameters' => array(
                 'key_from' => 'id',
-                'model_to' => '\\EntryPoints\\Model\\Parameters',
+                'model_to' => '\\Entrypoints\\Model\\Parameters',
                 'key_to' => 'created_by',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'modified_entryPoint_parameters' => array(
+            'modified_entrypoint_parameters' => array(
                 'key_from' => 'id',
-                'model_to' => '\\EntryPoints\\Model\\Parameters',
+                'model_to' => '\\Entrypoints\\Model\\Parameters',
                 'key_to' => 'modified_by',
                 'cascade_save' => true,
                 'cascade_delete' => false,

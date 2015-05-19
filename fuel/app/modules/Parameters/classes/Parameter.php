@@ -23,10 +23,10 @@ class Parameter extends \UNBOXAPI\Module{
     public $order;
     public $login_pane;
     public $url;
-    public $related_entryPoint;
+    public $related_entrypoint;
 
-    private function retrieve_Param($entryPoint,$param_id){
-        $param = $this->model->getEntryPointParam($param_id,$entryPoint);
+    private function retrieve_Param($entrypoint,$param_id){
+        $param = $this->model->getEntrypointParam($param_id,$entrypoint);
         if (count($param)==1){
             foreach($param as $row){
                 $this->id = $row['id'];

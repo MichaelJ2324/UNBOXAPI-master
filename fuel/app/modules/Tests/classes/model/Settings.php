@@ -23,7 +23,7 @@ class Settings extends \Model\Module{
             ),
             'form' => array(
                 'type' => 'relate',
-                'module' => 'EntryPoints'
+                'module' => 'Entrypoints'
             ),
         ),
         'parameter' => array(

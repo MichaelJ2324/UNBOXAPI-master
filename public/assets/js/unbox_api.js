@@ -956,7 +956,7 @@ UNBOXAPI.Views.Tester = {
                 module: this.modules.findWhere({ name: "HttpMethods" })
             });
             this.models.entryPoint = new UNBOXAPI.Models.Record({
-                module: this.modules.findWhere({ name: "EntryPoints" })
+                module: this.modules.findWhere({ name: "Entrypoints" })
             });
             this.collections.parameters = new UNBOXAPI.Collections.Records({
                 module: this.modules.findWhere({ name: "Parameters" })
@@ -971,8 +971,8 @@ UNBOXAPI.Views.Tester = {
             this.models.token = new UNBOXAPI.Models.Tokens();
             this.models.request = new UNBOXAPI.Models.Requests();
 
-            _.bindAll(this,"testSetup","epDetail","requestSetup","output","fetchEntryPoint","resetTest");
-            this.models.entryPoint.on("change:id",this.fetchEntryPoint);
+            _.bindAll(this,"testSetup","epDetail","requestSetup","output","fetchEntrypoint","resetTest");
+            this.models.entryPoint.on("change:id",this.fetchEntrypoint);
             this.output();
             this.testSetup();
             this.epDetail();
@@ -999,7 +999,7 @@ UNBOXAPI.Views.Tester = {
         epDetail: function(){
             this.setContent(
                 2,
-                UNBOXAPI.Views.Tester.EntryPointDetail.Panel,
+                UNBOXAPI.Views.Tester.EntrypointDetail.Panel,
                 {
                     model: this.models.entryPoint,
                     collection: this.collections.parameters,
@@ -1038,7 +1038,7 @@ UNBOXAPI.Views.Tester = {
             });
             this.output();
         },
-        fetchEntryPoint: function(){
+        fetchEntrypoint: function(){
             UNBOXAPI.Models.Utils.fetch({
                 model: this.models.entryPoint,
                 options: {},
@@ -1313,7 +1313,7 @@ UNBOXAPI.Views.Tester = {
             }
         })
     },
-    EntryPointDetail: {
+    EntrypointDetail: {
         Panel: Backbone.View.extend({
             events: {
             },
@@ -1350,33 +1350,33 @@ UNBOXAPI.Views.Tester = {
                 this.$ep_examples = $("#ep_examples");
                 this.$ep_exceptions = ("#ep_exceptions");
 
-                this.entryPointDetail = new UNBOXAPI.Views.Tester.EntryPointDetail.MainDetail({
+                this.entryPointDetail = new UNBOXAPI.Views.Tester.EntrypointDetail.MainDetail({
                     el: this.$ep_main,
                     model: this.model,
-                    template: this.layout.templates.getTemplate("EntryPointMain")
+                    template: this.layout.templates.getTemplate("EntrypointMain")
                 });
                 this.actionButtons= new UNBOXAPI.Views.Tester.ActionButtons({
                     el: this.$ep_action,
                     model: this.token,
                     collection: this.collection,
                     panelNumber: this.panel.get("number"),
-                    template: this.layout.templates.getTemplate("EntryPointActions")
+                    template: this.layout.templates.getTemplate("EntrypointActions")
                 });
-                this.parameterPanel = new UNBOXAPI.Views.Tester.EntryPointDetail.Parameters({
+                this.parameterPanel = new UNBOXAPI.Views.Tester.EntrypointDetail.Parameters({
                     el: this.$ep_parameters,
                     collection: this.collection,
-                    template: this.layout.templates.getTemplate("EntryPointParameters")
+                    template: this.layout.templates.getTemplate("EntrypointParameters")
                 });
                 /*
-                this.examplePanel = new UNBOXAPI.Views.Tester.EntryPointDetail.Examples({
+                this.examplePanel = new UNBOXAPI.Views.Tester.EntrypointDetail.Examples({
                     el: this.$ep_examples,
                     collection: this.examples,
-                    template: this.layout.templates.getTemplate("EntryPointExamples")
+                    template: this.layout.templates.getTemplate("EntrypointExamples")
                 });
-                this.exceptionPanel = new UNBOXAPI.Views.Tester.EntryPointDetail.Exceptions({
+                this.exceptionPanel = new UNBOXAPI.Views.Tester.EntrypointDetail.Exceptions({
                     el: this.$ep_exceptions,
                     collection: this.exceptions,
-                    template: this.layout.templates.getTemplate("EntryPointExceptions")
+                    template: this.layout.templates.getTemplate("EntrypointExceptions")
                 });*/
             },
             panelState: function(){
@@ -1508,7 +1508,7 @@ UNBOXAPI.Views.Tester = {
                     model: this.token,
                     collection: this.collection,
                     panelNumber: this.panel.get("number"),
-                    template: this.layout.templates.getTemplate("EntryPointActions")
+                    template: this.layout.templates.getTemplate("EntrypointActions")
                 });
             },
             panelState: function(){

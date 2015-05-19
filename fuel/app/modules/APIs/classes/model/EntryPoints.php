@@ -9,20 +9,20 @@
 namespace Apis\Model;
 
 
-class EntryPoints extends \Model\Relationship {
+class Entrypoints extends \Model\Relationship {
 
-    protected static $_table_name = 'api_entryPoints';
+    protected static $_table_name = 'api_entrypoints';
     protected static $_fields = array(
         'api_id' => array(
             'data_type' => 'varchar',
-            'label' => 'EntryPoint ID',
+            'label' => 'Entrypoint ID',
             'null' => false,
             'validation' => array(
                 'required' => true,
                 'max_length' => 50
             ),
         ),
-        'entryPoint_id' => array(
+        'entrypoint_id' => array(
             'data_type' => 'varchar',
             'label' => 'Parameter ID',
             'null' => false,
@@ -42,8 +42,8 @@ class EntryPoints extends \Model\Relationship {
                 'cascade_delete' => false,
             ),
             'entrypoint' => array(
-                'key_from' => 'entryPoint_id',
-                'model_to' => 'EntryPoints\\Model\\EntryPoints',
+                'key_from' => 'entrypoint_id',
+                'model_to' => 'Entrypoints\\Model\\Entrypoints',
                 'key_to' => 'id',
                 'cascade_save' => true,
                 'cascade_delete' => false,

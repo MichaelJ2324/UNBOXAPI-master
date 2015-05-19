@@ -76,12 +76,12 @@ class Applications extends \Model\Module{
         }
         return $query->execute($this->db_conn)->as_array();
     }
-    public function getEntryPoints($id)
+    public function getEntrypoints($id)
     {
         $query = \DB::select('EP.id','EP.name','EP.url','EP.method',array('HM.method','method_name'),'EP.description',array(\DB::expr("CONCAT(EP.name,' [',EP.url,']')"),"value"))->from(array('applications','A'));
         $query->join(array('application_apis','AA'),'INNER')->on('AA.application_id','=','A.id');
         $query->join(array('apis','API'),'INNER')->on('AA.api_id','=','API.id');
-        $query->join(array("api_entryPoints","AEP"),"INNER")->on("API.id","=","AEP.api_id");
+        $query->join(array("api_entrypoints","AEP"),"INNER")->on("API.id","=","AEP.api_id");
         $query->join(array("entry_points","EP"),"INNER")->on("EP.id","=","AEP.entry_point_id");
         $query->join(array('http_methods','HM'),'INNER')->on('EP.method','=','HM.id');
         $query->where('A.id',$id);

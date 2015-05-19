@@ -17,7 +17,7 @@ class Version extends \UNBOXAPI\Module {
     protected static $_models = array(
         'Applications',
         'Apis',
-        'EntryPoints',
+        'Entrypoints',
         'Parameters'
     );
 

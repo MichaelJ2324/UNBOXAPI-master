@@ -6,15 +6,15 @@
  * Time: 12:09 AM
  */
 
-namespace EntryPoints;
+namespace Entrypoints;
 
 
-class EntryPoint extends \UNBOXAPI\Module{
-    protected static $_name = "EntryPoints";
+class Entrypoint extends \UNBOXAPI\Module{
+    protected static $_name = "Entrypoints";
     protected static $_label = "Entry Point";
     protected static $_label_plural = "Entry Points";
     protected static $_models = array(
-        'EntryPoints',
+        'Entrypoints',
         'Parameters'
     );
 
@@ -30,12 +30,12 @@ class EntryPoint extends \UNBOXAPI\Module{
 
 
     public static function getParams($id){
-        $ep = new EntryPoint($id);
+        $ep = new Entrypoint($id);
         return $ep->params;
     }
 
-    private function retrieve_EntryPoint($id){
-        $ep = $this->model->getEntryPoint($id);
+    private function retrieve_Entrypoint($id){
+        $ep = $this->model->getEntrypoint($id);
         if (count($ep)==1){
             foreach($ep as $row){
                 $this->id = $row['id'];
@@ -62,7 +62,7 @@ class EntryPoint extends \UNBOXAPI\Module{
         }
     }
     private function retrive_ApiVersions($id){
-        $rows = $this->model->getEntryPointAPIs($id);
+        $rows = $this->model->getEntrypointAPIs($id);
         foreach($rows as $row){
             $this->api_versions[] = $row['api_id'];
         }

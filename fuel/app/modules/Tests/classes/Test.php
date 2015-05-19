@@ -22,7 +22,7 @@ class Test extends \UNBOXAPI\Module {
 
     public $application_id;
     public $api_id;
-    public $entryPoint_id;
+    public $entrypoint_id;
     public $login_id;
     public $saved_login;
     public $web_address;
