@@ -4,10 +4,10 @@ return array(
 	'type' => 'app',
 	'database' => 
 	array(
-		'hostname' => 'localhost',
+		'hostname' => '127.0.0.1',
 		'port' => '3306',
 		'database' => 'UNBOXAPI',
 		'username' => 'root',
-		'password' => 'password',
+		'password' => '',
 	),
 );

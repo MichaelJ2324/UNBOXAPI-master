@@ -95,7 +95,7 @@ class Apis extends \Model\Module{
             ),
             'entrypoints' => array(
                 'key_from' => 'id',
-                'model_to' => 'Apis\\Model\\EntryPoints',
+                'model_to' => 'Apis\\Model\\Entrypoints',
                 'key_to' => 'api_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
@@ -132,10 +132,10 @@ class Apis extends \Model\Module{
         }
         return $query->execute($this->db_conn)->as_array();
     }
-    public function getEntryPoints($id,$httpMethod="")
+    public function getEntrypoints($id,$httpMethod="")
     {
         $query = \DB::select('EP.id','EP.name','EP.description','EP.method',array('HM.method','method_name'),'EP.url',array(\DB::expr("CONCAT(EP.name,' [',EP.url,']')"),"value"))->from(array('entry_points','EP'));
-        $query->join(array("api_entryPoints","AEP"),"INNER")->on("EP.id","=","AEP.entryPoint_id");
+        $query->join(array("api_entrypoints","AEP"),"INNER")->on("EP.id","=","AEP.entrypoint_id");
         $query->join(array('http_methods','HM'),'INNER')->on('EP.method','=','HM.id');
         $query->where('AEP.api_id',$id);
         if ($httpMethod!=""){
@@ -152,7 +152,7 @@ class Apis extends \Model\Module{
     public function getLogins($id)
     {
         //array(\DB::expr("CONCAT(L.name,' [',L.url,']')"),"value")
-        $query = \DB::select('L.id','L.name','L.login_entryPoint_id','L.logout_entryPoint_id',array("L.name","value"))->from(array('logins','L'));
+        $query = \DB::select('L.id','L.name','L.login_entrypoint_id','L.logout_entrypoint_id',array("L.name","value"))->from(array('logins','L'));
         $query->join(array("api_logins","AL"),"INNER")->on("AL.login_id","=","L.id");
         $query->where('AL.api_id',$id);
         if (\Input::param("limit")) {

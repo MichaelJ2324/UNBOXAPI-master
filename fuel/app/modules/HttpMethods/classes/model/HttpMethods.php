@@ -48,9 +48,9 @@ class HttpMethods extends \Model\Module{
         )
     );
     protected static $_belongs_to = array(
-        'entryPoints' => array(
+        'entrypoints' => array(
             'key_from' => 'id',
-            'model_to' => 'EntryPoints\\Model\\EntryPoints',
+            'model_to' => 'Entrypoints\\Model\\Entrypoints',
             'key_to' => 'method',
             'cascade_save' => true,
             'cascade_delete' => false,

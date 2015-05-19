@@ -7,7 +7,7 @@ return array(
         1 => 'DataTypes',
         2 => 'ApiTypes',
     ),
-    'default' => 'EntryPoints',
+    'default' => 'Entrypoints',
     'login' => true,
     'panels' => 3,
     'max_panels' => 3,

@@ -28,11 +28,11 @@ class Request {
         $this->encodeData = $encodeData;
         $this->returnHeaders = $returnHeaders;
     }
-    public function set_EntryPoint(\EntryPoints\EntryPoint $entryPoint,$data=array()){
-        $this->url = rtrim($this->url,"/") ."/". ltrim($entryPoint->url,"/");
-        $this->http_method = $entryPoint->method_name;
-        $urlParams = $entryPoint->get_URLParams();
-        $requestParams = $entryPoint->get_RequestParams();
+    public function set_Entrypoint(\Entrypoints\Entrypoint $entrypoint,$data=array()){
+        $this->url = rtrim($this->url,"/") ."/". ltrim($entrypoint->url,"/");
+        $this->http_method = $entrypoint->method_name;
+        $urlParams = $entrypoint->get_URLParams();
+        $requestParams = $entrypoint->get_RequestParams();
         if ($urlParams!==false){
             $this->loadURLParams($urlParams,$data);
         }

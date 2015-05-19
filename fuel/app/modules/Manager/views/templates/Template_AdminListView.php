@@ -8,7 +8,7 @@
                 <form id='filters' class="form-inline">
                     <div class="form-group col-md-3">
                         <label>Name</label>
-                        <input type='text' id="name" name="name" class="form-control" placeholder="EntryPoint Name" />
+                        <input type='text' id="name" name="name" class="form-control" placeholder="Entrypoint Name" />
                     </div>
                     <div class="form-group col-md-3">
                         <label>Application</label>
@@ -73,13 +73,13 @@
     </div>
 </script>
 <script type="text/template" id="EpList">
-    <% _.each(entryPoints,function(entryPoint){ %>
+    <% _.each(entrypoints,function(entrypoint){ %>
         <tr>
-            <td><input type='checkbox' value='<%= entryPoint.escape('id') %>' /></td>
-            <td><%= entryPoint.escape('name') %></td>
-            <td><%= entryPoint.escape('description') %></td>
-            <td><%= entryPoint.escape('method_name') %></td>
-            <td colspan="2"><%= entryPoint.escape('url') %></td>
+            <td><input type='checkbox' value='<%= entrypoint.escape('id') %>' /></td>
+            <td><%= entrypoint.escape('name') %></td>
+            <td><%= entrypoint.escape('description') %></td>
+            <td><%= entrypoint.escape('method_name') %></td>
+            <td colspan="2"><%= entrypoint.escape('url') %></td>
         </tr>
     <% }) %>
 </script>

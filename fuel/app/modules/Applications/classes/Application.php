@@ -27,8 +27,8 @@ class Application extends \UNBOXAPI\Module{
         $application = new Model\Applications();
         return $application->getAPIs($id);
     }
-    public static function entryPoints($id){
+    public static function entrypoints($id){
         $application = new Model\Applications();
-        return $application->getEntryPoints($id);
+        return $application->getEntrypoints($id);
     }
 } 

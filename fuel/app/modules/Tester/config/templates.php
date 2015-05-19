@@ -22,7 +22,7 @@ return array(
                         </div>
                         <div class='row'>
                             <label>Entry Point</label>
-                            <input type='hidden' class='form-control select2 relate' id='entry_point' name='entry_point_id' data-module='EntryPoints'>
+                            <input type='hidden' class='form-control select2 relate' id='entry_point' name='entry_point_id' data-module='Entrypoints'>
                         </div>
                     </form>
                 </div>
@@ -149,35 +149,35 @@ return array(
 
         </div>
     ",
-    "EntryPointActions" => "
+    "EntrypointActions" => "
         <% if (hasParams==true && panelNumber==2) { %>
             <button type='button' class='btn btn-primary pull-right' id='setupParams' >Setup Params</button>
         <% }else{ %>
-            <button type='button' class='btn btn-primary pull-right' id='sendAPI' disabled='disabled' >Test EntryPoint</button>
+            <button type='button' class='btn btn-primary pull-right' id='sendAPI' disabled='disabled' >Test Entrypoint</button>
             <button type='button' class='btn btn-primary pull-right' id='generateScript'>Generate Script</button>
         <% } %>
     ",
-    "EntryPointMain" => "
+    "EntrypointMain" => "
         <table class='table table-responsive'>
             <tr>
                 <td class='row-head'>Name:</td>
-                <td class='ep-info'><%= _.escape(entryPoint.get('name')) %></td>
+                <td class='ep-info'><%= _.escape(entrypoint.get('name')) %></td>
             </tr>
             <tr>
                 <td class='row-head'>Method:</td>
-                <td class='ep-info'><%= _.escape(entryPoint.getHttpMethod()) %></td>
+                <td class='ep-info'><%= _.escape(entrypoint.getHttpMethod()) %></td>
             </tr>
             <tr>
                 <td class='row-head'>URL:</td>
-                <td class='ep-info'><%= _.escape(entryPoint.get('url')) %></td>
+                <td class='ep-info'><%= _.escape(entrypoint.get('url')) %></td>
             </tr>
         </table>
         <div>
             <span class='row-head'>Description:</span>
-            <p class='ep-info' id='ep_description'><%= _.escape(entryPoint.get('description')) %></p>
+            <p class='ep-info' id='ep_description'><%= _.escape(entrypoint.get('description')) %></p>
         </div>
     ",
-    "EntryPointParameters" => "
+    "EntrypointParameters" => "
         <div class='row'>
             <div class='col-sm-4'>
                 <b>Type</b>
@@ -203,7 +203,7 @@ return array(
             </div>
         <% }); %>
     ",
-    "EntryPointExamples" => "
+    "EntrypointExamples" => "
         <div class='row'>
             <div class='col-sm-2'></div>
             <div class='col-sm-4'>
@@ -227,7 +227,7 @@ return array(
             </div>
         <% }); %>
     ",
-    "EntryPointExceptions" => "
+    "EntrypointExceptions" => "
         <div class='row'>
             <div class='col-sm-4'>
                 <b>Type</b>

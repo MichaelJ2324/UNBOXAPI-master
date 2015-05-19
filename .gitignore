@@ -9,3 +9,4 @@ fuel/app/vendor/league
 fuel/vendor
 fuel/core
 fuel/packages
+composer.phar

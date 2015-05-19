@@ -40,9 +40,9 @@ class Tests extends \Model\Module{
                 'dependent' => 'Applications'
             ),
         ),
-        'entryPoint_id' => array(
+        'entrypoint_id' => array(
             'data_type' => 'varchar',
-            'label' => 'EntryPoint',
+            'label' => 'Entrypoint',
             'null' => false,
             'validation' => array(
                 'required' => true,
@@ -50,7 +50,7 @@ class Tests extends \Model\Module{
             ),
             'form' => array(
                 'type' => 'relate',
-                'module' => 'EntryPoints',
+                'module' => 'Entrypoints',
                 'dependent' => 'Apis'
             ),
         ),
@@ -120,9 +120,9 @@ class Tests extends \Model\Module{
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'entryPoint' => array(
-                'key_from' => 'entryPoint_id',
-                'model_to' => 'EntryPoints\\Model\\EntryPoints',
+            'entrypoint' => array(
+                'key_from' => 'entrypoint_id',
+                'model_to' => 'Entrypoints\\Model\\Entrypoints',
                 'key_to' => 'id',
                 'cascade_save' => true,
                 'cascade_delete' => false,

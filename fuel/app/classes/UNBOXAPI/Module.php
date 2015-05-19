@@ -641,8 +641,7 @@ abstract class Module {
                 if (strpos(get_parent_class($relationshipModel), "Relationship") !== false) {
                     $key_to = $Relationship->__get('key_to');
                     $foreignKey = $key_to[0];
-                    //TODO::Find something better than this HACK.
-                    $relatedKey = substr($relationship, 0, -1) . "_id";
+                    $relatedKey = substr($relationship, 0, -1)."_id";
                     foreach ($this->model->{$relationship} as $key => $model) {
                         if (($this->id == $model->{$foreignKey})&&($related_id==$model->{$relatedKey})) {
                             $exists = true;

@@ -6,13 +6,13 @@
  * Time: 12:19 AM
  */
 
-namespace EntryPoints\seed;
+namespace Entrypoints\seed;
 
 
-class EntryPoints extends \UNBOXAPI\Data\Seed\Seeder{
+class Entrypoints extends \UNBOXAPI\Data\Seed\Seeder{
 
-    protected static $_module = 'EntryPoints';
-    protected static $_model = 'EntryPoints';
+    protected static $_module = 'Entrypoints';
+    protected static $_model = 'Entrypoints';
 
     protected static $_records = array(
         array(

@@ -6,12 +6,12 @@
  * Time: 9:33 AM
  */
 
-namespace EntryPoints\Model;
+namespace Entrypoints\Model;
 
 
 class Parameters extends \Model\Relationship {
 
-    protected static $_table_name = 'entryPoint_parameters';
+    protected static $_table_name = 'entrypoint_parameters';
     protected static $_fields = array(
         'created_by' => array(
             'data_type' => 'varchar',
@@ -29,9 +29,9 @@ class Parameters extends \Model\Relationship {
             ),
             'form' => false,
         ),
-        'entryPoint_id' => array(
+        'entrypoint_id' => array(
             'data_type' => 'varchar',
-            'label' => 'EntryPoint ID',
+            'label' => 'Entrypoint ID',
             'null' => false,
             'validation' => array(
                 'required' => true,
@@ -43,7 +43,7 @@ class Parameters extends \Model\Relationship {
             'label' => 'Parameter ID',
             'null' => false,
             'validation' => array(
-                'required',
+                'required' => true,
                 'max_length' => 50
             ),
         ),
@@ -52,7 +52,7 @@ class Parameters extends \Model\Relationship {
             'label' => 'Required',
             'default' => 0,
             'validation' => array(
-                'max_lenght' => 1
+                'max_length' => 1
             ),
             'form' => array(
                 'type' => 'checkbox'
@@ -103,8 +103,8 @@ class Parameters extends \Model\Relationship {
     protected static $_relationships = array(
         'belongs_to' => array(
             'entrypoint' => array(
-                'key_from' => 'entryPoint_id',
-                'model_to' => 'EntryPoints\\Model\\EntryPoints',
+                'key_from' => 'entrypoint_id',
+                'model_to' => 'Entrypoints\\Model\\Entrypoints',
                 'key_to' => 'id',
                 'cascade_save' => true,
                 'cascade_delete' => false,

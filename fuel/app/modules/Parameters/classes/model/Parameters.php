@@ -111,7 +111,7 @@ class Parameters extends \Model\Module{
         'has_many' => array(
             'entrypoints' => array(
                 'key_from' => 'id',
-                'model_to' => 'EntryPoints\\Model\\Parameters',
+                'model_to' => 'Entrypoints\\Model\\Parameters',
                 'key_to' => 'parameter_id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
@@ -119,11 +119,11 @@ class Parameters extends \Model\Module{
         )
     );
 
-    public function getEntryPointParam($param,$entryPoint,$url=""){
-        $query = \DB::select('P.id','P.data_type','P.api_type','P.name','P.description','P.url_param',array('EPP.id','related_entryPoint'),'EPP.required','EPP.order','EPP.login_pane')->from(array('parameters','P'));
-        $query->join(array('entryPoint_parameters','EPP'),'INNER')->on('P.id','=','EPP.parameter_id');
+    public function getEntrypointParam($param,$entrypoint,$url=""){
+        $query = \DB::select('P.id','P.data_type','P.api_type','P.name','P.description','P.url_param',array('EPP.id','related_entrypoint'),'EPP.required','EPP.order','EPP.login_pane')->from(array('parameters','P'));
+        $query->join(array('entrypoint_parameters','EPP'),'INNER')->on('P.id','=','EPP.parameter_id');
         $query->where('P.id',$param);
-        $query->and_where('EPP.entryPoint_id',$entryPoint);
+        $query->and_where('EPP.entrypoint_id',$entrypoint);
         if ($url!=""){
             if ($url==false){
                 $query->and_where('P.url_param',"0");

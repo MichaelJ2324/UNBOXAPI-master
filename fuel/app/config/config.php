@@ -100,7 +100,7 @@ return array(
             'Applications',
             'Apis',
             'HttpMethods',
-            'EntryPoints',
+            'Entrypoints',
             'ParameterTypes',
             'Parameters',
             'Logins',

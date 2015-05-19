@@ -13,7 +13,7 @@ class Logins extends \Model\Module{
 
     protected static $_table_name = 'logins';
     protected static $_fields = array(
-        'login_entryPoint_id' => array(
+        'login_entrypoint_id' => array(
             'data_type' => 'varchar',
             'label' => 'Login Entry Point',
             'null' => false,
@@ -23,10 +23,10 @@ class Logins extends \Model\Module{
             ),
             'form' => array(
                 'type' => 'relate',
-                'module' => 'EntryPoints'
+                'module' => 'Entrypoints'
             ),
         ),
-        'logout_entryPoint_id' => array(
+        'logout_entrypoint_id' => array(
             'data_type' => 'varchar',
             'label' => 'Logout Entry Point',
             'null' => false,
@@ -36,7 +36,7 @@ class Logins extends \Model\Module{
             ),
             'form' => array(
                 'type' => 'relate',
-                'module' => 'EntryPoints'
+                'module' => 'Entrypoints'
             ),
         ),
         'deprecated' => array(
@@ -52,16 +52,16 @@ class Logins extends \Model\Module{
     );
     protected static $_relationships = array(
         'has_one' => array(
-            'login_entryPoint' => array(
-                'key_from' => 'login_entryPoint_id',
-                'model_to' => 'EntryPoints\\Model\\EntryPoints',
+            'login_entrypoint' => array(
+                'key_from' => 'login_entrypoint_id',
+                'model_to' => 'Entrypoints\\Model\\Entrypoints',
                 'key_to' => 'id',
                 'cascade_save' => true,
                 'cascade_delete' => false,
             ),
-            'logout_entryPoint' => array(
-                'key_from' => 'logout_entryPoint_id',
-                'model_to' => 'EntryPoints\\Model\\EntryPoints',
+            'logout_entrypoint' => array(
+                'key_from' => 'logout_entrypoint_id',
+                'model_to' => 'Entrypoints\\Model\\Entrypoints',
                 'key_to' => 'id',
                 'cascade_save' => true,
                 'cascade_delete' => false,

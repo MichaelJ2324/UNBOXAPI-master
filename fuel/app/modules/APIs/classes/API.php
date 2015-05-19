@@ -15,7 +15,7 @@ class Api extends \UNBOXApi\Module{
     protected static $_label_plural = "APIs";
     protected static $_models = array(
         'Apis',
-        'EntryPoints',
+        'Entrypoints',
         'Logins'
     );
 
@@ -30,9 +30,9 @@ class Api extends \UNBOXApi\Module{
         $api = new Model\Apis();
         return $api->getHttpMethods($id);
     }
-    public static function entryPoints($id,$httpMethod=""){
+    public static function entrypoints($id,$httpMethod=""){
         $api = new Model\Apis();
-        return $api->getEntryPoints($id,$httpMethod);
+        return $api->getEntrypoints($id,$httpMethod);
     }
     public static function logins($id){
         $api = new Model\Apis();
@@ -53,44 +53,44 @@ class Api extends \UNBOXApi\Module{
             return false;
         }
     }
-    public static function login($id,$entryPoint,$data=array()){
+    public static function login($id,$entrypoint,$data=array()){
         if (count($data)==0){
             $data = \Input::post();
         };
         $url=$data['web_address'];
         if ($url!==false){
             $Api = new Api($url,$id);
-            $entryPoint = new \EntryPoints\EntryPoint($entryPoint);
+            $entrypoint = new \Entrypoints\Entrypoint($entrypoint);
             $Api->request = new Request($Api->web_address);
-            $Api->request->set_EntryPoint($entryPoint,$data);
+            $Api->request->set_Entrypoint($entrypoint,$data);
             return $Api->request->send();
         }else{
             return false;
         }
     }
-    public static function buildScript($id,$entryPoint,$data=array()){
+    public static function buildScript($id,$entrypoint,$data=array()){
         if (count($data)==0){
             $data = \Input::post();
         };
         $url=$data['web_address'];
         if ($url!==false){
             $Api = new Api($url,$id);
-            $entryPoint = new \EntryPoints\EntryPoint($entryPoint);
+            $entrypoint = new \Entrypoints\Entrypoint($entrypoint);
             //$Api->writeScript();
         }else{
             return false;
         }
     }
-    public static function test($id,$entryPoint,$data=array()){
+    public static function test($id,$entrypoint,$data=array()){
         if (count($data)==0){
             $data = \Input::post();
         };
         $url=$data['web_address'];
         if ($url!==false){
             $Api = new Api($url,$id);
-            $entryPoint = new \EntryPoints\EntryPoint($entryPoint);
+            $entrypoint = new \Entrypoints\Entrypoint($entrypoint);
             $Api->request = new Request($Api->web_address);
-            $Api->request->set_EntryPoint($entryPoint,$data);
+            $Api->request->set_Entrypoint($entrypoint,$data);
             if ($Api->login_required==true) {
                 $Api->request->token = $data['token'];
             }

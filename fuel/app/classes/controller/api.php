@@ -414,7 +414,7 @@ class Api extends \Controller_Rest{
     }
     /******************************************
      *
-     * ENTRY POINTS for EntryPoints
+     * ENTRY POINTS for Entrypoints
      *
      ******************************************/
     /***
@@ -424,30 +424,30 @@ class Api extends \Controller_Rest{
      * @param string $related_id
      * @return mixed
      */
-    public function get_entryPoints($id="",$action="",$related_module="",$related_id=""){
+    public function get_entrypoints($id="",$action="",$related_module="",$related_id=""){
         try
         {
             $response = "";
             if ($action==""||!isset($action)){
                 if ($id=="") {
-                    $response = \EntryPoints\EntryPoint::get();
+                    $response = \Entrypoints\Entrypoint::get();
                 }else{
                     if ($id=='filter'){
-                        $response = \EntryPoints\EntryPoint::filter();
+                        $response = \Entrypoints\Entrypoint::filter();
                     }else{
-                        $response = \EntryPoints\EntryPoint::get($id);
+                        $response = \Entrypoints\Entrypoint::get($id);
                     }
                 }
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \EntryPoints\EntryPoint::recordRelated($id,$related_module,$related_id);
+                        $response = \Entrypoints\Entrypoint::recordRelated($id,$related_module,$related_id);
                         break;
                     case "related":
                         if ($related_id=='filter'){
-                            $response = \EntryPoints\EntryPoint::filterRelated($id,$related_module);
+                            $response = \Entrypoints\Entrypoint::filterRelated($id,$related_module);
                         }else{
-                            $response = \EntryPoints\EntryPoint::related($id,$related_module,$related_id);
+                            $response = \Entrypoints\Entrypoint::related($id,$related_module,$related_id);
                         }
                         break;
                     default:
@@ -468,20 +468,20 @@ class Api extends \Controller_Rest{
             );
         }
     }
-    public function post_entryPoints($id="",$action="",$related_module="",$related_id=""){
+    public function post_entrypoints($id="",$action="",$related_module="",$related_id=""){
         try
         {
             $response = "";
             if ($action==""||!isset($action)){
                 if ($id=="") {
-                    $response = \EntryPoints\EntryPoint::create();
+                    $response = \Entrypoints\Entrypoint::create();
                 }else{
                     throw new \Exception("Use PUT request for updating records.");
                 }
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \EntryPoints\EntryPoint::createRelated($id,$related_module);
+                        $response = \Entrypoints\Entrypoint::createRelated($id,$related_module);
                         break;
                     default:
                         throw new \Exception("Unknown action provided for parameter 3 of request");
@@ -501,16 +501,16 @@ class Api extends \Controller_Rest{
             );
         }
     }
-    public function put_entryPoints($id,$action="",$related_module="",$related_id=""){
+    public function put_entrypoints($id,$action="",$related_module="",$related_id=""){
         try
         {
             $response = "";
             if ($action==""||!isset($action)){
-                $response = \EntryPoints\EntryPoint::update($id);
+                $response = \Entrypoints\Entrypoint::update($id);
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \EntryPoints\EntryPoint::updateRelated($id,$related_module,$related_id);
+                        $response = \Entrypoints\Entrypoint::updateRelated($id,$related_module,$related_id);
                         break;
                     default:
                         throw new \Exception("Unknown action provided for parameter 3 of request");
@@ -530,16 +530,16 @@ class Api extends \Controller_Rest{
             );
         }
     }
-    public function delete_entryPoints($id,$action="",$related_module="",$related_id=""){
+    public function delete_entrypoints($id,$action="",$related_module="",$related_id=""){
         try
         {
             $response = "";
             if ($action==""||!isset($action)){
-                $response = \EntryPoints\EntryPoint::delete($id);
+                $response = \Entrypoints\Entrypoint::delete($id);
             }else{
                 switch ($action) {
                     case "link":
-                        $response = \EntryPoints\EntryPoint::unrelate($id,$related_module,$related_id);
+                        $response = \Entrypoints\Entrypoint::unrelate($id,$related_module,$related_id);
                         break;
                     default:
                         throw new \Exception("Unknown action provided for parameter 3 of request");
