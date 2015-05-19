@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/MichaelJ2324/UNBOXAPI-master.svg?branch=master)](https://travis-ci.org/MichaelJ2324/UNBOXAPI-master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/MichaelJ2324/UNBOXAPI-master/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/MichaelJ2324/UNBOXAPI-master/?branch=master)
+[![Build Status](https://scrutinizer-ci.com/g/MichaelJ2324/UNBOXAPI-master/badges/build.png?b=master)](https://scrutinizer-ci.com/g/MichaelJ2324/UNBOXAPI-master/build-status/master)
+
 UNBOX API
 =========
 
