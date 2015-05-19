@@ -32,7 +32,7 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function getScopes(AccessTokenEntity $token)
     {
-        $accessToken = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'));
+        $accessToken = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'))->get_one();
         $response = array();
         if (property_exists($accessToken,'scopes')){
             $scopes = $accessToken->scopes;
@@ -69,7 +69,7 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function associateScope(AccessTokenEntity $token, ScopeEntity $scope)
     {
-        $access_token = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'));
+        $access_token = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'))->get_one();
         $access_token->scopes[] = \Oauth\Model\Scopes::query()->where('scope',$scope->getId())->get_one();
         $access_token->save();
     }
@@ -79,7 +79,7 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function delete(AccessTokenEntity $token)
     {
-        $access_token = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId());
+        $access_token = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId())->get_one();
         $access_token->delete();
     }
 }

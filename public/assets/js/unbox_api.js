@@ -118,12 +118,15 @@ UNBOXAPI.App = Backbone.Router.extend({
         "login": "home",
         "register": "register",
         "profile": "profile",
+        "home": "home",
         '*path': 'defaultRoute'
     },
     initialize: function (options) {
         this.options = options || {};
-        this.metadata = new UNBOXAPI.Collections.MetaData;
         this.user = new UNBOXAPI.Models.User;
+        this.metadata = new UNBOXAPI.Collections.MetaData({
+            user: this.user
+        });
         this.loggedIn = false;
         if (!(this.options.user==null||typeof this.options.user=='undefined')){
             this.loggedIn = true;
@@ -134,10 +137,10 @@ UNBOXAPI.App = Backbone.Router.extend({
         this.view = null;
         this.layout = null;
 
+        console.log(this.loggedIn);
+        console.log(this.user);
         _.bindAll(this,"start","setupView","userStateChange");
         this.user.on("change:id",this.userStateChange);
-        console.log(this.user);
-        console.log(this.loggedIn);
     },
     start: function(){
         var functions = [
@@ -167,7 +170,8 @@ UNBOXAPI.App = Backbone.Router.extend({
                 if (this.view == null) {
                     this.view = new UNBOXAPI.Views.AppView({
                         el: $("body"),
-                        metadata: this.metadata
+                        metadata: this.metadata,
+                        user: this.user
                     });
                 } else {
                     if (oldLayout!=layout) {
@@ -184,13 +188,14 @@ UNBOXAPI.App = Backbone.Router.extend({
     },
     userStateChange: function(){
         var loggedIn = this.user.loggedIn();
-        console.log("USer state changed");
         if (this.loggedIn==false && loggedIn==true){
             this.metadata.fetchAll();
             this.loggedIn = loggedIn;
             var module = this.user.get('default_module');
             if (!(module==null||module==""||typeof module=='undefined')){
                 this.navigate(module,{trigger:true});
+            }else{
+                this.navigate("Home",{trigger: true});
             }
         }else{
             if (this.loggedIn==true && loggedIn==false){
@@ -474,6 +479,11 @@ UNBOXAPI.Views = {
                             hidden: false
                         });
                         break;
+                    default:
+                        pane.set({
+                            hidden: true
+                        });
+                        break;
                 }
             }
         },
@@ -627,12 +637,10 @@ UNBOXAPI.Views = {
             }
         },
         hide: function(){
-            console.log("Hiding Panel "+this.model.get('number'));
             this.$panel.addClass("hidden");
             this.$content.addClass("hidden");
         },
         show: function(){
-            console.log("Showing Panel "+this.model.get('number'));
             this.$panel.removeClass("hidden");
             this.$content.removeClass("hidden");
         },
@@ -816,6 +824,14 @@ UNBOXAPI.Views.Home = {
             );
         },
         home: function(){
+            this.setContent(
+                1,
+                UNBOXAPI.Views.Home.Profile,
+                {
+                    model: this.user
+                },
+                "close"
+            );
             this.setContent(
                 'main',
                 UNBOXAPI.Views.Home.Home
@@ -2341,13 +2357,11 @@ UNBOXAPI.Models = {
     //User Model
     User: Backbone.Model.extend({
         initialize: function(){
-            _.bindAll(this, 'getValue');
-            setInterval(function(model) {
-                model.fetch();
-            }, 600000,this);
+            _.bindAll(this, 'getValue',"loggedIn","login","logout");
         },
         urlRoot: "user/me",
         default: {
+            id: "",
             name: "",
             username: "",
             first_name: "",
@@ -2369,7 +2383,10 @@ UNBOXAPI.Models = {
                     password: this.get('password')
                 },
                 success: function(data){
-                    this.fetch({reset: true});
+                    this.fetch();
+                    setInterval(function(model) {
+                        model.fetch();
+                    }, 600000,this);
                 },
                 error: function(data){
                     console.log(data);
@@ -2382,10 +2399,7 @@ UNBOXAPI.Models = {
         },
         loggedIn: function(){
             var id = this.get('id');
-            if (!(id == null || typeof id == 'undefined' || id == false)) {
-                return true;
-            }
-            return false;
+            return !(id == null || typeof id == 'undefined' || id == false || id=="");
         },
         logout: function() {
             $.ajax({
@@ -2510,7 +2524,8 @@ UNBOXAPI.Collections = {
     }),
     //Metadata Handling
     MetaData: Backbone.Collection.extend({
-        initialize: function(){
+        initialize: function(options){
+            this.options = options || {};
             _.bindAll(this,"fetchAll","setup","setupConfig","setupModules","setupLayouts","setupTemplates");
             this.config = new UNBOXAPI.Collections.Config;
             this.templates = new UNBOXAPI.Collections.Templates;

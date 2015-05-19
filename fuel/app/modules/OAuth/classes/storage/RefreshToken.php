@@ -13,6 +13,8 @@ class RefreshToken extends AbstractStorage implements RefreshTokenInterface
      */
     public function get($token)
     {
+        $refresh_token=null;
+        $AccessToken=null;
         $refresh_token = \Oauth\Model\RefreshTokens::query()->where('refresh_token',$token)->get_one();
         if ($refresh_token!==null){
             $AccessToken = \Oauth\Model\AccessTokens::find($refresh_token->access_token_id);
