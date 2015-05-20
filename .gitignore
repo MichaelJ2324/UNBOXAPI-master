@@ -10,3 +10,4 @@ fuel/vendor
 fuel/core
 fuel/packages
 composer.phar
+composer.lock

@@ -30,7 +30,7 @@ $ git checkout [branch]
 
 Ignore any local file permission changes
 ```
-$ git config --global core.filemode false
+$ git config --add core.filemode false
 ```
 
 Add Upstream for easy fetch capabilities
@@ -46,8 +46,19 @@ $ vi fuel/app/config/install.php
 
 Reset File Permissions
 ```
-$ sudo chmod -R 775 ../UNBOXAPI
-$ sudo chown -R www:www ../UNBOXAPI
+$ sudo chmod -R 775 ../UNBOX_API
+$ sudo chown -R www:www ../UNBOX_API
+```
+
+Don't track changes to db files
+```
+$ git update-index --assume-unchanged fuel/app/config/db.php
+$ git update-index --assume-unchanged fuel/app/config/development/db.php
+$ git update-index --assume-unchanged fuel/app/config/install.php
+$ git update-index --assume-unchanged fuel/app/config/production/db.php
+$ git update-index --assume-unchanged fuel/app/config/staging/db.php
+$ git update-index --assume-unchanged fuel/app/config/test/db.php
+$ git update-index --assume-unchanged fuel/app/config/unbox.php
 ```
 
 Install and Seed Data
