@@ -1771,8 +1771,12 @@ UNBOXAPI.Views.Manager = {
                     modules: this.modules,
                     model: this.models.current,
 <<<<<<< HEAD
+<<<<<<< HEAD
                     templates: this.metadata.templates,
                     gTemplates: this.gTemplates
+=======
+                    templates: this.metadata.templates
+>>>>>>> origin/master
 =======
                     templates: this.metadata.templates
 >>>>>>> origin/master
