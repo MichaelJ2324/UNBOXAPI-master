@@ -1750,7 +1750,8 @@ UNBOXAPI.Views.Manager = {
                 UNBOXAPI.Views.Manager.Record.Panel,
                 {
                     modules: this.modules,
-                    model: this.models.current
+                    model: this.models.current,
+                    templates: this.metadata.templates
                 },
                 'open'
             );
@@ -1761,7 +1762,9 @@ UNBOXAPI.Views.Manager = {
                 UNBOXAPI.Views.Manager.Record.Panel,
                 {
                     related: true,
-                    modules: this.modules
+                    modules: this.modules,
+                    model: this.models.current,
+                    templates: this.metadata.templates
                 }
             );
         },
@@ -1794,6 +1797,7 @@ UNBOXAPI.Views.Manager = {
     Record: {
         Panel: Backbone.View.extend({
             initialize: function(options){
+                console.dir(options);
                 this.options = options || {};
                 this.panel = this.options.panel || {};
                 this.templates = this.options.templates || {};
