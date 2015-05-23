@@ -1,4 +1,4 @@
-[![Stories in Ready](https://badge.waffle.io/MichaelJ2324/UNBOX_API.png?label=ready&title=Ready)](https://waffle.io/MichaelJ2324/UNBOX_API)
+[![Current Sprint](https://badge.waffle.io/MichaelJ2324/UNBOX_API.png?label=Sprint&title=Current%20Sprint)](https://waffle.io/MichaelJ2324/UNBOX_API)
 [![Build Status](https://travis-ci.org/MichaelJ2324/UNBOX_API.svg?branch=master)](https://travis-ci.org/MichaelJ2324/UNBOX_API)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/MichaelJ2324/UNBOX_API/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/MichaelJ2324/UNBOX_API/?branch=master)
 
