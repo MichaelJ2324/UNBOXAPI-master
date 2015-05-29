@@ -25,7 +25,7 @@
 <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
     <div>
         <div class="navbar-header pull-left">
-            <a href="<?php echo Uri::base(false)."/"; ?>" class="dropdown-toggle" data-toggle="dropdown">
+            <a href="<?php echo Uri::base(false)."/"; ?>" >
                 <span class="navbar-brand pull-left logo" style="color: #ffffff;padding: 10px 15px 0px 15px;">
                     UNBOX
                     <span class='header-icon'>
@@ -36,22 +36,13 @@
             </a>
         </div>
         <div class="collapse navbar-collapse pull-left">
-            <ul class="nav navbar-nav" id="main-nav">
+            <ul class="nav navbar-nav" id="mainNav">
 
             </ul>
         </div>
-        <div class="navbar-header pull-right">
-            <ul class="nav navbar-nav">
-                <li>
-                    <a href="#tutorial">
-                        <span class="glyphicon glyphicon-info-sign"></span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#about">
-                        <span class="glyphicon glyphicon-question-sign"></span>
-                    </a>
-                </li>
+        <div class="collapse navbar-collapse pull-right">
+            <ul class="nav navbar-nav" id="rightNav">
+
             </ul>
         </div>
     </div>

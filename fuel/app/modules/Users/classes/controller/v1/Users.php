@@ -96,7 +96,12 @@ class Users extends RestV1{
         try {
             if ($_SESSION['loggedIn']){
                 $userId = $this->oauth_client->getUserId();
-                $response = \Users\User::me($userId);
+                \Log::debug("Current user: $userId");
+                if (isset($userId)) {
+                    $response = \Users\User::me($userId);
+                }else{
+                    throw new \Exception("No user associated with current token.");
+                }
             }else {
                 throw new \Exception("Access denied.");
             }

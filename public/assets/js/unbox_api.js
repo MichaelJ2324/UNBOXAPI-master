@@ -305,16 +305,22 @@ UNBOXAPI.Views = {
             this.notices = new UNBOXAPI.Collections.Notices;
 
             //Dom elements
-            this.$navBar = $("#main-nav");
+            this.$mainNav = $("#mainNav");
+            this.$rightNav = $("#rightNav");
             this.$notices = $("#notices");
             this.$layout = $("#layout");
 
             //build nav
-            this.nav = new UNBOXAPI.Views.NavBar({
-                el: this.$navBar,
+            this.mainNav = new UNBOXAPI.Views.MainNav({
+                el: this.$mainNav,
                 collection: this.metadata.layouts,
                 model: this.metadata.layouts.current,
-                template: this.metadata.templates.getTemplate("navBtns")
+                template: this.metadata.templates.getTemplate("mainNav")
+            });
+            this.rightNav = new UNBOXAPI.Views.RightNav({
+                el: this.$rightNav,
+                model: this.user,
+                template: this.metadata.templates.getTemplate("rightNav")
             });
             //build notice
             this.notice = new UNBOXAPI.Views.Notice({
@@ -348,12 +354,13 @@ UNBOXAPI.Views = {
             }
         }
     }),
-    NavBar: Backbone.View.extend({
+    MainNav: Backbone.View.extend({
         events: {
         },
         initialize: function(options){
             this.options = options || {};
             this.template = this.options.template;
+            this.user = this.options.user;
 
             _.bindAll(this,"render");
             this.collection.on("reset",this.render);
@@ -365,6 +372,25 @@ UNBOXAPI.Views = {
                 current: this.model,
                 modules: this.collection.models,
                 links: this.model.get("links")
+            });
+            this.$el.html(this.html);
+            return this;
+        }
+    }),
+    RightNav: Backbone.View.extend({
+        events: {
+        },
+        initialize: function(options){
+            this.options = options || {};
+            this.template = this.options.template;
+
+            _.bindAll(this,"render");
+            this.model.on("change",this.render);
+            this.render();
+        },
+        render: function(){
+            this.html = _.template(this.template,{
+                user: this.model
             });
             this.$el.html(this.html);
             return this;

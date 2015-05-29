@@ -48,7 +48,6 @@ class Client {
     }
 
     public function __construct(){
-        session_start();
         $this->setId();
         $this->setSecret();
         $this->setServer();
@@ -58,6 +57,7 @@ class Client {
         }
     }
     public function setupSession($loggedIn){
+        session_start();
         $_SESSION['loggedIn'] = $loggedIn;
         if ($loggedIn) {
             $_SESSION['token'] = $this->_token;

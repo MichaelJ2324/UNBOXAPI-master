@@ -51,7 +51,7 @@ return array(
                         <%= (input.get('disabled') == 'disabled' ? input.escape('disabled') : (input.escape('disabled')==true ? 'disabled' : '' )) %>
                         <%= (input.get('required') == 'required' ? input.escape('required') : (input.escape('required')==true ? 'required' : '' )) %>
                     ><%= (value||input.escape('value')) %></textarea>",
-    'navBtns' => "
+    'mainNav' => "
             <li id='homeLi' class='dropdown active'>
             <a href='<%= current.get('link') %>' style='float: left;'>
             <%= current.get('icon') %>
@@ -61,7 +61,7 @@ return array(
             <a href='#' class='dropdown-toggle' data-toggle='dropdown' style='float: right; padding-left: 0px;'>
                 <span class='caret'></span>
             </a>
-            <ul class='dropdown-menu' role='menu'>
+            <ul class='dropdown-menu ' role='menu'>
                 <% _.each(modules,function(module){
                 if (module.get('name')!==current.get('name')){
                 %>
@@ -76,6 +76,45 @@ return array(
                 <a href='<%= link.link %>'><%= link.icon %><%= _.escape(link.name) %></a>
             </li>
             <% }) %>",
+    'rightNav' => "
+            <li class='dropdown'>
+                <% if (user.loggedIn()){ %>
+                <a href='#profile' style='float: left;'>
+                    <span class='fa-stack fa-lg'>
+                      <i class='fa fa-circle fa-stack-2x'></i>
+                      <i class='fa fa-user fa-stack-1x fa-inverse'></i>
+                    </span>
+                    <%= user.escape('user_name') %>
+                </a>
+                <% } else { %>
+                <a href='#login' style='float: left;'>
+                  <i class='glyphicon glyphicon-log-in'></i>
+                   Login
+                </a>
+                <% } %>
+                <a href='#' class='dropdown-toggle' data-toggle='dropdown' style='float: right; padding-left: 0px;'>
+                    <span class='caret'></span>
+                </a>
+                <ul class='dropdown-menu dropdown-menu-right' role='menu'>
+                    <li>
+                        <a href='#tutorial'>
+                            <span class='glyphicon glyphicon-question-sign'></span>
+                            Tutorial
+                        </a>
+                    </li>
+                    <li>
+                        <a href='#about'>
+                            <span class='glyphicon glyphicon-info-sign'></span>
+                            About
+                        </a>
+                    </li>
+                    <% if (user.loggedIn()){ %>
+                        <li role='presentation' class='divider'></li>
+                        <li><a href='#logout'><i class='glyphicon glyphicon-log-out'></i>Logout</a></li>
+                    <% } %>
+                </ul>
+            </li>
+    ",
     "panel" => "
             <div class='un-color<%= num %> opaque un-panel un-panel-closed hidden' id='panel<%= num %>'>
                 <span data-panel='<%= num %>' class='un-panel-toggle un-open-panel opaque un-color<%= num %>' id='panel<%= num %>_toggle'>
