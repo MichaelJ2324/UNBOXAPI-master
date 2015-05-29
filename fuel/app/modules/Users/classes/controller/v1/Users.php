@@ -2,28 +2,18 @@
 /**
  * Created by PhpStorm.
  * User: mrussell
- * Date: 3/28/15
- * Time: 12:30 PM
+ * Date: 5/19/15
+ * Time: 4:48 PM
  */
 
-namespace Controller;
+namespace Users\Controller\V1;
 
 
-use Oauth\Oauth;
+use Controller\V1\Rest as RestV1;
 
-class User extends \Controller_Rest{
+class Users extends RestV1{
 
-    public $oauth_client;
-
-    public function router($resource, $arguments) {
-        try{
-            $this->oauth_client = new \Oauth\Client();
-            parent::router($resource, $arguments);
-        }catch(\Exception $ex){
-            $response = \Response::forge(\Format::forge(array('Error' => $ex->getMessage()))->to_json(), 500)->set_header('Content-Type', 'application.json');
-            return $response;
-        }
-    }
+    protected $auth_required = false;
 
     public function post_login(){
         try {
@@ -104,7 +94,7 @@ class User extends \Controller_Rest{
     }
     public function get_me(){
         try {
-            if ($this->oauth_client->validateAuth()){
+            if ($_SESSION['loggedIn']){
                 $userId = $this->oauth_client->getUserId();
                 $response = \Users\User::me($userId);
             }else {
@@ -123,4 +113,105 @@ class User extends \Controller_Rest{
             );
         }
     }
+    public function post_logout(){
+        try {
+            if ($_SESSION['loggedIn']){
+                $response = $this->oauth_client->logout();
+            }else {
+                throw new \Exception("Access denied.");
+            }
+            return $this->response(
+                $response
+            );
+        } catch (\Exception $e) {
+            return $this->response(
+                array(
+                    'err' => true,
+                    'msg' => "Exception: " . $e->getMessage() . "\n",
+                ),
+                403
+            );
+        }
+    }
+
+
+    public function get_index($id="",$action="",$related_module="",$related_id=""){
+        return $this->response(
+            array(
+                'err' => 'true',
+                'msg' => "Please use Users/me Entrypoint. \n",
+            ),
+            401
+        );
+    }
+    public function post_index($id="",$action="",$related_module="",$related_id=""){
+        return $this->response(
+            array(
+                'err' => 'true',
+                'msg' => "Please use Users/Register Entrypoint. \n",
+            ),
+            401
+        );
+    }
+    public function put_index($id="",$action="",$related_module="",$related_id=""){
+        try
+        {
+            $response = "";
+            if ($_SESSION['loggedIn']){
+                if ($action==""||!isset($action)){
+                    $response = \Users\User::update($_SESSION['user_id']);
+                }else{
+                    switch ($action) {
+                        default:
+                            throw new \Exception("Unknown action provided for parameter 3 of request");
+                    }
+                }
+            }else{
+                throw new \Exception("Access denied");
+            }
+            return $this->response(
+                $response
+            );
+        }
+        catch (\Exception $e) {
+            return $this->response(
+                array(
+                    'err' => 'true',
+                    'msg' => "Caught exception: ".$e->getMessage()."\n",
+                ),
+                400
+            );
+        }
+    }
+    public function delete_index($id="",$action="",$related_module="",$related_id=""){
+        try
+        {
+            $response = "";
+            if ($_SESSION['loggedIn']) {
+                if ($action == "" || !isset($action)) {
+                    $response = \Users\User::delete($_SESSION['user_id']);
+                } else {
+                    switch ($action) {
+                        default:
+                            throw new \Exception("Unknown action provided for parameter 3 of request");
+                    }
+                }
+            }else{
+                throw new \Exception("Access denied");
+            }
+            return $this->response(
+                $response
+            );
+        }
+        catch (\Exception $e) {
+            return $this->response(
+                array(
+                    'err' => 'true',
+                    'msg' => "Caught exception: ".$e->getMessage()."\n",
+                ),
+                400
+            );
+        }
+    }
+
 }
