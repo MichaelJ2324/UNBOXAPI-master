@@ -2,14 +2,13 @@
 /**
  * Created by PhpStorm.
  * User: mrussell
- * Date: 4/10/15
- * Time: 12:55 PM
+ * Date: 5/19/15
+ * Time: 4:48 PM
  */
 
-namespace Controller;
+namespace OAuth\Controller\V1;
 
-
-class oauth extends \Controller_Rest {
+class OAuth extends \Controller_Rest{
 
     public $oauth_server;
 
@@ -108,6 +107,9 @@ class oauth extends \Controller_Rest {
         }
     }
     public function post_authorization(){
+
+    }
+    public function post_revoke(){
 
     }
 }

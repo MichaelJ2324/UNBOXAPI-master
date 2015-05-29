@@ -32,7 +32,7 @@ return array(
 		// How many errors should we show before we stop showing them? (prevents out-of-memory errors)
 		'throttle'     => 10,
 		// Should notices from Error::notice() be shown?
-		'notices'      => true,
+		'notices'      => false,
 	),
 	'language'           => 'en', // Default language
 	'language_fallback'  => 'en', // Fallback language when file isn't available for default language

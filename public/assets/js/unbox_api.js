@@ -1770,16 +1770,8 @@ UNBOXAPI.Views.Manager = {
                 {
                     modules: this.modules,
                     model: this.models.current,
-<<<<<<< HEAD
-<<<<<<< HEAD
                     templates: this.metadata.templates,
                     gTemplates: this.gTemplates
-=======
-                    templates: this.metadata.templates
->>>>>>> origin/master
-=======
-                    templates: this.metadata.templates
->>>>>>> origin/master
                 },
                 'open'
             );
@@ -2393,7 +2385,7 @@ UNBOXAPI.Models = {
         initialize: function(){
             _.bindAll(this, 'getValue',"loggedIn","login","logout");
         },
-        urlRoot: "user/me",
+        urlRoot: UNBOXAPI.Global.ajaxURL+"users/me",
         default: {
             id: "",
             name: "",
@@ -2409,7 +2401,7 @@ UNBOXAPI.Models = {
         login: function(){
             //var loading = UNBOXAPI.Global.Utils.Loading.start("Logging In");
             $.ajax({
-                url: 'user/login',
+                url: UNBOXAPI.Global.ajaxURL+'users/login',
                 type: "POST",
                 context: this,
                 data: {
@@ -2437,7 +2429,7 @@ UNBOXAPI.Models = {
         },
         logout: function() {
             $.ajax({
-                url: 'user/logout',
+                url: UNBOXAPI.Global.ajaxURL+'users/logout',
                 type: "POST",
                 context: this,
                 success: function(data){

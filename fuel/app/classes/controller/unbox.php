@@ -35,6 +35,6 @@ class Unbox extends \Controller
      */
     public function action_404()
     {
-        return \Response::forge(\ViewModel::forge('UNBOXAPI/404'), 404);
+        return \Response::forge(\View::forge('404'),404);
     }
 }
