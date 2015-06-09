@@ -1,8 +1,8 @@
 {
-    "name": "fuel/fuel",
+    "name": "UNBOX_API",
     "type": "project",
-    "description" : "FuelPHP is a simple, flexible, community driven PHP 5.3+ framework, based on the best ideas of other frameworks, with a fresh start!",
-    "keywords": ["application", "website", "development", "framework", "PHP"],
+    "description" : "UNBOX API is an application for Managing, Testing, and Documenting APIs.",
+    "keywords": ["application", "website", "development", "API", "PHP"],
     "license": "MIT",
     "repositories": [
       {
@@ -104,7 +104,6 @@
       "league/oauth2-server": "4.1.3"
     },
     "suggest": {
-        "mustache/mustache": "Allow Mustache templating with the Parser package"
     },
     "config": {
         "vendor-dir": "fuel/vendor"

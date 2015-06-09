@@ -1,12 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/30/15
- * Time: 6:39 AM
- */
 
-namespace Oauth\Seed;
+namespace OAuth\Seed;
 
 
 class Clients extends \UNBOXAPI\Data\Seed\Seeder{
@@ -18,7 +12,8 @@ class Clients extends \UNBOXAPI\Data\Seed\Seeder{
         array(
             'client_id' => 'unbox_demo_api_client',
             'secret' => 'unbox_demo_api_secret',
-            'name' => 'UNBOX Demo Client'
+            'name' => 'UNBOX Demo Client',
+			'type' => 'api_user'
         )
     );
 
@@ -26,7 +21,8 @@ class Clients extends \UNBOXAPI\Data\Seed\Seeder{
         $record = array(
             'client_id' => \Config::get('unbox.oauth.client.id'),
             'secret' => \Config::get('unbox.oauth.client.secret'),
-            'name' => \Config::get('unbox.oauth.client.name')
+            'name' => \Config::get('unbox.oauth.client.name'),
+			'type' => 'unbox_client'
         );
         static::$_records[] = $record;
         return static::$_records;

@@ -1,10 +1,10 @@
 <?php
 
-namespace Oauth\Model;
+namespace OAuth\Model;
 
-class Sessions extends \Model\Oauth {
+class Sessions extends \Model\Auth {
 
-    protected static $_table_name = 'oauth_sessions';
+    protected static $_table_name = 'sessions';
     protected static $_fields = array(
         'owner_type' => array(
             'data_type' => 'varchar',
@@ -35,7 +35,7 @@ class Sessions extends \Model\Oauth {
         ),
         'client_redirect_uri' => array(
             'data_type' => 'varchar',
-            'label' => 'Access Token',
+            'label' => 'Client Redirect Uri',
             'validation' => array(
                 'max_length' => 50
             ),
@@ -45,14 +45,14 @@ class Sessions extends \Model\Oauth {
         'belongs_to' => array(
             'accessToken' => array(
                 'key_from' => 'id',
-                'model_to' => 'Oauth\\Model\\AccessTokens',
+                'model_to' => 'OAuth\\Model\\AccessTokens',
                 'key_to' => 'session_id',
                 'cascade_save' => false,
                 'cascade_delete' => true,
             ),
             'authCode' => array(
                 'key_from' => 'id',
-                'model_to' => 'Oauth\\Model\\AuthCodes',
+                'model_to' => 'OAuth\\Model\\AuthCodes',
                 'key_to' => 'session_id',
                 'cascade_save' => false,
                 'cascade_delete' => true,
@@ -61,19 +61,19 @@ class Sessions extends \Model\Oauth {
         'has_one' => array(
             'client' => array(
                 'key_from' => 'client_id',
-                'model_to' => 'Oauth\\Model\\Clients',
+                'model_to' => 'OAuth\\Model\\Clients',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             )
         ),
         'many_many' => array(
             'scopes' => array(
                 'key_from' => 'id',
                 'key_through_from' => 'session_id',
-                'table_through' => 'oauth_session_scopes',
+                'table_through' => 'session_scopes',
                 'key_through_to' => 'scope_id',
-                'model_to' => 'Oauth\\Model\\Scopes',
+                'model_to' => 'OAuth\\Model\\Scopes',
                 'key_to' => 'id',
                 'cascade_save' => false,
                 'cascade_delete' => true,

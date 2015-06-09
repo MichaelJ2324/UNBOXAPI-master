@@ -145,17 +145,9 @@ return array(
                 </div>
             </div>
         </div>
-        <div class='ep-actions' id='ep_action1'>
-
+        <div class='ep-actions' id='ep_actions'>
+			<button type='button' class='btn btn-primary pull-right' id='setupRequest'>Setup Request</button>
         </div>
-    ",
-    "EntrypointActions" => "
-        <% if (hasParams==true && panelNumber==2) { %>
-            <button type='button' class='btn btn-primary pull-right' id='setupParams' >Setup Params</button>
-        <% }else{ %>
-            <button type='button' class='btn btn-primary pull-right' id='sendAPI' disabled='disabled' >Test Entrypoint</button>
-            <button type='button' class='btn btn-primary pull-right' id='generateScript'>Generate Script</button>
-        <% } %>
     ",
     "EntrypointMain" => "
         <table class='table table-responsive'>
@@ -165,7 +157,7 @@ return array(
             </tr>
             <tr>
                 <td class='row-head'>Method:</td>
-                <td class='ep-info'><%= _.escape(entrypoint.getHttpMethod()) %></td>
+                <td class='ep-info'><%= _.escape(entrypoint.get('method')) %></td>
             </tr>
             <tr>
                 <td class='row-head'>URL:</td>
@@ -252,43 +244,64 @@ return array(
                 </div>
             </div>
         <% }); %>
-    ",    "Panel3" => "
-        <div class='parameter-setup'>
-            <form id='ParameterForm'>
-                <div class='panel-group' id='ep_params_accordion'>
-                    <div class='panel panel-default'>
-                        <div class='panel-heading'>
-                            <h4 class='panel-title'>
-                                <a data-toggle='collapse' data-parent='#ep_params_accordion' href='#EP_urlParams'>
-                                    URL Parameters
-                                </a>
-                            </h4>
-                        </div>
-                        <div class='panel-collapse collapse in' id='EP_urlParams'>
-                            <div class='panel-body' id='ep_url_params' >
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class='panel panel-default'>
-                        <div class='panel-heading'>
-                            <h4 class='panel-title'>
-                                <a data-toggle='collapse' data-parent='#ep_params_accordion' href='#EP_requestParams'>
-                                    Request Parameters
-                                </a>
-                            </h4>
-                        </div>
-                        <div class='panel-collapse collapse in' id='EP_requestParams'>
-                            <div class='panel-body' id='ep_request_params'>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
+    ",
+	"Panel3" => "
+        <div class='request-setup' style='height: 93%'>
+			<div class='panel-group' id='ep_request_accordion'>
+				<div class='panel panel-default'>
+					<div class='panel-heading'>
+						<h4 class='panel-title'>
+							<a data-toggle='collapse' data-parent='#ep_request_accordion' href='#EP_requestSetup'>
+								Request Setup
+							</a>
+						</h4>
+					</div>
+					<div class='panel-collapse collapse in' id='EP_requestSetup'>
+						<div class='panel-body' id='ep_request_info' >
+						</div>
+					</div>
+				</div>
+				<div class='panel panel-default'>
+					<div class='panel-heading'>
+						<h4 class='panel-title'>
+							<a data-toggle='collapse' data-parent='#ep_request_accordion' href='#EP_urlParams'>
+								EntryPoint URL
+							</a>
+						</h4>
+					</div>
+					<div class='panel-collapse collapse' id='EP_urlParams'>
+						<form id='URLParams'>
+							<div class='panel-body' id='ep_url_params' >
+							</div>
+						</form>
+					</div>
+				</div>
+				<div class='panel panel-default'>
+					<div class='panel-heading'>
+						<h4 class='panel-title'>
+							<a data-toggle='collapse' data-parent='#ep_request_accordion' href='#EP_requestParams'>
+								Request Payload
+							</a>
+						</h4>
+					</div>
+					<div class='panel-collapse collapse' id='EP_requestParams'>
+						<form id='RequestPayload'>
+							<div class='panel-body' id='ep_request_params'>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
         </div>
-        <div class='ep-actions' id='ep_action2'>
+        <div class='test-actions' id='test_actions'>
+        	<button type='button' class='btn btn-primary pull-right' id='sendAPI' disabled='disabled' >Send Request</button>
+            <button type='button' class='btn btn-primary pull-right' id='generateScript'>Generate Script</button>
         </div>
     ",
+	"RequestInfo" => "
+		<label for='web_address'>Base URL</label>
+		<input type='text' class='form-control' id='web_address' name='web_address' value='<%= web_address.getValue() %>' />
+	",
     "Parameters" => "
         <% _.each(parameters,function(param){ %>
             <label><%= param.escape('name') %> <span class='text-muted'><%= param.escape('type') %></span></label>
@@ -314,22 +327,22 @@ return array(
                 </ul>
                 <div class='tab-content'>
                     <div role='tabpanel' class='tab-pane' id='request'>
-                        <% if (request.get('request')==''||request.get('request')==null) {
+                        <% if (request==''||request==null) {
                         }else{
                             if (style.get('name')=='pretty'){ %>
-                                <%= '<pre>'+_.escape(JSON.stringify(jQuery.parseJSON(request.get('request')),undefined,2))+'</pre>' %>
+                                <%= '<pre>'+_.escape(JSON.stringify(jQuery.parseJSON(request),undefined,2))+'</pre>' %>
                             <%      }else if (style.get('name')=='raw') { %>
-                                <%= '<pre>'+request.escape('request')+'</pre>' %>
+                                <%= '<pre>'+_.escape(request)+'</pre>' %>
                             <%      }
                         } %>
                     </div>
                     <div role='tabpanel' class='tab-pane active' id='response'>
-                        <% if (request.get('response')==''||request.get('response')==null) {
+                        <% if (response==''||response==null) {
                             }else{
                                 if (style.get('name')=='pretty'){ %>
-                                    <%= '<pre>'+_.escape(JSON.stringify(jQuery.parseJSON(request.get('response')),undefined,2))+'</pre>' %>
+                                    <%= '<pre>'+_.escape(JSON.stringify(jQuery.parseJSON(response),undefined,2))+'</pre>' %>
                                 <%      }else if (style.get('name')=='raw') { %>
-                                    <%= '<pre>'+request.escape('response')+'</pre>' %>
+                                    <%= '<pre>'+_.escape(response)+'</pre>' %>
                                 <%      }
                             } %>
                     </div>

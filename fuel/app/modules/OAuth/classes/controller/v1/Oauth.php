@@ -1,115 +1,144 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 5/19/15
- * Time: 4:48 PM
- */
 
 namespace OAuth\Controller\V1;
 
 class OAuth extends \Controller_Rest{
 
-    public $oauth_server;
+    protected $server;
 
     public function router($resource, $arguments) {
         try{
-            $this->oauth_server = \Oauth\Oauth::getInstance();
-            parent::router($resource, $arguments);
+			$oauth_server = \Config::get('unbox.oauth.server.host');
+			if ($oauth_server =='localhost'){
+				$this->server = \OAuth\Server::getInstance();
+				return parent::router($resource, $arguments);
+			}else{
+				$url = $oauth_server.DIRECTORY_SEPARATOR."oauth/v1/oauth/".$resource;
+				$Request = \Request::forge($url,'curl');
+				$method = \Input::method();
+				$Request->set_method($method);
+				$Request->set_params($_POST);
+				foreach(\Input::headers() as $header => $value){
+					$Request->set_header($header,$value);
+				}
+				return $Request->execute($arguments)->response();
+			}
         }catch(\Exception $ex){
             $response = \Response::forge(\Format::forge(array('Error' => $ex->getMessage()))->to_json(), 500)->set_header('Content-Type', 'application.json');
             return $response;
         }
     }
-
-    public function post_me(){
+    public function action_token($client_id="",$client_secret="",$grant_type="",$scope=""){
         try {
-            if (isset($_POST['client_id'])&&
-                isset($_POST['client_secret'])&&
-                isset($_POST['access_token'])
-            ){
-                if ($this->oauth_server->validateToken($_POST['access_token'])){
-                    $userId = $this->oauth_server->getTokenUserId();
-                    $response = \Users\User::me($userId);
-                }else{
-                    $response = array(
-                        'err' => true,
-                        'msg' => 'Invalid Access Token.'
-                    );
-                }
-            }else{
-                throw new \Exception("Missing all required parameters for authorization.");
-            }
+			if (!isset($_POST['grant_type'])) {
+				$_POST['grant_type'] = $grant_type;
+			}
+			if (!isset($_POST['client_id'])) {
+				$_POST['client_id'] = $client_id;
+			}
+			if (!isset($_POST['client_secret'])) {
+				$_POST['client_secret'] = $client_secret;
+			}
+			if (!isset($_POST['scopes'])) {
+				$_POST['scope'] = $scope;
+			}
+			$this->server->setupGrant($grant_type);
+			$response           = $this->server->issueAccessToken();
+			return $this->response(
+				$response
+			);
+        } catch (\Exception $e) {
+            return $this->response(
+                "Error: " . $e->getMessage() . "\n",
+                401
+            );
+        }
+    }
+    public function action_refresh($client_id="",$client_secret="",$grant_type="",$scope="",$refresh_token=""){
+        try {
+			if (!isset($_POST['client_id'])) {
+				$_POST['client_id'] = $client_id;
+			}
+			if (!isset($_POST['client_secret'])) {
+				$_POST['client_secret'] = $client_secret;
+			}
+			if (!isset($_POST['scope'])) {
+				$_POST['scope'] = $scope;
+			}
+			if (!isset($_POST['grant_type'])) {
+				$_POST['grant_type'] = $grant_type;
+			}
+			$grant_type = $_POST['grant_type'];
+			if (!isset($_POST['refresh_token'])) {
+				$_POST['refresh_token'] = $refresh_token;
+			}
+			if ($grant_type=='refresh_token'){
+				$this->server->setupGrant($grant_type);
+				$response = $this->server->issueAccessToken();
+			}else{
+				throw new \Exception("Invalid grant type for Refresh request.");
+			}
             return $this->response(
                 $response
             );
         } catch (\Exception $e) {
             return $this->response(
-                array(
-                    'err' => true,
-                    'msg' => "Error: " . $e->getMessage() . "\n",
-                ),
+                "Error: " . $e->getMessage() . "\n",
                 401
             );
         }
     }
-    public function post_token(){
-        try {
+    public function action_auth(){
+		try {
+			if (isset($_POST['client_id'])&&
+				isset($_POST['client_secret'])
+			){
+				$this->server->setupGrant('auth_code');
+				$authParams = $this->server->getGrantType('authorization_code')->checkAuthorizeParams();
 
-            if (isset($_POST['username'])&&
-                isset($_POST['password'])&&
-                isset($_POST['grant_type'])&&
-                isset($_POST['client_id'])&&
-                isset($_POST['client_secret'])
-            ){
-                $this->oauth_server->setupGrant('password');
-                $this->oauth_server->setupGrant('refresh_token');
-                $response = $this->oauth_server->issueAccessToken();
-            }else{
-                throw new \Exception("Missing all required parameters for authorization.");
-            }
-            return $this->response(
-                $response
-            );
-        } catch (\Exception $e) {
-            return $this->response(
-                array(
-                    'err' => true,
-                    'msg' => "Error: " . $e->getMessage() . "\n",
-                ),
-                401
-            );
-        }
+				return \Response::redirect('login');
+			}else{
+				throw new \Exception("Missing all required parameters for authorization.");
+			}
+		} catch (\Exception $e) {
+			return $this->response(
+				"Error: " . $e->getMessage() . "\n",
+				401
+			);
+		}
     }
-    public function post_refresh(){
-        try {
-            if (isset($_POST['refresh_token'])&&
-                isset($_POST['grant_type'])&&
-                isset($_POST['client_id'])&&
-                isset($_POST['client_secret'])
-            ){
-                $this->oauth_server->setupGrant('refresh_token');
-                $response = $this->oauth_server->issueAccessToken();
-            }else{
-                throw new \Exception("Missing all required parameters for authorization.");
-            }
-            return $this->response(
-                $response
-            );
-        } catch (\Exception $e) {
-            return $this->response(
-                array(
-                    'err' => true,
-                    'msg' => "Error: " . $e->getMessage() . "\n",
-                ),
-                401
-            );
-        }
+    public function action_revoke($token=""){
+		try {
+			if (!isset($_POST['token'])){
+				$_POST['token'] = $token;
+			}
+			$this->server->revokeToken($token);
+			return true;
+		} catch (\Exception $e) {
+			return $this->response(
+				"Error: " . $e->getMessage() . "\n",
+				401
+			);
+		}
     }
-    public function post_authorization(){
-
-    }
-    public function post_revoke(){
-
-    }
+	public function action_user($token=null){
+		try{
+			if (!isset($_POST['token'])){
+				$_POST['token'] = $token;
+			}
+			if ($this->server->validateToken($token)){
+				return $this->response(
+					array(
+						'user_id' => $this->server->getTokenUser(),
+						'scopes' => $this->server->getTokenScopes()
+					)
+				);
+			}
+		}catch (\Exception $ex){
+			return $this->response(
+				"Error: " . $ex->getMessage() . "\n",
+				401
+			);
+		}
+	}
 }

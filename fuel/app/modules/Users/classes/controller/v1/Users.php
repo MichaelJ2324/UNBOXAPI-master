@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 5/19/15
- * Time: 4:48 PM
- */
 
 namespace Users\Controller\V1;
 
@@ -17,28 +11,27 @@ class Users extends RestV1{
 
     public function post_login(){
         try {
-            if (isset($_POST['username'])&&isset($_POST['password'])){
-                $payload = array(
-                    'username' => $_POST['username'],
-                    'password' => $_POST['password']
-                );
-                if ($this->oauth_client->setGrantType('password')!==false){
-                    $this->oauth_client->payload = $payload;
-                    $tokenInfo = $this->oauth_client->issueAccessToken();
-                    \Oauth\Client::encryptCookie($tokenInfo);
-                    $response = array(
-                        'err' => false,
-                        'msg' => "Successfully logged in."
-                    );
-                }else{
-                    throw new \Exception("Grant type not found");
-                }
-                return $this->response(
-                    $response
-                );
-            }else{
-                throw new \Exception("Username and password must be provided");
-            }
+			if ($this->authorized==false) {
+				if (isset($_POST['username']) && isset($_POST['password'])) {
+					if ($this->oauth_client->setGrantType('password') !== FALSE) {
+						$tokenInfo                   = $this->oauth_client->issueAccessToken();
+						\OAuth\Client::makeCookie($tokenInfo);
+						$response = array(
+							'err' => FALSE,
+							'msg' => "Successfully logged in."
+						);
+					} else {
+						throw new \Exception("Grant type not found");
+					}
+					return $this->response(
+						$response
+					);
+				} else {
+					throw new \Exception("Username and password must be provided");
+				}
+			}else{
+				throw new \Exception("Already logged in as user.");
+			}
         } catch (\Exception $e) {
             return $this->response(
                 array(
@@ -53,34 +46,38 @@ class Users extends RestV1{
     public function post_register(){
         try
         {
-            if (isset($_POST['username'])&&
-                isset($_POST['password'])&&
-                isset($_POST['last_name'])&&
-                isset($_POST['captcha'])&&
-                isset($_POST['email'])
-            ){
-                $captcha = \Input::json('captcha');
-                $remoteIp = \Input::ip();
-                $recaptcha = new \ReCaptcha\ReCaptcha(\Config::get("unbox.google.recaptcha"));
-                $resp = $recaptcha->verify($captcha, $remoteIp);
-                if ($resp->isSuccess()) {
-                    $response = \Users\User::register();
-                } else {
-                    $errors = $resp->getErrorCodes();
-                    return $this->response(
-                        array(
-                            'err' => true,
-                            'msg' => "ReCaptcha not valid. Errors:".json_encode($errors),
-                        ),
-                        400
-                    );
-                }
-                return $this->response(
-                    $response
-                );
-            }else{
-                throw new \Exception("Missing required field for registration.");
-            }
+			if ($this->authorized===FALSE) {
+				if (isset($_POST['username']) &&
+					isset($_POST['password']) &&
+					isset($_POST['last_name']) &&
+					isset($_POST['captcha']) &&
+					isset($_POST['email'])
+				) {
+					$captcha   = \Input::json('captcha');
+					$remoteIp  = \Input::ip();
+					$recaptcha = new \ReCaptcha\ReCaptcha(\Config::get("unbox.google.recaptcha"));
+					$resp      = $recaptcha->verify($captcha, $remoteIp);
+					if ($resp->isSuccess()) {
+						$response = \Users\User::register();
+					} else {
+						$errors = $resp->getErrorCodes();
+						return $this->response(
+							array(
+								'err' => TRUE,
+								'msg' => "ReCaptcha not valid. Errors:".json_encode($errors),
+							),
+							400
+						);
+					}
+					return $this->response(
+						$response
+					);
+				} else {
+					throw new \Exception("Missing required field for registration.");
+				}
+			}else{
+				throw new \Exception("Already logged in as user.");
+			}
         }
         catch (\Exception $e) {
             return $this->response(
@@ -92,13 +89,12 @@ class Users extends RestV1{
             );
         }
     }
-    public function get_me(){
+    public function get_me($user_id=null){
         try {
-            if ($_SESSION['loggedIn']){
-                $userId = $this->oauth_client->getUserId();
-                \Log::debug("Current user: $userId");
-                if (isset($userId)) {
-                    $response = \Users\User::me($userId);
+            if ($this->authorized===TRUE){
+				$userInfo = $this->oauth_client->getUserInfo();
+                if (is_array($userInfo)) {
+                    $response = \Users\User::me($userInfo['user_id']);
                 }else{
                     throw new \Exception("No user associated with current token.");
                 }
@@ -120,8 +116,8 @@ class Users extends RestV1{
     }
     public function post_logout(){
         try {
-            if ($_SESSION['loggedIn']){
-                $response = $this->oauth_client->logout();
+            if ($this->authorized===TRUE){
+                $response = $this->oauth_client->revokeToken();
             }else {
                 throw new \Exception("Access denied.");
             }
@@ -162,9 +158,10 @@ class Users extends RestV1{
         try
         {
             $response = "";
-            if ($_SESSION['loggedIn']){
+            if ($this->authorized){
                 if ($action==""||!isset($action)){
-                    $response = \Users\User::update($_SESSION['user_id']);
+					$userInfo = $this->oauth_client->getUserInfo();
+					$response = \Users\User::update($userInfo['user_id']);
                 }else{
                     switch ($action) {
                         default:
@@ -192,9 +189,10 @@ class Users extends RestV1{
         try
         {
             $response = "";
-            if ($_SESSION['loggedIn']) {
+            if ($this->authorized) {
                 if ($action == "" || !isset($action)) {
-                    $response = \Users\User::delete($_SESSION['user_id']);
+					$userInfo = $this->oauth_client->getUserInfo();
+                    $response = \Users\User::delete($userInfo['user_id']);
                 } else {
                     switch ($action) {
                         default:

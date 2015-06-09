@@ -6,25 +6,50 @@ namespace Controller\V1;
 class Rest extends \Controller_Rest {
 
     protected $rest_format = "json";
-    protected $auth = "authorized";
+    protected $auth = "authorize";
     protected $authorization = true;
     protected $auth_required = true;
+	protected $scope = 'api';
 
     protected $oauth_client;
+	protected $authorized = FALSE;
     protected $module;
     protected $class;
 
-    protected function authorized(){
+    protected function authorize(){
         try{
             if ($this->authorization) {
-                $this->oauth_client = new \Oauth\Client();
-                $loggedIn = $this->oauth_client->validateAuth();
-                if ($loggedIn || $this->auth_required == false) {
-                    return true;
-                }
-                return false;
+				$this->oauth_client = \OAuth\Client::getInstance();
+				$token = \OAuth\Client::getCookie();
+				if ($token !== false) {
+					if ($this->oauth_client->validateAuth($token,$this->scope)) {
+						\Log::debug("Authorized!");
+						$this->authorized = TRUE;
+					}
+				}else{
+					$token = \Input::headers('Authorization');
+					if (!empty($token)){
+						if ($token!==null){
+							if (strpos($token,"Bearer") !== false) {
+								$tokenArray = explode(" ", $token);
+								$token = $tokenArray[1];
+							}
+						}else{
+							$token = \Input::all('access_token');
+						}
+						if (!($token==null||$token==""||empty($token))){
+							if ($this->oauth_client->validateAuth($token,$this->scope,false)) {
+								$this->authorized = TRUE;
+							}
+						}
+					}
+				}
+				if ($this->authorized===TRUE || $this->auth_required == FALSE) {
+					return TRUE;
+				}
+				return FALSE;
             }else{
-                return true;
+                return TRUE;
             }
         }catch(\Exception $ex){
             \Log::debug("Exception:".$ex->getMessage());
@@ -48,7 +73,6 @@ class Rest extends \Controller_Rest {
                 $this->class = $class;
             }
         }
-        \Log::debug($this->module);
         parent::before();
     }
     public function get_index($id="",$action="",$related_module="",$related_id=""){

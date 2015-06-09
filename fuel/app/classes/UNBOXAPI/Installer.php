@@ -27,6 +27,18 @@ class Installer {
             'profiling'    => false,
             'readonly'     => false,
         ),
+		'auth' => array(
+			'type'        => 'mysqli',
+			'connection'  => array(
+				'persistent' => false,
+			),
+			'identifier'   => '`',
+			'table_prefix' => '',
+			'charset'      => 'utf8',
+			'enable_cache' => false,
+			'profiling'    => false,
+			'readonly'     => false,
+		),
         'dbUtil' => array(
             'type'        => 'mysqli',
             'connection'  => array(
@@ -59,7 +71,7 @@ class Installer {
         }
     }
     public function start(){
-        print("Setting up database...");
+        print("Setting up databases...");
         if ($this->setup_database()){
             print(" SUCCESS!\n");
             //installs Config Table to Database
@@ -85,38 +97,78 @@ class Installer {
         \Config::save('install',$this->config);
     }
     private function setup_database(){
-        $database = $this->config['database']['database'];
         $this->setDatabaseConfig($this->config['database']);
-        $DB = new Data\DB\Database($database);
+		$dbConfig = \Config::load("db",null,true);
+		\Config::set("db",$dbConfig);
+        $DB = new Data\DB\Database($dbConfig['default']['connection']['database']);
         if (!(Data\DB\Database::create($DB,"dbUtil",true))){
             throw new \Exception("Database not created. Error:" . \DB::error_info());
         }
-        \Cache::set($this->cacheFile.".name",$database);
+		unset($DB);
+		if (isset($dbConfig['auth'])){
+			$DB = new Data\DB\Database($dbConfig['auth']['connection']['database']);
+			if (!(Data\DB\Database::create($DB,"dbUtil",true))){
+				throw new \Exception("Database not created. Error:" . \DB::error_info());
+			}
+		}
         return true;
     }
     private function setup_config(){
         $unboxConfig = \Config::get('unbox');
         //TODO::Client ID and Secret generation during Installation. Currently using md5'd GUIDS.
+		$unboxConfig['oauth']['server']['host'] = $this->config['auth']['host'];
         $unboxConfig['oauth']['client']['id'] = md5(\UNBOXAPI\Data\Util\Guid::make());
         $unboxConfig['oauth']['client']['secret'] = md5(\UNBOXAPI\Data\Util\Guid::make());
+		$unboxConfig['oauth']['client']['name'] = "Unbox API Web Application";
         \Config::save('unbox.php',$unboxConfig);
     }
     private function setDatabaseConfig($dbConfig){
-        $currentConfig = $this->base_db_config;
-        $currentConfig['default']['connection'] = array_merge($currentConfig['default']['connection'],$dbConfig);
-        unset($dbConfig['database']);
-        $currentConfig['dbUtil']['connection'] = array_merge($currentConfig['dbUtil']['connection'],$dbConfig);
-        $dbConfigFile = APPPATH."config/db.php";
-        $prodConfigFile = APPPATH."config/production/db.php";
-        $stageConfigFile = APPPATH."config/staging/db.php";
-        $testConfigFile = APPPATH."config/test/db.php";
-        $devConfigFile = APPPATH."config/development/db.php";
-        \Config::save($dbConfigFile,$currentConfig);
-        \Config::save($prodConfigFile,$currentConfig);
-        \Config::save($stageConfigFile,$currentConfig);
-        \Config::save($testConfigFile,$currentConfig);
-        \Config::save($devConfigFile,$currentConfig);
+		$config_locations = array(
+			'default',
+			'production',
+			'staging',
+			'test',
+			'development');
+		if (isset($dbConfig['all'])){
+			foreach($config_locations as $location){
+				if ($location=='default'){
+					$location=APPPATH."config/db.php";
+				}else{
+					$location=APPPATH."config/".$location."/db.php";
+				}
+				$config = $this->buildDbConfig($dbConfig['all']);
+				\Log::debug("Saving database config to: $location");
+				\Config::save($location,$config);
+			}
+		}else{
+			foreach($dbConfig as $location => $databaseConfig){
+				if (in_array($location,$config_locations)) {
+					if ($location == 'default') {
+						$location = APPPATH."config/db.php";
+					} else {
+						$location = APPPATH."config/".$location."/db.php";
+					}
+					$config = $this->buildDbConfig($databaseConfig);
+					\Log::debug("Saving database config to: $location");
+					\Config::save($location, $config);
+				}
+			}
+		}
     }
+	private function buildDbConfig($config){
+		$baseConfig = $this->base_db_config;
+		$baseConfig['default']['connection'] = array_merge($baseConfig['default']['connection'],$config);
+		if ($this->config['auth']['host']=='localhost'){
+			$authConfig = $config;
+			$authConfig['database'] = $config['database']."_auth";
+			$baseConfig['auth']['connection'] = array_merge($baseConfig['auth']['connection'],$authConfig);
+		}else{
+			unset($baseConfig['auth']);
+		}
+		unset($config['database']);
+		$baseConfig['dbUtil']['connection'] = array_merge($baseConfig['dbUtil']['connection'],$config);
+		return $baseConfig;
+	}
     private function install_configTable(){
         $attributes = array(
             'fields' => array(
@@ -177,7 +229,6 @@ class Installer {
                         unset($relatedTables);
                         unset($Model);
                         unset($Table);
-                        sleep(1);
                     }
                 }
             }
@@ -190,15 +241,15 @@ class Installer {
             $RelateTable->setFields($properties['fields']);
             $RelateTable->primaryKeys = array('id');
             $RelateTable->setForeignKeys($properties['foreign_keys']);
+			$RelateTable->setConnection($properties['connection'][0]);
             $this->tables[$RelateTable->name] = $RelateTable;
 
             if (!(Data\DB\Table::create($RelateTable))){
                 throw new \Exception("Table ".$RelateTable->name." not created. Error:".serialize(\DB::error_info()));
             }
             unset($RelateTable);
-            sleep(1);
         }
-        \Cache::set($this->cacheFile.".tables",$this->tables);
+        \Cache::set($this->cacheFile.".tables",$this->tables,600);
         return true;
     }
     public static function installForeignKeys(){
@@ -217,7 +268,7 @@ class Installer {
                                 } else {
                                     $tables[$tableName]->foreignKeys[$foreignKey]['added'] = true;
                                     $addedCount++;
-                                    \Cache::set("database.tables", $tables);
+                                    \Cache::set("database.tables", $tables,600);
                                 }
                             }
                         }

@@ -7,7 +7,7 @@ return array(
 		'client' => array(
 			'id' => '',
 			'secret' => '',
-			'name' => 'UNBOX Web App',
+			'name' => '',
 		),
 		'server' => array(
 			'host' => 'localhost',

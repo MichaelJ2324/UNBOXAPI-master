@@ -271,7 +271,7 @@ abstract class Module {
                 $results = array(
                     'total' => $total,
                     'records' => $records,
-                    'page' => ($offset % $offset)
+                    'page' => ($offset % $limit)
                 );
             }else{
                 \Log::debug("No records found in relation to $relationship with $related_id");

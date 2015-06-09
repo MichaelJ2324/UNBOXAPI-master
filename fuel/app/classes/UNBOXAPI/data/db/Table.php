@@ -28,6 +28,7 @@ class Table {
     function __construct($model=null){
         if (isset($model)){
             $this->model = $model;
+			$this->setConnectionFromModel();
             $this->name = $model::table();
             $this->setFieldsFromModel();
             $this->primaryKeys = $model::primary_key();
@@ -52,14 +53,14 @@ class Table {
             if (!(is_object($table))) {
                 $tableName = $table;
                 \Log::info("Creating Table ".$tableName);
-                \DBUtil::create_table($table, $attributes['fields'], $attributes['primary_keys'], self::$if_not_exists, self::$engine, self::$charset, $attributes['foreign_keys'], self::$db);
+                \DBUtil::create_table($table, $attributes['fields'], $attributes['primary_keys'], self::$if_not_exists, self::$engine, self::$charset, $attributes['foreign_keys'], static::$db);
             }else{
                 $tableName = $table->name;
                 $foreignKeys = array();
                 $count = 0;
                 if (is_array($table->foreignKeys)) {
                     foreach ($table->foreignKeys as $key => $foreignKey) {
-                        if (\DBUtil::table_exists($foreignKey['reference']['table'],self::$db)) {
+                        if (\DBUtil::table_exists($foreignKey['reference']['table'],static::$db)) {
                             $foreignKeys[$count] = $foreignKey;
                             $table->foreignKeys[$key]['added'] = true;
                             $count++;
@@ -69,7 +70,7 @@ class Table {
                     }
                 }
                 \Log::info("Creating Table ".$tableName);
-                \DBUtil::create_table($table->name, $table->fields, $table->primaryKeys, self::$if_not_exists, self::$engine, self::$charset, $foreignKeys, self::$db);
+                \DBUtil::create_table($table->name, $table->fields, $table->primaryKeys, self::$if_not_exists, self::$engine, self::$charset, $foreignKeys, static::$db);
             }
             return \DBUtil::table_exists($tableName,self::$db);
         }catch(\Database_Exception $ex){
@@ -140,7 +141,13 @@ class Table {
         }
         return $this->fields;
     }
-
+	public function setConnection($connection){
+		static::$db = $connection;
+	}
+	private function setConnectionFromModel(){
+		$model = $this->model;
+		$this->setConnection($model::connection());
+	}
     //Model specific functions
     private function setFieldsFromModel(){
         $model = $this->model;
@@ -186,8 +193,11 @@ class Table {
                             'on_update' => ($relationshipObject->__get("cascade_save") ? 'CASCADE' : 'NO ACTION'),
                             'on_delete' => ($relationshipObject->__get("cascade_delete") ? 'CASCADE' : 'NO ACTION')
                         )
-                    )
+                    ),
                 );
+				if (!isset($this->relatedTables[$tableName]['connection'])){
+					$this->relatedTables[$tableName]['connection'] = array(static::$db);
+				}
                 $this->relatedTables[$tableName]['fields'][$key[0]] = array(
                     'type' => 'varchar',
                     'constraint' => 50,

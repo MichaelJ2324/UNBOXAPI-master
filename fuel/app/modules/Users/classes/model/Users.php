@@ -9,183 +9,127 @@
 namespace Users\Model;
 
 
-class Users extends \Model\Oauth{
+class Users extends \Orm\Model{
 
-    protected static $_table_name = 'users';
-    protected static $_to_array_exclude = array('password');
-    protected static $_fields = array(
-        'first_name' => array(
+    protected static $_table_name = 'user';
+    protected static $_properties = array(
+        'id' => array(
             'data_type' => 'varchar',
-            'label' => 'First Name',
+            'label' => 'User ID',
             'null' => false,
-            'auto_inc' => false,
             'validation' => array(
                 'required' => true,
                 'max_length' => 50
             ),
-            'form' => array('type' => 'text'),
-        ),
-        'last_name' => array(
-            'data_type' => 'varchar',
-            'label' => 'Last Name',
-            'null' => false,
-            'auto_inc' => false,
-            'validation' => array(
-                'required' => true,
-                'max_length' => 50
-            ),
-            'form' => array('type' => 'text'),
-        ),
-        'username' => array(
-            'data_type' => 'varchar',
-            'label' => 'Username',
-            'null' => false,
-            'auto_inc' => false,
-            'validation' => array(
-                'required' => true,
-                'max_length' => 50
-            ),
-            'form' => array('type' => 'text'),
-        ),
-        'password' => array(
-            'data_type' => 'varchar',
-            'label' => 'Password',
-            'null' => false,
-            'auto_inc' => false,
-            'validation' => array(
-                'required' => true,
-                'max_length' => 100
-            ),
-            'form' => array('type' => 'password'),
-        ),
-        'email' => array(
-            'data_type' => 'varchar',
-            'label' => 'Email',
-            'null' => false,
-            'auto_inc' => false,
-            'validation' => array(
-                'required' => true,
-                'max_length' => 100
-            ),
-            'form' => array('type' => 'text'),
-        ),
-        'default_module' => array(
-            'data_type' => 'varchar',
-            'label' => 'Default Module',
-            'validation' => array(
-                'required' => true,
-                'max_length' => 25
-            ),
-            'form' => array(
-                'type' => 'select',
-                'options' => array(
-                    array(
-                        'key' => 'Home',
-                        'value' => 'Home'
-                    ),
-                    array(
-                        'key' => 'Profile',
-                        'value' => 'Profile'
-                    ),
-                    array(
-                        'key' => 'Tester',
-                        'value' => 'Tester'
-                    ),
-                    array(
-                        'key' => 'Manager',
-                        'value' => 'Manager'
-                    )
-                ),
-            ),
+            'form' => false
         ),
     );
-    protected static $_relationships = array(
-        'has_many' => array(
-            'created_applications' => array(
-                'key_from' => 'id',
-                'model_to' => '\\Applications\\Model\\Applications',
-                'key_to' => 'created_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'modified_applications' => array(
-                'key_from' => 'id',
-                'model_to' => '\\Applications\\Model\\Applications',
-                'key_to' => 'modified_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'created_apis' => array(
-                'key_from' => 'id',
-                'model_to' => '\\Apis\\Model\\Apis',
-                'key_to' => 'created_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'modified_apis' => array(
-                'key_from' => 'id',
-                'model_to' => '\\Apis\\Model\\Apis',
-                'key_to' => 'modified_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'created_entrypoints' => array(
-                'key_from' => 'id',
-                'model_to' => '\\Entrypoints\\Model\\Entrypoints',
-                'key_to' => 'created_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'modified_entrypoints' => array(
-                'key_from' => 'id',
-                'model_to' => '\\Entrypoints\\Model\\Entrypoints',
-                'key_to' => 'modified_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'created_entrypoint_parameters' => array(
-                'key_from' => 'id',
-                'model_to' => '\\Entrypoints\\Model\\Parameters',
-                'key_to' => 'created_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'modified_entrypoint_parameters' => array(
-                'key_from' => 'id',
-                'model_to' => '\\Entrypoints\\Model\\Parameters',
-                'key_to' => 'modified_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'created_parameters' => array(
-                'key_from' => 'id',
-                'model_to' => '\\Parameters\\Model\\Parameters',
-                'key_to' => 'created_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'modified_parameters' => array(
-                'key_from' => 'id',
-                'model_to' => '\\Parameters\\Model\\Parameters',
-                'key_to' => 'modified_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'created_parameterTypes' => array(
-                'key_from' => 'id',
-                'model_to' => '\\ParameterTypes\\Model\\ParameterTypes',
-                'key_to' => 'created_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-            'modified_parameterTypes' => array(
-                'key_from' => 'id',
-                'model_to' => '\\ParameterTypes\\Model\\ParameterTypes',
-                'key_to' => 'modified_by',
-                'cascade_save' => true,
-                'cascade_delete' => false,
-            ),
-        )
+	protected static $_eav = array(
+		'statistics' => array(
+			  'model_to' => '\\Users\\Model\\Preferences',
+			  'attribute' => 'attribute',		// the key column in the related table contains the attribute
+			  'value' => 'value',			// the value column in the related table contains the value
+		)
+	);
+    protected static $_has_many = array(
+		'preferences' => array(
+			'key_from' => 'id',			// key in this model
+			'model_to' => 'Users\\Model\\Preferences',      // related model
+			'key_to' => 'user_id',		// key in the related model
+			'cascade_save' => true,		// update the related table on save
+			'cascade_delete' => true,		// delete the related data when deleting the parent
+		),
+	);
+	protected static $_belongs_to = array(
+		'created_applications' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Applications\\Model\\Applications',
+			'key_to' => 'created_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'modified_applications' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Applications\\Model\\Applications',
+			'key_to' => 'modified_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'created_apis' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Apis\\Model\\Apis',
+			'key_to' => 'created_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'modified_apis' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Apis\\Model\\Apis',
+			'key_to' => 'modified_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'created_entrypoints' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Entrypoints\\Model\\Entrypoints',
+			'key_to' => 'created_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'modified_entrypoints' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Entrypoints\\Model\\Entrypoints',
+			'key_to' => 'modified_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'created_entrypoint_parameters' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Entrypoints\\Model\\Parameters',
+			'key_to' => 'created_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'modified_entrypoint_parameters' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Entrypoints\\Model\\Parameters',
+			'key_to' => 'modified_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'created_parameters' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Parameters\\Model\\Parameters',
+			'key_to' => 'created_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'modified_parameters' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Parameters\\Model\\Parameters',
+			'key_to' => 'modified_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'created_parameterTypes' => array(
+			'key_from' => 'id',
+			'model_to' => '\\ParameterTypes\\Model\\ParameterTypes',
+			'key_to' => 'created_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		),
+		'modified_parameterTypes' => array(
+			'key_from' => 'id',
+			'model_to' => '\\ParameterTypes\\Model\\ParameterTypes',
+			'key_to' => 'modified_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
+		)
     );
+	protected static $_observers = array(
+		'\\UNBOXAPI\\Observer_Guid' => array(
+			'events' => array('before_insert'),
+		),
+	);
 
 }

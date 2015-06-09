@@ -9,26 +9,7 @@ class Metadata extends Rest{
 
     public function get_index($module="",$action="",$related_module="",$related_id=""){
         try {
-            $response = "";
-            if ($module == "" || !isset($module)) {
-                $response = \UNBOXAPI\Metadata::get_metaData();
-            } else {
-                if (\Module::exists($module) !== false) {
-                    if (substr($module, -1) === "s") {
-                        $class = substr($module, 0, -1);
-                    } else {
-                        $class = $module;
-                    }
-                    $Class = "\\$module\\$class";
-                    $response = $Class::metadata();
-                } else {
-                    if ($module == 'Config') {
-                        $response = \UNBOXAPI\Metadata::get_config();
-                    } else {
-                        throw new \Exception("Module does not exist", 500);
-                    }
-                }
-            }
+			$response = \UNBOXAPI\Metadata::get_metaData($this->authorized);
             return $this->response(
                 $response
             );

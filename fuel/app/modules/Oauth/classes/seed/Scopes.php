@@ -11,23 +11,31 @@ namespace Oauth\Seed;
 
 class Scopes extends \UNBOXAPI\Data\Seed\Seeder{
 
-    protected static $_module = 'Oauth';
+    protected static $_module = 'OAuth';
     protected static $_model = 'Scopes';
 
     protected static $_records = array(
         array(
             'id' => 'unbox_demo_scope',
-            'scope' => 'demo_app',
-            'description' => 'Access to Demo API only.',
+            'scope' => 'demo_api',
+            'description' => 'Access to Demo API only',
         ),
         array(
             'scope' => 'profile',
-            'description' => 'Access to profile information on account.',
+            'description' => 'Access to user profile information.',
         ),
         array(
             'scope' => 'client',
-            'description' => 'Able to access all resources. For VPS servers',
-        )
+            'description' => 'Able to create users and user oauth clients, used by Application Deployments.',
+        ),
+		array(
+			'scope' => 'admin',
+			'description' => 'Able to create users and user oauth clients, used by Application Deployments.',
+		),
+		array(
+			'scope' => 'api',
+			'description' => 'Access to all Rest API.',
+		),
     );
 
 }

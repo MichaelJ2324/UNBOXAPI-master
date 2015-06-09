@@ -17,7 +17,7 @@ return array(
 	'index_file'  => 'index.php',
 	'profiling'  => false,
 	'cache_dir'       => APPPATH.'cache/',
-	'caching'         => false,
+	'caching'         => true,
 	'cache_lifetime'  => null, // In Seconds
 	'ob_callback'  => null,
 
@@ -95,7 +95,7 @@ return array(
 		'modules'  => array(
             //User Stuff first
             'Users',
-			'Oauth',
+			'OAuth',
             //Modules
             'Applications',
             'Apis',
@@ -106,12 +106,11 @@ return array(
             'Logins',
 			'Versions',
             'Tests',
+			'Packages',
             //Layouts
             'Home',
             'Manager',
-            'Tester',
-            //Objects
-			'Request'
+            'Tester'
         ),
 		'classes'  => array(
 		),

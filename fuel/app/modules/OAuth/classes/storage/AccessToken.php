@@ -1,6 +1,6 @@
 <?php
 
-namespace Oauth\Storage;
+namespace OAuth\Storage;
 
 use League\OAuth2\Server\Entity\AccessTokenEntity;
 use League\OAuth2\Server\Entity\ScopeEntity;
@@ -14,7 +14,7 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function get($token)
     {
-        $access_token = \Oauth\Model\AccessTokens::query()->where('access_token',$token)->get_one();
+        $access_token = \OAuth\Model\AccessTokens::query()->where('access_token',$token)->get_one();
 
         if (count($access_token) === 1) {
             $token = (new AccessTokenEntity($this->server))
@@ -32,9 +32,9 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function getScopes(AccessTokenEntity $token)
     {
-        $accessToken = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'))->get_one();
+        $accessToken = \OAuth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'))->get_one();
         $response = array();
-        if (property_exists($accessToken,'scopes')){
+        if (isset($accessToken->scopes)){
             $scopes = $accessToken->scopes;
             if (count($scopes) > 0) {
                 foreach ($scopes as $scope) {
@@ -54,7 +54,7 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function create($token, $expireTime, $sessionId)
     {
-        $accessToken = \Oauth\Model\AccessTokens::forge(
+        $accessToken = \OAuth\Model\AccessTokens::forge(
             array(
                 'access_token'  =>  $token,
                 'session_id'    =>  $sessionId,
@@ -69,8 +69,8 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function associateScope(AccessTokenEntity $token, ScopeEntity $scope)
     {
-        $access_token = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'))->get_one();
-        $access_token->scopes[] = \Oauth\Model\Scopes::query()->where('scope',$scope->getId())->get_one();
+        $access_token = \OAuth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'))->get_one();
+        $access_token->scopes[] = \OAuth\Model\Scopes::query()->where('scope',$scope->getId())->get_one();
         $access_token->save();
     }
 
@@ -79,7 +79,7 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function delete(AccessTokenEntity $token)
     {
-        $access_token = \Oauth\Model\AccessTokens::query()->where('access_token',$token->getId())->get_one();
+        $access_token = \OAuth\Model\AccessTokens::query()->where('access_token',$token->getId())->get_one();
         $access_token->delete();
     }
 }

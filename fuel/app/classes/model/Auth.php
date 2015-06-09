@@ -9,9 +9,9 @@
 namespace Model;
 
 
-class Oauth extends \Orm\Model{
+class Auth extends \Orm\Model{
 
-    protected static $_connection = 'default';
+    protected static $_connection = 'auth';
     protected static $_table_name;
     protected static $_primary_key = array('id');
     //fields array is an override array for properties

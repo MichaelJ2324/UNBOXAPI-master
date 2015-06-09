@@ -1,5 +1,6 @@
 <?php
 return array(
     'Clients',
-    'Scopes'
+    'Scopes',
+	'Users'
 );

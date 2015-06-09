@@ -1,6 +1,6 @@
 <?php
 
-namespace Oauth\Storage;
+namespace OAuth\Storage;
 
 use League\OAuth2\Server\Entity\AccessTokenEntity;
 use League\OAuth2\Server\Entity\AuthCodeEntity;
@@ -16,8 +16,8 @@ class Session extends AbstractStorage implements SessionInterface
      */
     public function getByAccessToken(AccessTokenEntity $accessToken)
     {
-        $AccessToken = \Oauth\Model\AccessTokens::query()->where('access_token',$accessToken->getId())->get_one();
-        $session = \Oauth\Model\Sessions::find($AccessToken->session_id);
+        $AccessToken = \OAuth\Model\AccessTokens::query()->where('access_token',$accessToken->getId())->get_one();
+        $session = \OAuth\Model\Sessions::find($AccessToken->session_id);
         if (count($session) === 1) {
             $Session = new SessionEntity($this->server);
             $Session->setId($session->id);
@@ -34,7 +34,7 @@ class Session extends AbstractStorage implements SessionInterface
      */
     public function getByAuthCode(AuthCodeEntity $authCode)
     {
-        $session = \Oauth\Model\Sessions::find('first',
+        $session = \OAuth\Model\Sessions::find('first',
             array(
                 'related' => array(
                     'authCode' => array(
@@ -62,13 +62,13 @@ class Session extends AbstractStorage implements SessionInterface
     public function getScopes(SessionEntity $session)
     {
         $Scopes = array();
-        $session = \Oauth\Model\Sessions::query()->where('id',$session->getId())->related('scopes')->get_one();
+        $session = \OAuth\Model\Sessions::query()->where('id',$session->getId())->related('scopes')->get_one();
         if (isset($session)&&$session!==null) {
             if (property_exists($session, "scopes")) {
                 $scopes = $session->scopes;
                 foreach ($scopes as $scope) {
                     $Scopes[] = (new ScopeEntity($this->server))->hydrate([
-                        'id' => $scope->id,
+                        'id' => $scope->scope,
                         'description' => $scope->description,
                     ]);
                 }
@@ -82,11 +82,17 @@ class Session extends AbstractStorage implements SessionInterface
      */
     public function create($ownerType, $ownerId, $clientId, $clientRedirectUri = null)
     {
-        $session = \Oauth\Model\Sessions::forge(
+		$Client = \OAuth\Model\Clients::find('first',array(
+			'where' => array(
+				array('client_id',$clientId)
+			)
+		));
+        $session = \OAuth\Model\Sessions::forge(
             array(
                 'owner_type'  =>    $ownerType,
                 'owner_id'    =>    $ownerId,
-                'client_id'   =>    $clientId,
+                'client_id'   =>    $Client->id,
+				'client_redirect_uri' => $clientRedirectUri
             )
         );
         $session->save();
@@ -98,8 +104,13 @@ class Session extends AbstractStorage implements SessionInterface
      */
     public function associateScope(SessionEntity $session, ScopeEntity $scope)
     {
-        $session = \Oauth\Model\Sessions::find($session->getId());
-        $session->scopes[] = \Oauth\Model\Scopes::find($scope->getId());
+        $session = \OAuth\Model\Sessions::find($session->getId(),array('related' => array('scopes')));
+        $session->scopes[] = \OAuth\Model\Scopes::query()->where('scope',$scope->getId())->get_one();
         $session->save();
     }
+
+	public function delete($sessionID){
+		$session = \OAuth\Model\Sessions::find($sessionID);
+		$session->delete();
+	}
 }

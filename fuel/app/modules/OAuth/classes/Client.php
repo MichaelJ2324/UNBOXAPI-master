@@ -1,73 +1,86 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 4/7/15
- * Time: 1:11 AM
- */
 
-namespace Oauth;
+namespace OAuth;
 
 
 class Client {
 
-    protected static $_name = 'Oauth';
+    protected static $_name = 'OAuth';
     protected static $_config;
 
     protected $_server;
     protected $_id;
     protected $_secret;
+	protected $_type;
     protected $_grant_type;
+	protected $_scope = array(
+		'api'
+	);
 
     protected $_token;
-    protected $_userId;
+    protected $_user_info;
 
     public $payload;
 
     private $config;
     private $request;
-    private $server = null;
 
     public static function config(){
         static::$_config = \Config::load(static::$_name."::module");
         return static::$_config;
     }
-    public static function encryptCookie($tokenInfo){
+    public static function makeCookie($tokenInfo){
         $serializedToken = serialize($tokenInfo);
         $data = \Crypt::encode($serializedToken);
         \Cookie::set('unauth',$data);
     }
-    public static function decryptCookie(){
+    public static function getCookie($crypted=false){
         $unauth = \Cookie::get('unauth');
         if ($unauth!==null) {
-            $serializeToken = \Crypt::decode($unauth);
-            $token = unserialize($serializeToken);
-            return $token;
+			if ($crypted===false) {
+				$serializedToken = \Crypt::decode($unauth);
+				$token          = unserialize($serializedToken);
+				return $token;
+			}else {
+				return $unauth;
+			}
         }
         return false;
     }
-
-    public function __construct(){
-        $this->setId();
-        $this->setSecret();
+	public static function deleteCookie(){
+		\Cookie::set('unauth',"1",1);
+		\Cookie::delete("unauth");
+	}
+	public static function getInstance($interface = false)
+	{
+		static $instance = null;
+		if (null === $instance) {
+			$instance = new static($interface);
+		}
+		return $instance;
+	}
+	/**
+	 * @param $type = Type of client accessing system. API or JS
+	 */
+	protected function __construct(){
         $this->setServer();
+		$this->setId(\Config::get('unbox.oauth.client.id'));
+		$this->setSecret(\Config::get('unbox.oauth.client.secret'));
         $this->config = static::config();
-        if ($this->_server=='localhost'){
-            $this->server = Oauth::getInstance();
-        }
     }
-    public function setupSession($loggedIn){
-        session_start();
-        $_SESSION['loggedIn'] = $loggedIn;
-        if ($loggedIn) {
-            $_SESSION['token'] = $this->_token;
-            $_SESSION['user_id'] = $this->_userId;
-        }else{
-            unset($_SESSION['token']);
-            unset($_SESSION['user_id']);
-        }
-        session_write_close();
-    }
+	private function __clone()
+	{
+	}
+	private function __wakeup()
+	{
+	}
+
+	public function getToken(){
+		return $this->_token;
+	}
+	public function getUserInfo(){
+		return $this->_user_info;
+	}
     public function setGrantType($grant){
         if (in_array($grant,$this->config['grant_types'])){
             $this->_grant_type = $grant;
@@ -75,181 +88,191 @@ class Client {
             return false;
         }
     }
-    public function validateAuth(){
-        $token = static::decryptCookie();
-        $valid = false;
-        if (!($token==false||$token==null||empty($token))){
-            if ($this->validateToken($token['access_token'])){
-                $this->_token = $token;
-                if ($this->getTokenUser()!==false){
-                    $valid = true;
-                }
-            }else{
-                if ($valid===false&&isset($token['refresh_token'])){
-                    $newToken = $this->refreshToken($token['refresh_token']);
-                    if ($newToken!==null){
-                        if ($this->validateToken($newToken['access_token'])){
-                            $this->_token = $newToken;
-                            static::encryptCookie($this->_token);
-                            if ($this->_server=='localhost') {
-                                if ($this->getTokenUser($newToken['access_token'])!==false) {
-                                    $valid = true;
-                                }
-                            }else{
-                                $valid = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        $this->setupSession($valid);
+    public function validateAuth($token,$requiredScope,$auto_refresh=true){
+		$valid = FALSE;
+		if (!($this->validateToken($token))){
+			if ($auto_refresh){
+				if (isset($this->_id) && isset($this->_secret)) {
+					if ($this->refreshToken($token['refresh_token']) !== NULL) {
+						static::makeCookie($this->_token);
+						$valid = TRUE;
+					}
+				}
+			}
+		}else{
+			$valid = TRUE;
+		}
+		if ($valid === TRUE){
+			if (!$this->validateScope($requiredScope)){
+				$valid = FALSE;
+			}
+		}
+		\Log::debug($valid);
         return $valid;
     }
-    public function getToken(){
-        return $this->_token;
-    }
-    public function getUserId(){
-        return $this->_userId;
-    }
-    private function validateToken($accessToken){
-        $valid = false;
-        if ($this->_server=='localhost'){
-            if ($this->server->validateToken($accessToken)){
-                $valid = true;
-            }
-        }else{
-            $user = $this->getTokenUser($accessToken);
-            if ($user!==false){
-                $valid = true;
-            }
-        }
+    private function validateToken($token){
+        $valid = FALSE;
+		$cachedToken = $this->checkCache($token);
+		if ($cachedToken !== FALSE){
+			if ($token['refresh_token']==$cachedToken['refresh_token']){
+				\Log::debug("Token is valid");
+				$this->_token = $token;
+				$valid = TRUE;
+			}
+		}
         return $valid;
     }
-    private function getTokenUser($accessToken=null){
-        $userId = false;
-        if ($this->_server=='localhost') {
-            $userId = $this->server->getTokenUserId();
-            if (!($userId == false || $userId == null)) {
-                $this->_userId = $userId;
-            }
-        }else{
-            $this->payload = array(
-                'access_token' => $accessToken
-            );
-            $this->setupPayload();
-            $this->setupRequest("me/","POST");
-            $response = $this->sendRequest();
-            if ($response['err']!==false){
-                $userId = $response['id'];
-                $this->_userId = $userId;
-            }
-        }
-        return $userId;
-    }
+	private function validateScope($requiredScope){
+		$valid = FALSE;
+		$cachedUser = $this->getCachedUser();
+		if ($cachedUser !== FALSE){
+			$this->_user_info = $cachedUser;
+			if (is_array($this->_user_info['scopes'])) {
+				\Log::debug("Required Scope: $requiredScope");
+				\Log::debug("Current scopes: ".serialize($this->_user_info['scopes']));
+				if (in_array($requiredScope, $this->_user_info['scopes'])) {
+					\Log::debug("Scope is valid");
+					$valid = TRUE;
+				}
+			}
+		}
+		return $valid;
+	}
+	public function refreshToken($refresh_token=null){
+		$this->setGrantType("refresh_token");
+		if ($refresh_token==null){
+			$refresh_token = $this->_token['refresh_token'];
+		}
+		$this->payload = array(
+			'refresh_token' => $refresh_token
+		);
+		$token = $this->issueAccessToken();
+		return $token;
+	}
     public function issueAccessToken(){
-        $this->setupPayload();
-        if ($this->_server=='localhost'){
-            foreach($this->payload as $param => $value){
-                $_POST[$param] = $value;
-            }
-            switch ($this->_grant_type){
-                case "password":
-                    $this->server->setupGrant("password");
-                case "refresh_token":
-                    $this->server->setupGrant("refresh_token");
-                    break;
-                default:
-                    return false;
-            }
-            return $this->server->issueAccessToken();
-        }else{
-            $this->setupRequest();
-            $response = $this->sendRequest();
-            if (!isset($response['err'])){
-                return $response;
-            }else{
-                throw new \Exception("Access Token not issued. Server Response - ".$response['msg']);
-            }
-        }
+		if (isset($this->_id) && isset($this->_secret)){
+			$this->setupPayload();
+			$this->setupRequest();
+			$Response = $this->request->execute($this->payload)->response();
+			$response = json_decode($Response->body(), TRUE);
+			if ($Response->status == '200') {
+				$this->_token = $response;
+				$this->cacheToken($this->_token);
+				$this->setupRequest("user");
+				$userResponse = $this->request->execute(array('token' => $this->_token['access_token']))->response(
+				);
+				if ($userResponse->status == '200') {
+					$userInfo         = json_decode($userResponse->body(), TRUE);
+					$this->_user_info = $userInfo;
+					$this->cacheUser($userInfo);
+				}
+				return $this->_token;
+			}else{
+				if (strpos($response,"invalid")!== FALSE && $this->_grant_type == 'refresh_token'){
+					$this->deleteUserCache($this->payload['refresh_token']);
+					static::deleteCookie();
+				}
+				throw new \Exception("Exception - ".$response);
+			}
+		}else{
+			throw new \Exception("No client id and secret specified.");
+		}
     }
-    public function logout(){
-        $this->destroySession();
+	public function revokeToken() {
+		$this->deleteCache($this->_token);
+		$this->payload = array(
+			'token' => $this->_token['refresh_token']
+		);
+		$this->setupRequest('revoke');
+		return $this->request->execute($this->payload)->response();
+	}
+	public function setId($id){
+		$this->_id = $id;
+		return $this->_id;
+	}
+	public function setSecret($secret){
+		$this->_secret = $secret;
+		return $this->_secret;
+	}
+	public function setScope($scope,$append = true){
+		if ($append){
+			$this->_scope = array_merge($this->_scope,$scope);
+		}else{
+			$this->_scope = $scope;
+		}
+		return $this->_scope;
+	}
+	private function setServer(){
+		$this->_server = \Config::get('unbox.oauth.server.host');
+		return $this->_server;
+	}
+	private function checkCache($token){
+		try
+		{
+			\Log::debug("Looking for: {$token['access_token']}");
+			$cachedToken = \Cache::get("tokens.{$token['access_token']}");
+			$cachedToken = \Crypt::decode($cachedToken);
+			$cachedToken = unserialize($cachedToken);
+			return $cachedToken;
+		}
+		catch (\CacheNotFoundException $e) {
+			\Log::debug("OAuth token not found in cache. Token is presumed expired.");
+			return false;
+		}
+	}
+	private function getCachedUser(){
+		try
+		{
+			\Log::debug("Looking for: {$this->_token['refresh_token']}");
+			$cachedUser = \Cache::get("users.{$this->_token['refresh_token']}");
+			$cachedUser = \Crypt::decode($cachedUser);
+			\Log::debug($cachedUser);
+			$cachedUser = unserialize($cachedUser);
 
-    }
-    private function destroySession(){
-        $_SESSION = array();
-        // If it's desired to kill the session, also delete the session cookie.
-        // Note: This will destroy the session, and not just the session data!
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
-            );
-        }
-        // Finally, destroy the session.
-        session_destroy();
-    }
-    private function refreshToken($refresh_token=null){
-        $this->setGrantType("refresh_token");
-        if ($refresh_token==null){
-            $this->payload = array(
-                'refresh_token' => $this->_token['refresh_token']
-            );
-        }else{
-            $this->payload = array(
-                'refresh_token' => $refresh_token
-            );
-        }
-        $token = $this->issueAccessToken();
-        return $token;
-    }
+			return $cachedUser;
+		}
+		catch (\CacheNotFoundException $e) {
+			\Log::debug("User not found in cache.");
+			return false;
+		}
+	}
+	private function cacheToken($token){
+		$cryptToken = \Crypt::encode(serialize($token));
+		\Cache::set("tokens.{$token['access_token']}",$cryptToken,3590);
+	}
+	private function deleteCache($token){
+		$this->deleteTokenCache($token['access_token']);
+		$this->deleteUserCache($token['refresh_token']);
+	}
+	private function deleteTokenCache($access_token){
+		\Cache::delete("tokens.$access_token");
+	}
+	private function deleteUserCache($refresh_token){
+		\Cache::delete("users.$refresh_token");
+	}
+	private function cacheUser($userInfo){
+		$cryptUser = \Crypt::encode(serialize($userInfo));
+		\Cache::set("users.{$this->_token['refresh_token']}",$cryptUser,86400);
+	}
     private function setupPayload(){
         $clientAttributes = array(
             'client_id' => $this->_id,
             'client_secret' => $this->_secret,
-            'grant_type' => $this->_grant_type
+            'grant_type' => $this->_grant_type,
         );
+		if ($this->_grant_type!=='refresh_token'){
+			$clientAttributes['scope'] = implode(",",$this->_scope);
+		}
         if (is_array($this->payload)){
-            $this->payload = array_merge($this->payload,$clientAttributes);
+            $this->payload = array_merge($clientAttributes,$this->payload);
         }else{
             $this->payload = $clientAttributes;
         }
-
-    }
-    private function sendRequest(){
-        if (isset($this->payload)){
-            if (is_array($this->payload)){
-                $this->request->payload = $this->payload;
-                $this->request->initialize();
-                if ($this->request->send()){
-                    return $this->request->getResponse();
-                }else{
-                    throw new \Exception("Error");
-                }
-            }else{
-                return false;
-            }
-        }else{
-            return false;
-        }
-    }
-    private function setId(){
-        $this->_id = \Config::get('unbox.oauth.client.id');
-        return $this->_id;
-    }
-    private function setSecret(){
-        $this->_secret = \Config::get('unbox.oauth.client.secret');
-        return $this->_secret;
-    }
-    private function setServer(){
-        $this->_server = \Config::get('unbox.oauth.server.host');
-        return $this->_server;
     }
     private function buildURL(){
         $url = "";
         switch ($this->_grant_type){
+			case "client":
             case "password":
                 $url = "token";
                 break;
@@ -257,15 +280,21 @@ class Client {
                 $url = "refresh";
                 break;
         }
-        return $this->_server.DIRECTORY_SEPARATOR."oauth".DIRECTORY_SEPARATOR.$url;
+        return "oauth/v1/oauth".DIRECTORY_SEPARATOR.$url;
     }
     private function setupRequest($url=null,$httpMethod="POST"){
-        if ($url!==null) {
+        if ($url==null) {
             $url = $this->buildURL();
         }else{
-            $url = $this->_server.DIRECTORY_SEPARATOR."oauth".DIRECTORY_SEPARATOR.$url;
+            $url = "oauth/v1/oauth".DIRECTORY_SEPARATOR.$url;
         }
-        $this->request = new \Request\Rest($url,$httpMethod,true,false);
+		if ($this->_server=='localhost'){
+			$this->request = \Request::forge($url,true);
+		}else{
+			$url = $this->_server.$url;
+			$this->request = \Request::forge($url,'curl');
+			$this->request->set_method($httpMethod);
+		}
         return $this->request;
     }
 }

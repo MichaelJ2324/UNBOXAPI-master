@@ -65,7 +65,8 @@
 
 <script type="text/javascript">
     UNBOX = new UNBOXAPI.App({
-        user: <?php echo ($user=="null"?$user:"'$user'"); ?>
+		//id: <?php //echo $session; ?>,
+        user: <?php echo ($user===null?"null":"'$user'"); ?>
     });
     UNBOX.start();
 

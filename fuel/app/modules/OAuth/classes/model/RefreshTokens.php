@@ -2,9 +2,9 @@
 
 namespace Oauth\Model;
 
-class RefreshTokens extends \Model\Oauth {
+class RefreshTokens extends \Model\Auth {
 
-    protected static $_table_name = 'oauth_refresh_tokens';
+    protected static $_table_name = 'refresh_tokens';
     protected static $_fields = array(
         'refresh_token' => array(
             'data_type' => 'varchar',
@@ -40,7 +40,7 @@ class RefreshTokens extends \Model\Oauth {
         'has_one' => array(
             'accessToken' => array(
                 'key_from' => 'access_token_id',
-                'model_to' => 'Oauth\\Model\\AccessTokens',
+                'model_to' => 'OAuth\\Model\\AccessTokens',
                 'key_to' => 'id',
                 'cascade_save' => false,
                 'cascade_delete' => true,

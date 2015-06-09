@@ -12,13 +12,12 @@ namespace UNBOXAPI;
 class Metadata {
 
     protected static $_excluded_modules = array(
-        'Oauth',
-        'Users',
-        'Request',
-        'Versions'
+        'oauth',
+        'users',
+        'versions'
     );
 
-    public static function get_metaData(){
+    public static function get_metaData($loggedIn=false){
         $metadata = array(
             array(
                 'key' => 'config',
@@ -39,18 +38,18 @@ class Metadata {
         );
         $modules = \Module::loaded();
         foreach ($modules as $module=>$path){
-            if (!in_array($module,static::$_excluded_modules)) {
+            if (!in_array(strtolower($module),static::$_excluded_modules)) {
                 $class = \UNBOXAPI\Data\Util\Module::classify($module);
                 $Class = "\\$module\\$class";
                 $moduleMeta = $Class::metadata();
                 if (get_parent_class($Class) == 'UNBOXAPI\Module') {
-                    if ($moduleMeta['config']['login']===true && $_SESSION['loggedIn']===true){
+                    if ($moduleMeta['config']['login']===true && $loggedIn===true){
                         $metadata[1]['value'][] = $moduleMeta;
                     }else if ($moduleMeta['config']['login']===false){
                         $metadata[1]['value'][] = $moduleMeta;
                     }
                 } else if (get_parent_class($Class) == 'UNBOXAPI\Layout') {
-                    if ($moduleMeta['config']['login']===true && $_SESSION['loggedIn']===true){
+                    if ($moduleMeta['config']['login']===true && $loggedIn===true){
                         $metadata[2]['value'][] = $moduleMeta;
                     }else if ($moduleMeta['config']['login']===false){
                         $metadata[2]['value'][] = $moduleMeta;

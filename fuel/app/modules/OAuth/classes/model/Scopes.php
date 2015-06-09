@@ -2,9 +2,9 @@
 
 namespace Oauth\Model;
 
-class Scopes extends \Model\Oauth {
+class Scopes extends \Model\Auth {
 
-    protected static $_table_name = 'oauth_scopes';
+    protected static $_table_name = 'scopes';
     protected static $_fields = array(
         'scope' => array(
             'data_type' => 'varchar',
@@ -30,9 +30,9 @@ class Scopes extends \Model\Oauth {
             'accessTokens' => array(
                 'key_from' => 'id',
                 'key_through_from' => 'scope_id',
-                'table_through' => 'oauth_access_token_scopes',
+                'table_through' => 'access_token_scopes',
                 'key_through_to' => 'access_token_id',
-                'model_to' => 'Oauth\\Model\\AccessTokens',
+                'model_to' => 'OAuth\\Model\\AccessTokens',
                 'key_to' => 'id',
                 'cascade_save' => false,
                 'cascade_delete' => true,
@@ -40,9 +40,9 @@ class Scopes extends \Model\Oauth {
             'authCodes' => array(
                 'key_from' => 'id',
                 'key_through_from' => 'scope_id',
-                'table_through' => 'oauth_auth_code_scopes',
+                'table_through' => 'auth_code_scopes',
                 'key_through_to' => 'auth_code_id',
-                'model_to' => 'Oauth\\Model\\AuthCodes',
+                'model_to' => 'OAuth\\Model\\AuthCodes',
                 'key_to' => 'id',
                 'cascade_save' => false,
                 'cascade_delete' => true,
@@ -50,13 +50,13 @@ class Scopes extends \Model\Oauth {
             'sessions' => array(
                 'key_from' => 'id',
                 'key_through_from' => 'scope_id',
-                'table_through' => 'oauth_session_scopes',
+                'table_through' => 'session_scopes',
                 'key_through_to' => 'session_id',
-                'model_to' => 'Oauth\\Model\\Sessions',
+                'model_to' => 'OAuth\\Model\\Sessions',
                 'key_to' => 'id',
                 'cascade_save' => false,
                 'cascade_delete' => true,
-            )
+            ),
         )
     );
 }

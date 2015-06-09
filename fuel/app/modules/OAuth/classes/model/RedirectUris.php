@@ -2,9 +2,9 @@
 
 namespace Oauth\Model;
 
-class RedirectUris extends \Model\Oauth {
+class RedirectUris extends \Model\Auth {
 
-    protected static $_table_name = 'oauth_client_redirect_uris';
+    protected static $_table_name = 'client_redirect_uris';
     protected static $_fields = array(
         'client_id' => array(
             'data_type' => 'varchar',

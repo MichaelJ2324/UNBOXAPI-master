@@ -2,9 +2,9 @@
 
 namespace Oauth\Model;
 
-class AccessTokens extends \Model\Oauth {
+class AccessTokens extends \Model\Auth {
 
-    protected static $_table_name = 'oauth_access_tokens';
+    protected static $_table_name = 'access_tokens';
     protected static $_fields = array(
         'access_token' => array(
             'data_type' => 'varchar',
@@ -39,16 +39,16 @@ class AccessTokens extends \Model\Oauth {
         'belongs_to' => array(
             'refreshToken' => array(
                 'key_from' => 'id',
-                'model_to' => 'Oauth\\Model\\RefreshTokens',
+                'model_to' => 'OAuth\\Model\\RefreshTokens',
                 'key_to' => 'access_token_id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             )
         ),
         'has_one' => array(
             'session' => array(
                 'key_from' => 'session_id',
-                'model_to' => 'Oauth\\Model\\Sessions',
+                'model_to' => 'OAuth\\Model\\Sessions',
                 'key_to' => 'id',
                 'cascade_save' => false,
                 'cascade_delete' => true,
@@ -59,9 +59,9 @@ class AccessTokens extends \Model\Oauth {
             'scopes' => array(
                 'key_from' => 'id',
                 'key_through_from' => 'access_token_id',
-                'table_through' => 'oauth_access_token_scopes',
+                'table_through' => 'access_token_scopes',
                 'key_through_to' => 'scope_id',
-                'model_to' => 'Oauth\\Model\\Scopes',
+                'model_to' => 'OAuth\\Model\\Scopes',
                 'key_to' => 'id',
                 'cascade_save' => false,
                 'cascade_delete' => true,

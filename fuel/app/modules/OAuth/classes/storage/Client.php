@@ -28,7 +28,7 @@ class Client extends AbstractStorage implements ClientInterface
             $Client = new ClientEntity($this->server);
             $Client->hydrate(
                 array(
-                    'id'    =>  $client->id,
+                    'id'    =>  $client->client_id,
                     'name'  =>  $client->name,
                 )
             );
@@ -59,7 +59,7 @@ class Client extends AbstractStorage implements ClientInterface
         if (count($client) === 1) {
             $Client = new ClientEntity($this->server);
             $Client->hydrate([
-                'id'    =>  $client->id,
+                'id'    =>  $client->client_id,
                 'name'  =>  $client->name,
             ]);
 

@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/8/15
- * Time: 3:01 PM
- */
 
 namespace Users;
 
@@ -14,23 +8,26 @@ class User extends \UNBOXAPI\Module{
     protected static $_label = "User";
     protected static $_label_plural = "Users";
 
-    public $first_name;
-    public $last_name;
-    public $password;
-    public $username;
-    public $email;
+	protected static $_models = array(
+		'Users',
+		'Preferences'
+	);
 
-    public static function authenticate($username,$password,$crypt = true){
-        $model = static::model();
-        if ($crypt) $password = \Crypt::encode($password);
-        $user = $model::query()->where('username', $username )->where('password',$password)->get_one();
-        $count = count($user);
-        if ($count===1){
-            return $user;
-        }else{
-            return false;
-        }
-    }
+	protected static $_available_attributes = array(
+		'first_name',
+		'last_name',
+	);
+	public $preferences;
+
+	public function __construct(){
+		unset($this->name);
+		unset($this->deleted_at);
+		unset($this->date_created);
+		unset($this->created_by);
+		unset($this->date_modified);
+		unset($this->modified_by);
+	}
+
     public static function register(){
         $User = new User();
         $User->first_name = \Input::json('first_name');
@@ -45,7 +42,7 @@ class User extends \UNBOXAPI\Module{
         return static::create($User);
     }
     public static function me($userId){
-        $model = static::model();
+        $model = static::model(true);
         $user = $model::find($userId);
         return $user->to_array();
     }

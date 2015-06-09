@@ -17,9 +17,9 @@ class Tester extends \UNBOXAPI\Layout{
     protected static $_link = "#test";
     protected static $_icon = "<i class='fa fa-check-square'></i>";
     protected static $_links = array(
-        'tutorial' => array(
+        'save' => array(
             'name' => 'Save',
-            'link' => "#save",
+            'link' => "#test/save",
             'icon' => "",
             'type' => "",
             'layout' => "",
@@ -43,7 +43,7 @@ class Tester extends \UNBOXAPI\Layout{
             $Test = new \Tests\Test();
             $Test->load($test_id);
         }
-        //TODO::Add logic for running a Test using the Request/Rest object
+        //TODO::Add logic for running a Test using the Fuel \Request Object
         return $response;
     }
 } 

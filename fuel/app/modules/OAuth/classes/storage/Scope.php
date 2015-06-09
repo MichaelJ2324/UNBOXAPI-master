@@ -13,7 +13,7 @@ class Scope extends AbstractStorage implements ScopeInterface
      */
     public function get($scope, $grantType = null, $clientId = null)
     {
-        $scope = \Oauth\Model\Scopes::query()->where('scope',$scope)->get_one();
+        $scope = \OAuth\Model\Scopes::query()->where('scope',$scope)->get_one();
 
         if (count($scope) === 0) {
             return;

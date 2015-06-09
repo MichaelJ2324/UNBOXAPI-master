@@ -116,6 +116,7 @@ UNBOXAPI.App = Backbone.Router.extend({
         "manage/:module/:action/:id": "quickRecord",
         "test": "tester",
         "login": "home",
+        "logout": "logout",
         "register": "register",
         "profile": "profile",
         "home": "home",
@@ -123,6 +124,8 @@ UNBOXAPI.App = Backbone.Router.extend({
     },
     initialize: function (options) {
         this.options = options || {};
+        this.id = this.options.id;
+        //TODO::Setup $.AJAX with jsClient ID in header
         this.user = new UNBOXAPI.Models.User;
         this.metadata = new UNBOXAPI.Collections.MetaData({
             user: this.user
@@ -182,8 +185,9 @@ UNBOXAPI.App = Backbone.Router.extend({
             } else {
                 this.navigate("login", {trigger: true});
             }
+        }else{
+            this.navigate("login", {trigger: true});
         }
-
         return ready;
     },
     userStateChange: function(){
@@ -200,6 +204,7 @@ UNBOXAPI.App = Backbone.Router.extend({
         }else{
             if (this.loggedIn==true && loggedIn==false){
                 this.loggedIn = false;
+                this.metadata.fetchAll();
             }
             this.navigate("Home",{trigger: true});
         }
@@ -288,6 +293,9 @@ UNBOXAPI.App = Backbone.Router.extend({
             this.navigate("login");
             this.login();
         }
+    },
+    logout: function(){
+        this.user.logout();
     },
     defaultRoute: function () {
         this.home();
@@ -544,7 +552,7 @@ UNBOXAPI.Views = {
             this.options = options || {};
             this.template = this.options.template;
 
-            this.$content = "";
+            this.$content = null;
             _.bindAll(this,"render","resize","setContent","reset","setupDOMPointers");
             this.model.on("change:width",this.resize);
             this.model.on("change:content",this.setContent);
@@ -557,7 +565,7 @@ UNBOXAPI.Views = {
             return this;
         },
         setupDOMPointers: function(){
-            this.$content = this.$el.children(".un-panel-content");
+            this.$content = $("#main_content");
         },
         setContent: function(){
             var previousContent = this.model.previous("content");
@@ -565,12 +573,15 @@ UNBOXAPI.Views = {
                 previousContent.close();
             }
             var view = this.model.get("content");
+            console.log(this.$content);
             view.el = this.$content;
             view.setElement(this.$content);
             view.render();
         },
         resize: function(){
-            this.$el.css("width", this.model.get("width")+"%");
+            //FIXME::Hack to make resizing work
+            //this.$el used to work, but doesn't now?
+            $("#main").css("width", this.model.get("width")+"%");
         },
         reset: function(){
             this.$content.html("");
@@ -1021,10 +1032,14 @@ UNBOXAPI.Views.Tester = {
                 module: this.modules.findWhere({ name: "Parameters" })
             });
             this.models.token = new UNBOXAPI.Models.Tokens();
-            this.models.request = new UNBOXAPI.Models.Requests();
+            this.models.test = new UNBOXAPI.Models.Record({
+                module: this.modules.findWhere({ name: "Tests" })
+            });
 
-            _.bindAll(this,"testSetup","epDetail","requestSetup","output","fetchEntrypoint","resetTest");
+
+            _.bindAll(this,"testSetup","epDetail","requestSetup","output","fetchEntrypoint","resetTester","submitTest");
             this.models.entryPoint.on("change:id",this.fetchEntrypoint);
+            this.models.test.on("test",this.submitTest);
             this.output();
             this.testSetup();
             this.epDetail();
@@ -1056,7 +1071,6 @@ UNBOXAPI.Views.Tester = {
                     model: this.models.entryPoint,
                     panel: this.collection.getPanel(2),
                     collection: this.collections.parameters,
-                    token: this.models.token,
                     templates: this.metadata.templates
                 }
             );
@@ -1064,12 +1078,13 @@ UNBOXAPI.Views.Tester = {
         requestSetup: function(){
             this.setContent(
                 3,
-                UNBOXAPI.Views.Tester.Parameters.Panel,
+                UNBOXAPI.Views.Tester.RequestSetup.Panel,
                 {
                     collection: this.collections.parameters,
+                    panel: this.collection.getPanel(3),
                     web_address: this.models.web_address,
                     token: this.models.token,
-                    request: this.models.request,
+                    test: this.models.test,
                     templates: this.metadata.templates
                 }
             );
@@ -1079,12 +1094,29 @@ UNBOXAPI.Views.Tester = {
                 'main',
                 UNBOXAPI.Views.Tester.Output.Panel,
                 {
-                    model: this.models.request,
-                    templates: this.metadata.templates
+                    model: this.models.test,
+                    template: this.metadata.templates.getTemplate("Main")
                 }
             );
         },
-        resetTest: function(){
+        submitTest: function(){
+            this.models.test.set({
+                application_id: this.models.application.get("id"),
+                api_id: this.models.api.get("id"),
+                entrypoint_id: this.models.entryPoint.get("id"),
+                login_id: this.models.login.get("id"),
+                web_address: this.models.web_address.getValue()
+            });
+            this.models.test.url = UNBOXAPI.Global.ajaxURL+"/tester/test";
+            UNBOXAPI.Models.Utils.fetch({
+                model: this.models.test
+            });
+        },
+        resetTester: function(){
+            this.collections.parameters.url = UNBOXAPI.Global.ajaxURL+"Entrypoints/"+this.models.entryPoint.get("id")+"/related/Parameters";
+            UNBOXAPI.Models.Utils.fetch({
+                model: this.collections.parameters
+            });
             var panel = this.collection.getPanel(3);
             panel.set({
                 hidden: true
@@ -1095,7 +1127,7 @@ UNBOXAPI.Views.Tester = {
             UNBOXAPI.Models.Utils.fetch({
                 model: this.models.entryPoint,
                 options: {},
-                success: this.resetTest
+                success: this.resetTester
             });
         }
     }),
@@ -1369,6 +1401,7 @@ UNBOXAPI.Views.Tester = {
     EntrypointDetail: {
         Panel: Backbone.View.extend({
             events: {
+                "click #setupRequest": "setupRequest"
             },
             initialize: function(options) {
                 this.options = options || {};
@@ -1379,11 +1412,9 @@ UNBOXAPI.Views.Tester = {
                 this.template = this.templates.getTemplate("Panel2");
 
                 this.$ep_main = null;
-                this.$ep_action1 = null;
                 this.$ep_parameters = null;
                 this.$ep_examples = null;
                 this.$ep_exceptions = null;
-
 
                 _.bindAll(this,"render","panelState","setup");
                 this.model.bind("sync",this.panelState);
@@ -1398,7 +1429,6 @@ UNBOXAPI.Views.Tester = {
             },
             setup: function(){
                 this.$ep_main = $("#ep_main");
-                this.$ep_action = $("#ep_action1");
                 this.$ep_parameters = $("#ep_parameters");
                 this.$ep_examples = $("#ep_examples");
                 this.$ep_exceptions = ("#ep_exceptions");
@@ -1407,13 +1437,6 @@ UNBOXAPI.Views.Tester = {
                     el: this.$ep_main,
                     model: this.model,
                     template: this.templates.getTemplate("EntrypointMain")
-                });
-                this.actionButtons= new UNBOXAPI.Views.Tester.ActionButtons({
-                    el: this.$ep_action,
-                    model: this.token,
-                    collection: this.collection,
-                    panelNumber: this.panel.get("number"),
-                    template: this.templates.getTemplate("EntrypointActions")
                 });
                 this.parameterPanel = new UNBOXAPI.Views.Tester.EntrypointDetail.Parameters({
                     el: this.$ep_parameters,
@@ -1431,6 +1454,9 @@ UNBOXAPI.Views.Tester = {
                     collection: this.exceptions,
                     template: this.layout.templates.getTemplate("EntrypointExceptions")
                 });*/
+            },
+            setupRequest: function(){
+                this.collection.trigger("setupRequest");
             },
             panelState: function(){
                 if (this.model.get('name')!==null&&this.model.get('name')!==""){
@@ -1455,7 +1481,7 @@ UNBOXAPI.Views.Tester = {
             },
             render: function(){
                 this.html = _.template(this.template,{
-                    entryPoint: this.model
+                    entrypoint: this.model
                 });
                 this.$el.html(this.html);
                 return this;
@@ -1472,7 +1498,7 @@ UNBOXAPI.Views.Tester = {
             },
             render: function(){
                 this.html = _.template(this.template, {
-                    parameters: this.collection.where({url_param: "0"})
+                    parameters: this.collection.where({ url_param: "0"})
                 });
                 this.$el.html(this.html);
                 return this;
@@ -1517,118 +1543,130 @@ UNBOXAPI.Views.Tester = {
             }
         })
     },
-    Parameters: {
+    RequestSetup: {
         Panel: Backbone.View.extend({
             events: {
+                "click #sendRequest": "sendRequest",
+                "click #generateScript": "generateScript"
             },
             initialize: function(options) {
                 this.options = options || {};
                 this.panel = this.options.panel || {};
                 this.token = this.options.token || {};
                 this.templates = this.options.templates || {};
+                this.web_address = this.options.web_address || {};
+                this.test = this.options.test;
 
                 this.template = this.templates.getTemplate("Panel3");
 
+                this.$request_info = null;
                 this.$url_parameters = null;
                 this.$request_parameters = null;
-                this.$actions = null;
 
-                _.bindAll(this,"render","panelState");
-                this.collection.on("testerSetup",this.panelState);
+                _.bindAll(this,"render","openPanel","submitBtnState","sendRequest","generateScript");
+                this.collection.on("sync",this.render);
+                this.collection.on("setupRequest",this.openPanel);
+                this.collection.bind("sync",this.render);
+                this.token.bind("change:access_token",this.submitBtnState);
             },
             render: function(){
                 this.html = _.template(this.template);
                 this.$el.html(this.html);
 
                 this.setup();
-
+                this.submitBtnState();
                 return this;
             },
             setup: function(){
                 //setup dom references
+                this.$request_info = $("#ep_request_info");
                 this.$url_parameters = $("#ep_url_params");
                 this.$request_parameters = $("#ep_request_params");
-                this.$actions = $("#ep_action2");
 
-                this.urlParams = new UNBOXAPI.Views.Tester.Parameters.UrlParams({
+                this.requestInfo = new UNBOXAPI.Views.Tester.RequestSetup.Info({
+                    el: this.$request_info,
+                    model: this.web_address,
+                    template: this.templates.getTemplate("RequestInfo")
+                });
+                this.urlParams = new UNBOXAPI.Views.Tester.RequestSetup.Parameters({
                     el: this.$url_parameters,
-                    collection: this.collection,
+                    parameters: this.collection.where({ url_param: "1" }),
                     template: this.templates.getTemplate("Parameters")
                 });
-                this.requestParams = new UNBOXAPI.Views.Tester.Parameters.RequestParams({
+                this.requestPayload = new UNBOXAPI.Views.Tester.RequestSetup.Parameters({
                     el: this.$request_parameters,
-                    collection: this.collection,
+                    parameters: this.collection.where({ url_param: "0" }),
                     template: this.templates.getTemplate("Parameters")
-                });
-                this.actionButtons = new UNBOXAPI.Views.Tester.ActionButtons({
-                    el: this.$actions,
-                    model: this.token,
-                    collection: this.collection,
-                    panelNumber: this.panel.get("number"),
-                    template: this.templates.getTemplate("EntrypointActions")
                 });
             },
-            panelState: function(){
-                if (this.collection.length>0){
-                    this.panel.set({
-                        open: true
-                    });
+            submitBtnState: function() {
+                if (!(this.token.get("access_token")==null||typeof this.token.get("access_token")=='undefined')) {
+                    $("#sendAPI").removeAttr("disabled");
                 }else{
-                    this.panel.set({
-                        hidden: true
-                    });
+                    $("#sendAPI").attr("disabled",true);
                 }
+            },
+            sendRequest: function(e){
+                var payload = $("#RequestPayload").serializeArray();
+                var url_params = $("#URLParams").serializeArray();
+                this.test.set({
+                    payload: payload,
+                    url_params: url_params
+                });
+                this.test.trigger("test");
+            },
+            generateScript: function(e){
+
+            },
+            openPanel: function(){
+                this.panel.set({
+                    open: true
+                });
             }
         }),
-        UrlParams: Backbone.View.extend({
-            initialize: function(options) {
+        Info: Backbone.View.extend({
+            events: {
+                "change #web_address": "updateRequestURL"
+            },
+            initialize: function(options){
                 this.options = options || {};
                 this.template = this.options.template || {};
-                _.bindAll(this,"render");
-                this.collection.on("testerSetup",this.render);
+                _.bindAll(this,"render","updateRequestURL");
+                this.render();
             },
             render: function(){
-                var url_params = this.collection.where({ url_param: "1"});
-                var html = "";
-                for (var x=0;x<url_params.length;x++) {
-                    var type = (!(url_params[x].get("api_type_name")==null||url_params[x].get("api_type_name")=="")?url_params[x].get("api_type"):url_params[x].get("data_type"));
-                    var field = {
-                        name: url_params[x].get("name"),
-                        required: url_params[x].get("required"),
-                        value: ""
-                    };
-                    url_params[x].set({
-                        html: _.template(type.template,{
-                            field: field
-                        }),
-                        type: type.name
-                    });
-                }
                 this.html = _.template(this.template,{
-                    parameters: url_params
+                    web_address: this.model
                 });
                 this.$el.html(this.html);
                 return this;
+            },
+            updateRequestURL: function(e){
+                var value = $(e.currentTarget).val();
+                this.model.set({
+                    value: value
+                });
             }
         }),
-        RequestParams: Backbone.View.extend({
+        Parameters: Backbone.View.extend({
             initialize: function(options) {
                 this.options = options || {};
+                this.parameters = this.options.parameters || [];
                 this.template = this.options.template || {};
                 _.bindAll(this,"render");
-                this.collection.on("testerSetup",this.render);
+                this.render();
             },
             render: function(){
-                var url_params = this.collection.where({ url_param: "0"});
                 var html = "";
-                for (var x=0;x<url_params.length;x++) {
-                    var type = (!(url_params[x].get("api_type_name")==null||url_params[x].get("api_type_name")=="")?url_params[x].get("api_type"):url_params[x].get("data_type"));
+                var params = [];
+                for (var x=0;x<this.parameters.length;x++) {
+                    var type = (!(this.parameters[x].get("api_type_name")==null||this.parameters[x].get("api_type_name")=="")?this.parameters[x].get("api_type"):this.parameters[x].get("data_type"));
                     var field = {
-                        name: url_params[x].get("name"),
-                        required: url_params[x].get("required"),
+                        name: this.parameters[x].get("name"),
+                        required: this.parameters[x].get("required"),
                         value: ""
                     };
-                    url_params[x].set({
+                    params[x].set({
                         html: _.template(type.template,{
                             field: field
                         }),
@@ -1636,7 +1674,7 @@ UNBOXAPI.Views.Tester = {
                     });
                 }
                 this.html = _.template(this.template,{
-                    parameters: url_params
+                    parameters: params
                 });
                 this.$el.html(this.html);
                 return this;
@@ -1650,9 +1688,7 @@ UNBOXAPI.Views.Tester = {
             },
             initialize: function (options) {
                 this.options = options || {};
-                this.layout = this.options.layout || {};
-                this.templates = this.options.templates;
-                this.template = this.templates.getTemplate("Main");
+                this.template = this.options.template;
 
                 var Style = Backbone.Model.extend({
                     defaults: {
@@ -1660,18 +1696,16 @@ UNBOXAPI.Views.Tester = {
                     }
                 });
 
-                _.bindAll(this, "render");
-                this.model.bind("change", this.render);
+                _.bindAll(this, "render","changeStyle");
+                this.model.bind("sync", this.render);
 
                 this.style = new Style();
                 this.style.bind("change", this.render);
-
-                this.$request = $("#request");
-                this.$response = $("#response");
             },
             render: function () {
                 this.html = _.template(this.template,{
-                    request: this.model,
+                    request: this.model.get("request"),
+                    response: this.model.get("response"),
                     style: this.style
                 });
                 this.$el.html(this.html);
@@ -1684,71 +1718,7 @@ UNBOXAPI.Views.Tester = {
                 });
             }
         })
-    },
-    ActionButtons: Backbone.View.extend({
-        events: {
-            "click #sendAPI": "testEP",
-            "click #generateScript": "generateScript",
-            "click #setupParams": "setupParams"
-        },
-        initialize: function(options){
-            this.options = options || {};
-            this.panelNumber = this.options.panelNumber || null;
-            this.template = this.options.template || {};
-
-            _.bindAll(this,"render","testButtonState","testEP","generateScript","setupParams");
-            this.collection.bind("sync",this.render);
-            this.model.bind("change:access_token",this.testButtonState);
-        },
-        render: function(){
-            var hasParams = false;
-            if (this.collection.length>0){
-                hasParams = true;
-            }
-            this.html = _.template(this.template,{
-                hasParams: hasParams,
-                panelNumber: this.panelNumber
-            });
-            this.$el.html(this.html);
-            this.testButtonState();
-            return this;
-        },
-        setupParams: function(){
-            this.collection.trigger("testerSetup");
-        },
-        testButtonState: function() {
-            if (!(this.model.get("access_token")==null||typeof this.model.get("access_token")=='undefined')) {
-                $("#sendAPI").removeAttr("disabled");
-            }else{
-                $("#sendAPI").attr("disabled",true);
-            }
-        },
-        testEP: function(e){
-            var paramForm = $("#ParameterForm").serializeArray();
-            paramForm.push(
-                {
-                    name: 'token',
-                    value: UNBOXAPI.tester.models.token.get('access_token')
-                },
-                {
-                    name: 'web_address',
-                    value: UNBOXAPI.tester.web_address
-                });
-            $.ajax({
-                url: UNBOXAPI.Global.ajaxURL+'apis/'+UNBOXAPI.tester.models.api.get('id')+'/test/'+UNBOXAPI.tester.models.entryPoint.get("id"),
-                type: "POST",
-                data: paramForm,
-                success: function(data){
-                    UNBOXAPI.tester.models.request.clear();
-                    UNBOXAPI.tester.models.request.set(data);
-                },
-                dataType: 'json'
-            });
-        },
-        generateScript: function(e){
-
-        }
-    })
+    }
 }
 UNBOXAPI.Views.Manager = {
     Layout: UNBOXAPI.Views.Layout.extend({
@@ -2193,6 +2163,7 @@ UNBOXAPI.Models = {
             content: null
         },
         resize: function(){
+            console.log("Resizing");
             var openPanels = this.panels.where({
                 open: true
             });
@@ -2409,6 +2380,7 @@ UNBOXAPI.Models = {
     //User Model
     User: Backbone.Model.extend({
         initialize: function(){
+            this.checkin = null;
             _.bindAll(this, 'getValue',"loggedIn","login","logout");
         },
         urlRoot: UNBOXAPI.Global.ajaxURL+"users/me",
@@ -2436,7 +2408,7 @@ UNBOXAPI.Models = {
                 },
                 success: function(data){
                     this.fetch();
-                    setInterval(function(model) {
+                    this.checkin = setInterval(function(model) {
                         model.fetch();
                     }, 600000,this);
                 },
@@ -2459,11 +2431,16 @@ UNBOXAPI.Models = {
                 type: "POST",
                 context: this,
                 success: function(data){
-                    this.reset();
+                    this.clear();
+                    window.clearInterval(this.checkin);
+                    this.checkin = null;
                 },
                 error: function(data){
                     console.log(data);
-                    //UNBOXAPI.Global.Utils.log(data);
+                    //FIXME::Wierd error on logout. Everything gets removed properly in backend, but it still throws error.
+                    this.clear();
+                    window.clearInterval(this.checkin);
+                    this.checkin = null;
                 },
                 dataType: 'json'
             }).done(function() {

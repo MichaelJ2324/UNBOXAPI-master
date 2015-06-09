@@ -2,9 +2,9 @@
 
 namespace Oauth\Model;
 
-class AuthCodes extends \Model\Oauth {
+class AuthCodes extends \Model\Auth {
 
-    protected static $_table_name = 'oauth_auth_codes';
+    protected static $_table_name = 'auth_codes';
     protected static $_fields = array(
         'auth_code' => array(
             'data_type' => 'varchar',
@@ -58,7 +58,7 @@ class AuthCodes extends \Model\Oauth {
             'scopes' => array(
                 'key_from' => 'id',
                 'key_through_from' => 'auth_code_id',
-                'table_through' => 'oauth_auth_code_scopes',
+                'table_through' => 'auth_code_scopes',
                 'key_through_to' => 'scope_id',
                 'model_to' => 'Oauth\\Model\\Scopes',
                 'key_to' => 'id',

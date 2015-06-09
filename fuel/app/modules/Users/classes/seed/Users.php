@@ -19,17 +19,7 @@ class Users extends \UNBOXAPI\Data\Seed\Seeder{
             'first_name' => 'Unbox',
             'last_name' => 'Demo',
             'username' => 'unbox_demo',
-            'password' => 'unbox',
             'email' => 'demo@unboxapi.com'
         )
     );
-    protected static function records(){
-        $records = array();
-        foreach(static::$_records as $record=>$values){
-            $values['password'] = \Crypt::encode($values['password']);
-            $records[] = $values;
-        }
-        static::$_records = $records;
-        return static::$_records;
-    }
 }

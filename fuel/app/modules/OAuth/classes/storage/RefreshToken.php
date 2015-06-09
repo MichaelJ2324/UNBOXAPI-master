@@ -3,6 +3,7 @@
 namespace Oauth\Storage;
 
 use League\OAuth2\Server\Entity\RefreshTokenEntity;
+use League\OAuth2\Server\Entity\AccessTokenEntity;
 use League\OAuth2\Server\Storage\AbstractStorage;
 use League\OAuth2\Server\Storage\RefreshTokenInterface;
 
@@ -30,6 +31,20 @@ class RefreshToken extends AbstractStorage implements RefreshTokenInterface
         return;
     }
 
+	public function getByAccessToken(AccessTokenEntity $token){
+		$refresh_token=null;
+		$refresh_token = \Oauth\Model\RefreshTokens::query()->where('access_token_id',$token->getId())->get_one();
+		if (count($refresh_token) === 1) {
+			$token = (new RefreshTokenEntity($this->server))
+				->setId($refresh_token->refresh_token)
+				->setExpireTime($refresh_token->expire_time)
+				->setAccessTokenId($refresh_token->access_token_id);
+			return $token;
+		}
+
+		return;
+	}
+
     /**
      * {@inheritdoc}
      */
@@ -52,7 +67,7 @@ class RefreshToken extends AbstractStorage implements RefreshTokenInterface
      */
     public function delete(RefreshTokenEntity $token)
     {
-        $refresh_token = \Oauth\Model\RefreshTokens::query()->where('refresh_token',$token->getId())->get_one();
+        $refresh_token = \OAuth\Model\RefreshTokens::query()->where('refresh_token',$token->getId())->get_one();
         $refresh_token->delete();
     }
 }

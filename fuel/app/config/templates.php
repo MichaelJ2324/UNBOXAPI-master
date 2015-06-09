@@ -80,10 +80,7 @@ return array(
             <li class='dropdown'>
                 <% if (user.loggedIn()){ %>
                 <a href='#profile' style='float: left;'>
-                    <span class='fa-stack fa-lg'>
-                      <i class='fa fa-circle fa-stack-2x'></i>
-                      <i class='fa fa-user fa-stack-1x fa-inverse'></i>
-                    </span>
+                    <i class='fa fa-user'></i>
                     <%= user.escape('user_name') %>
                 </a>
                 <% } else { %>
@@ -127,7 +124,7 @@ return array(
             </div>",
     "main" => "
         <div class='un-panel' id='main' style='width: 100%;'>
-            <div class='un-panel-content' style='padding-right: 10px;'>
+            <div class='un-panel-content' id='main_content' style='padding-right: 10px;'>
 
             </div>
         </div>
