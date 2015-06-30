@@ -2,10 +2,10 @@
 
 namespace Oauth\Storage;
 
-use League\OAuth2\Server\Entity\ClientEntity;
-use League\OAuth2\Server\Entity\SessionEntity;
-use League\OAuth2\Server\Storage\AbstractStorage;
-use League\OAuth2\Server\Storage\ClientInterface;
+use OAuth2\Server\Entity\ClientEntity;
+use OAuth2\Server\Entity\SessionEntity;
+use OAuth2\Server\Storage\AbstractStorage;
+use OAuth2\Server\Storage\ClientInterface;
 
 class Client extends AbstractStorage implements ClientInterface
 {
@@ -14,7 +14,7 @@ class Client extends AbstractStorage implements ClientInterface
      */
     public function get($clientId, $clientSecret = null, $redirectUri = null, $grantType = null)
     {
-        $query = \Oauth\Model\Clients::query()->where('client_id',$clientId);
+        $query = \OAuth\Model\Clients::query()->where('client_id',$clientId);
 
         if ($clientSecret !== null) {
             $query->where('secret',$clientSecret);
@@ -44,7 +44,7 @@ class Client extends AbstractStorage implements ClientInterface
      */
     public function getBySession(SessionEntity $session)
     {
-        $client = \Oauth\Model\Clients::find('first',
+        $client = \OAuth\Model\Clients::find('first',
             array(
                 'related' => array(
                     'session' => array(

@@ -42,48 +42,49 @@ return array(
         </div>
     ",
     "LoginInfo" => "
+		<label for='login_web_address'>Web Address</label>
+		<input type='text' class='form-control select2' id='login_web_address' name='login_web_address' />
         <ul class='nav nav-tabs'>
             <li role='presentation' class='active'><a href='#login_form_container'>Form</a></li>
-            <li role='presentation' class='disabled'><a href='#login_info'>Login Info</a></li>
+            <li role='presentation' class='disabled'><a href='#token_info_container'>Login Info</a></li>
         </ul>
         <div class='tab-content'>
             <div role='tabpanel' class='tab-pane' id='login_form_container'>
                 <form id='login_form' class='form-horizontal hidden' role='form'>
+                	<div id='login_normal'>
+					</div>
+					<div id='login_advanced' class='panel-collapse collapse'>
+					</div>
+					<a id='login_advanced_btn' data-toggle='collapse' data-target='#login_advanced'>Advanced+</a>
+					<br>
+					<button type='button' id='loginBtn' class='btn btn-primary'>Login</button>
                 </form>
             </div>
-            <div role='tabpanel' class='tab-pane' id='token_info'>
+            <div role='tabpanel' class='tab-pane' id='token_info_container'>
+            	<div class='row'>
+					<button type='button' class='btn btn-primary pull-left logout' id='logoutBtn'>Logout</button>
+				</div>
+				<div class='row'>
+					<table class='table table-responsive pull-left' id='token_info'>
+
+					</table>
+        		</div>
             </div>
         </div>
     ",
-    "LoginForm" => "
-        <div id='login_normal'>
-        </div>
-        <div id='login_advanced' class='panel-collapse collapse'>
-        </div>
-        <a id='login_advanced_btn' data-toggle='collapse' data-target='#login_advanced'>Advanced+</a>
-        <br>
-        <button type='button' id='loginBtn' class='btn btn-primary'>Login</button>
-    ",
     'TokenInfo' => "
-        <div class='row'>
-            <button type='button' class='btn btn-primary pull-left logout' id='logOutBtn2'>Logout</button>
-            <button type='button' class='btn btn-link pull-right' id='return_LoginForm'>Return to Form</button>
-        </div>
-        <div class='row'>
-            <table class='table table-responsive pull-left'>
-                <% var attribute %>
-                <% for(attribute in token.attributes) { %>
-                    <tr>
-                        <td>
-                            <%= attribute %>:
-                        </td>
-                        <td>
-                            <%= token.get(attribute) %>
-                        </td>
-                    </tr>
-                <% } %>
-            </table>
-        </div>",
+			<% var attribute %>
+				<% for(attribute in token.attributes) { %>
+				<tr>
+					<td>
+						<%= attribute %>:
+					</td>
+					<td>
+						<%= token.get(attribute) %>
+					</td>
+				</tr>
+			<% } %>
+        ",
     'LoginParam' => "
         <% _.each(parameters,function(param){ %>
             <label class='control-label'><%= param.escape('name') %></label>

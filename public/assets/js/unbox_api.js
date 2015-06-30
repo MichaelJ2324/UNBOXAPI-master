@@ -735,6 +735,7 @@ UNBOXAPI.Views.Global = {
             this.url = this.options.url || null;
             this.defaultDisabled = this.options.disable || false;
             this.filters = this.options.filters || {};
+            this.fetchOnSelect = this.options.fetchOnSelect || false;
             if (this.url==null){
                 this.url = this.model.url()+"/filter";
             }
@@ -766,21 +767,16 @@ UNBOXAPI.Views.Global = {
             var filters = {
                 name: term
             };
-            console.log(this.filters);
             for (var key in this.filters) {
                 if (this.filters.hasOwnProperty(key)) {
                     var obj = this.filters[key];
-                    console.log(obj);
-                    console.log(typeof obj);
                     if (typeof obj == 'object'){
                         filters[key] = obj.get('id');
                     }else{
                         filters[key] = obj;
                     }
                 }
-                console.log("Test");
             }
-            console.log(filters);
             return {
                 filters: filters,
                 view: "select2",
@@ -800,14 +796,17 @@ UNBOXAPI.Views.Global = {
             }else{
                 $(this.el).removeAttr('disabled');
             }
-
         },
         updateModel: function(e){
             var value = $(e.currentTarget).val();
-            console.log(value);
             this.model.set({
                 id: value
             });
+            if (this.fetchOnSelect && !(value==null || typeof value=='undefined')){
+                UNBOXAPI.Models.Utils.fetch({
+                    model: this.model
+                });
+            }
         }
     })
 }
@@ -1021,14 +1020,14 @@ UNBOXAPI.Views.Tester = {
             this.models.entryPoint = new UNBOXAPI.Models.Record({
                 module: this.modules.findWhere({ name: "Entrypoints" })
             });
-            this.collections.parameters = new UNBOXAPI.Collections.Records({
+            this.models.entryPoint.parameters = new UNBOXAPI.Collections.Records({
                 module: this.modules.findWhere({ name: "Parameters" })
             });
             this.models.web_address = new UNBOXAPI.Models.Data({
                 key: 'web_address',
                 value: ""
             });
-            this.collections.login_parameters = new UNBOXAPI.Collections.Records({
+            this.models.login.parameters = new UNBOXAPI.Collections.Records({
                 module: this.modules.findWhere({ name: "Parameters" })
             });
             this.models.token = new UNBOXAPI.Models.Tokens();
@@ -1038,7 +1037,7 @@ UNBOXAPI.Views.Tester = {
 
 
             _.bindAll(this,"testSetup","epDetail","requestSetup","output","fetchEntrypoint","resetTester","submitTest");
-            this.models.entryPoint.on("change:id",this.fetchEntrypoint);
+            this.models.entryPoint.on("sync",this.resetTester);
             this.models.test.on("test",this.submitTest);
             this.output();
             this.testSetup();
@@ -1053,7 +1052,6 @@ UNBOXAPI.Views.Tester = {
                     application: this.models.application,
                     api: this.models.api,
                     login: this.models.login,
-                    login_parameters: this.collections.login_parameters,
                     httpMethod: this.models.httpMethod,
                     entryPoint: this.models.entryPoint,
                     web_address: this.models.web_address,
@@ -1070,7 +1068,6 @@ UNBOXAPI.Views.Tester = {
                 {
                     model: this.models.entryPoint,
                     panel: this.collection.getPanel(2),
-                    collection: this.collections.parameters,
                     templates: this.metadata.templates
                 }
             );
@@ -1080,7 +1077,7 @@ UNBOXAPI.Views.Tester = {
                 3,
                 UNBOXAPI.Views.Tester.RequestSetup.Panel,
                 {
-                    collection: this.collections.parameters,
+                    collection: this.models.entryPoint.parameters,
                     panel: this.collection.getPanel(3),
                     web_address: this.models.web_address,
                     token: this.models.token,
@@ -1113,13 +1110,13 @@ UNBOXAPI.Views.Tester = {
             });
         },
         resetTester: function(){
-            this.collections.parameters.url = UNBOXAPI.Global.ajaxURL+"Entrypoints/"+this.models.entryPoint.get("id")+"/related/Parameters";
-            UNBOXAPI.Models.Utils.fetch({
-                model: this.collections.parameters
-            });
             var panel = this.collection.getPanel(3);
             panel.set({
                 hidden: true
+            });
+            this.models.entryPoint.parameters.url = UNBOXAPI.Global.ajaxURL+"Entrypoints/"+this.models.entryPoint.get("id")+"/related/Parameters";
+            UNBOXAPI.Models.Utils.fetch({
+                model: this.models.entryPoint.parameters
             });
             this.output();
         },
@@ -1142,11 +1139,9 @@ UNBOXAPI.Views.Tester = {
                 this.application = this.options.application;
                 this.api = this.options.api;
                 this.login = this.options.login;
-                this.login_parameters = this.options.login_parameters;
                 this.httpMethod = this.options.httpMethod;
                 this.entryPoint = this.options.entryPoint;
                 this.web_address = this.options.web_address;
-
 
                 //prepare dom references
                 this.$appSelect = null;
@@ -1160,7 +1155,6 @@ UNBOXAPI.Views.Tester = {
                 this.token = this.options.token || new UNBOXAPI.Models.Tokens;
 
                 this.template = this.templates.getTemplate("Panel1");
-                this.render();
             },
             render: function() {
                 this.html = _.template(this.template);
@@ -1186,12 +1180,15 @@ UNBOXAPI.Views.Tester = {
                 this.apiSelect = new UNBOXAPI.Views.Global.DependentRelateField({
                     el: this.$apiSelect,
                     model: this.api,
-                    parent: this.application
+                    parent: this.application,
+                    fetchOnSelect: true
                 });
                 this.loginSelect = new UNBOXAPI.Views.Global.DependentRelateField({
                     el: this.$loginSelect,
                     model: this.login,
-                    parent: this.api
+                    disable: true,
+                    parent: this.api,
+                    fetchOnSelect: true
                 });
                 this.httpMethodSelect = new UNBOXAPI.Views.Global.RelateField({
                     el: this.$httpMethodSelect,
@@ -1203,14 +1200,15 @@ UNBOXAPI.Views.Tester = {
                     parent: this.api,
                     filters: {
                         method: this.httpMethod
-                    }
+                    },
+                    fetchOnSelect: true
                 });
 
                 //Setup Login Form
                 this.loginSubPanel = new UNBOXAPI.Views.Tester.Setup.LoginPanel({
                     el: this.$api_login_panel,
                     model: this.login,
-                    collection: this.login_parameters,
+                    api: this.api,
                     token: this.token,
                     web_address: this.web_address,
                     templates: this.templates
@@ -1220,181 +1218,90 @@ UNBOXAPI.Views.Tester = {
         }),
         LoginPanel: Backbone.View.extend({
             events: {
-                "click #logged_in_info": "render",
-                "click .logout": "logout"
+                "click #loginBtn": "login",
+                "click #logoutBtn": "logout"
             },
             initialize: function(options) {
                 this.options = options|| {};
-                this.token = this.options.token || new UNBOXAPI.Models.Tokens;
-                this.templates = this.options.templates || {};
+                this.api = this.options.api;
                 this.web_address = this.options.web_address;
+                this.token = this.options.token;
+                this.templates = this.options.templates || {};
+                this.template = this.templates.getTemplate("LoginInfo");
 
-                _.bindAll(this,"render","logout");
-                this.model.bind("change",this.render);
+                _.bindAll(this,"render");
+                this.model.on("change",this.render);
+                this.api.on("change", this.render);
             },
             render: function(){
-                this.template = this.templates.getTemplate("LoginInfo");
-                this.html = _.template(this.template);
-                this.$el.html(this.html);
-                this.setup();
+                if (this.api.get('login_required')) {
+                    this.html = _.template(this.template);
+                    this.$el.html(this.html);
+                    this.setup();
+                }else{
+                    this.html = "Login not required for API.";
+                    this.$el.html(this.html);
+                }
                 return this.$el;
             },
             setup: function(){
-                this.$formContainer = $("#login_form_container");
-                this.$loginForm = $("#login_form");
-                this.loginForm = new UNBOXAPI.Views.Tester.Setup.LoginForm({
-                    el: this.$loginForm,
-                    model: this.model,
-                    collection: this.collection,
-                    token: this.token,
-                    template: this.templates.getTemplate("LoginForm")
+                this.$normalParams = $("#login_normal");
+                this.$advancedParams = $("#login_advanced");
+                this.$token_info = $("#token_info");
+                this.normalParams = new UNBOXAPI.Views.Tester.Setup.LoginParams({
+                    el: this.$normalParams,
+                    collection: this.model.parameters.where({ type: "normal" }),
+                    template: this.templates.getTemplate("LoginParam")
+                });
+                this.advancedParams = new UNBOXAPI.Views.Tester.Setup.LoginParams({
+                    el: this.$advancedParams,
+                    collection: this.model.parameters.where({ type: "advanced" }),
+                    template: this.templates.getTemplate("LoginParam")
                 });
                 this.tokenInfo = new UNBOXAPI.Views.Tester.Setup.TokenInfo({
-                    el: this.$loginForm,
-                    model: this.model,
-                    collection: this.collection,
-                    token: this.token,
-                    template: this.templates.getTemplate("LoginForm")
+                    el: this.$token_info,
+                    model: this.token,
+                    template: this.templates.getTemplate("TokenInfo")
                 });
+            },
+            login: function(){
+                console.log("Login test");
             },
             logout: function(){
-                var data = {
-                    'web_address': UNBOXAPI.tester.web_address,
-                    'token': UNBOXAPI.tester.models.token.get("access_token")
-                };
-                $.ajax({
-                    url: UNBOXAPI.Global.ajaxURL+'apis/'+UNBOX.models.api.get('id')+'/test/'+UNBOX.models.login.get("logout_entryPoint_id"),
-                    type: "POST",
-                    data: data,
-                    context: this,
-                    success: function(data){
-                        this.token.clear();
-                        this.token.trigger("logout");
-                    },
-                    dataType: 'json'
-                });
-            }
-        }),
-        LoginForm: Backbone.View.extend({
-            events: {
-                "click #loginBtn": "login"
-            },
-            initialize: function(options) {
-                this.options = options || {};
-                this.token = this.options.token || new UNBOXAPI.Models.Tokens;
-                this.templates = this.options.template || {};
-
-                _.bindAll(this,"render","login");
-
-                this.$normal_div = $("#login_normal");
-                this.$advanced_div = $("#login_advanced");
-                this.$loggedIn_btn = $("#logged_in_info");
-
-                this.$logoutBtn = $("#logoutBtn");
-                this.$loginBtn = $("#loginBtn");
-
-                this.collection.on("sync",this.render);
-            },
-            render: function() {
-                var normal_params = this.collection.where({login_pane: "normal"});
-                var type = "";
-                var field = "";
-                for (var x = 0; x < normal_params.length; x++) {
-                    type = "";
-                    field = "";
-                    type = (!(normal_params[x].get("api_type_name") == null || normal_params[x].get("api_type_name") == "") ? normal_params[x].get("api_type") : normal_params[x].get("data_type"));
-                    field = {
-                        name: normal_params[x].get("name"),
-                        required: normal_params[x].get("required"),
-                        value: ""
-                    };
-                    normal_params[x].set({
-                        html: _.template(type.template, {
-                            field: field
-                        }),
-                        type: type.name
-                    });
-                }
-                this.html = _.template(this.template, {
-                    parameters: normal_params
-                });
-                this.$normal_div.html(this.html);
-                var advanced_params = this.collection.where({login_pane: "advanced"});
-                for (var x = 0; x < advanced_params.length; x++) {
-                    type = "";
-                    field = "";
-                    type = (!(advanced_params[x].get("api_type_name") == null || advanced_params[x].get("api_type_name") == "") ? advanced_params[x].get("api_type") : advanced_params[x].get("data_type"));
-                    if (type.template == null) type = advanced_params[x].get("data_type");
-                    field = {
-                        name: advanced_params[x].get("name"),
-                        required: advanced_params[x].get("required"),
-                        value: ""
-                    };
-                    advanced_params[x].set({
-                        html: _.template(type.template, {
-                            field: field
-                        }),
-                        type: type.name
-                    });
-                }
-                this.html = "";
-                this.html = _.template(this.template, {
-                    parameters: advanced_params
-                });
-                this.$advanced_div.removeClass('in');
-                this.$advanced_div.html(this.html);
-                this.$el.removeClass('hidden');
-                $(".select2", this.$el).select2();
-                return this;
+                console.log("Logout test");
             }
         }),
         LoginParams: Backbone.View.extend({
             initialize: function(options) {
                 this.options = options || {};
-                this.token = this.options.token || new UNBOXAPI.Models.Tokens;
                 this.template = this.options.template || {};
 
-                _.bindAll(this,"render","login");
-
-                this.$normal_div = $("#login_normal");
-                this.$advanced_div = $("#login_advanced");
-                this.$loggedIn_btn = $("#logged_in_info");
-
-                this.$logoutBtn = $("#logoutBtn");
-                this.$loginBtn = $("#loginBtn");
-
-                this.collection.on("sync",this.render);
+                _.bindAll(this,"render");
+                this.render();
             },
             render: function(){
                 this.html = _.template(this.template,{
-                    parameters: parameters
+                    parameters: this.collection
                 });
                 this.$el.html(this.html);
                 return this;
             }
         }),
         TokenInfo: Backbone.View.extend({
-            events: {
-                "click #loginBtn": "login"
-            },
             initialize: function(options) {
                 this.options = options || {};
                 this.token = this.options.token || new UNBOXAPI.Models.Tokens;
-                this.template = this.options.template || {};
+                this.template = this.options.template;
 
-                _.bindAll(this,"render","login");
-
-                this.$normal_div = $("#login_normal");
-                this.$advanced_div = $("#login_advanced");
-                this.$loggedIn_btn = $("#logged_in_info");
-
-                this.$logoutBtn = $("#logoutBtn");
-                this.$loginBtn = $("#loginBtn");
-
-                this.collection.on("sync",this.render);
+                _.bindAll(this,"render");
+                this.render();
             },
             render: function(){
-
+                this.html = _.template(this.template,{
+                    token: this.model
+                });
+                this.$el.html(this.html);
+                return this;
             }
         })
     },
@@ -1440,7 +1347,7 @@ UNBOXAPI.Views.Tester = {
                 });
                 this.parameterPanel = new UNBOXAPI.Views.Tester.EntrypointDetail.Parameters({
                     el: this.$ep_parameters,
-                    collection: this.collection,
+                    collection: this.model.parameters,
                     template: this.templates.getTemplate("EntrypointParameters")
                 });
                 /*

@@ -2,9 +2,9 @@
 
 namespace Oauth\Storage;
 
-use League\OAuth2\Server\Entity\ScopeEntity;
-use League\OAuth2\Server\Storage\AbstractStorage;
-use League\OAuth2\Server\Storage\ScopeInterface;
+use OAuth2\Server\Entity\ScopeEntity;
+use OAuth2\Server\Storage\AbstractStorage;
+use OAuth2\Server\Storage\ScopeInterface;
 
 class Scope extends AbstractStorage implements ScopeInterface
 {

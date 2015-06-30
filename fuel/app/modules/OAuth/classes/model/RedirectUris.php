@@ -29,10 +29,10 @@ class RedirectUris extends \Model\Auth {
         'has_one' => array(
             'client' => array(
                 'key_from' => 'client_id',
-                'model_to' => 'Oauth\\Model\\Clients',
+                'model_to' => 'OAuth\\Model\\Clients',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             )
         ),
     );

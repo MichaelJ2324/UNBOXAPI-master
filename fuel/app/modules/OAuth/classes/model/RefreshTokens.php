@@ -8,7 +8,7 @@ class RefreshTokens extends \Model\Auth {
     protected static $_fields = array(
         'refresh_token' => array(
             'data_type' => 'varchar',
-            'label' => 'Access Token',
+            'label' => 'Refresh Token',
             'null' => false,
             'validation' => array(
                 'required' => true,
@@ -38,12 +38,12 @@ class RefreshTokens extends \Model\Auth {
     protected static $_relationships = array(
         'belongs_to' => array(),
         'has_one' => array(
-            'accessToken' => array(
+            'access_token' => array(
                 'key_from' => 'access_token_id',
                 'model_to' => 'OAuth\\Model\\AccessTokens',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             )
         ),
         'has_many' => array(),

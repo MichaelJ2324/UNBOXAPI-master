@@ -159,8 +159,7 @@ class Client {
 				$this->_token = $response;
 				$this->cacheToken($this->_token);
 				$this->setupRequest("user");
-				$userResponse = $this->request->execute(array('token' => $this->_token['access_token']))->response(
-				);
+				$userResponse = $this->request->execute(array('token' => $this->_token['access_token']))->response();
 				if ($userResponse->status == '200') {
 					$userInfo         = json_decode($userResponse->body(), TRUE);
 					$this->_user_info = $userInfo;
@@ -169,10 +168,11 @@ class Client {
 				return $this->_token;
 			}else{
 				if (strpos($response,"invalid")!== FALSE && $this->_grant_type == 'refresh_token'){
+					\Log::debug($this->payload['refresh_token']);
 					$this->deleteUserCache($this->payload['refresh_token']);
 					static::deleteCookie();
 				}
-				throw new \Exception("Exception - ".$response);
+				throw new \Exception($response);
 			}
 		}else{
 			throw new \Exception("No client id and secret specified.");
@@ -259,9 +259,11 @@ class Client {
             'client_id' => $this->_id,
             'client_secret' => $this->_secret,
             'grant_type' => $this->_grant_type,
+			'scope' => implode(",",$this->_scope)
         );
-		if ($this->_grant_type!=='refresh_token'){
-			$clientAttributes['scope'] = implode(",",$this->_scope);
+		if ($this->_grant_type=='password'){
+			$clientAttributes['username'] = \Input::param('username');
+			$clientAttributes['password'] = \Input::param('password');
 		}
         if (is_array($this->payload)){
             $this->payload = array_merge($clientAttributes,$this->payload);

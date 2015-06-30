@@ -17,6 +17,7 @@ class Server {
     private $refreshTokenStorage;
     private $scopeStorage;
     private $sessionStorage;
+	private $requestHandler;
 
 	public static function config(){
 		static::$_config = \Config::load(APPPATH."modules/".static::$_name."/config/module.php");
@@ -32,6 +33,7 @@ class Server {
         return $instance;
     }
     protected function __construct($autoInit = false){
+		$this->requestHandler = new RequestHandler();
         $this->initStorage();
 		$this->config = static::config();
 		if ($autoInit){
@@ -54,7 +56,7 @@ class Server {
         $this->sessionStorage = new \Oauth\Storage\Session();
     }
     private function initAuthServer(){
-        $this->authorization_server = new \League\OAuth2\Server\AuthorizationServer;
+        $this->authorization_server = new \OAuth2\Server\AuthorizationServer($this->requestHandler);
         $this->authorization_server->setSessionStorage($this->sessionStorage);
         $this->authorization_server->setAccessTokenStorage($this->accessTokenStorage);
         $this->authorization_server->setClientStorage($this->clientStorage);
@@ -64,7 +66,8 @@ class Server {
 		$this->authorization_server->requireScopeParam(true);
     }
     private function initResourceServer(){
-        $this->resource_server = new \League\OAuth2\Server\ResourceServer(
+        $this->resource_server = new \OAuth2\Server\ResourceServer(
+			$this->requestHandler,
             $this->sessionStorage,
             $this->accessTokenStorage,
             $this->clientStorage,
@@ -77,7 +80,7 @@ class Server {
 		}
         switch ($grant) {
             case 'password':
-                $Grant = new \League\OAuth2\Server\Grant\PasswordGrant();
+                $Grant = new \OAuth2\Server\Grant\PasswordGrant();
                 $Grant->setVerifyCredentialsCallback(function ($username, $password) {
                     $password = base64_decode($password);
                     $user = \OAuth\User::authenticate($username,$password);
@@ -91,16 +94,16 @@ class Server {
 				$this->setupGrant('refresh_token');
 				break;
             case 'refresh_token':
-                $Grant = new \League\OAuth2\Server\Grant\RefreshTokenGrant();
+                $Grant = new \OAuth2\Server\Grant\RefreshTokenGrant();
                 $this->authorization_server->addGrantType($Grant,$grant);
                 break;
 			case 'client':
-				$Grant = new \League\OAuth2\Server\Grant\ClientCredentialsGrant();
+				$Grant = new \OAuth2\Server\Grant\ClientCredentialsGrant();
 				$this->authorization_server->addGrantType($Grant,$grant);
 				$this->setupGrant('refresh_token');
 				break;
             case 'auth_code':
-                $Grant = new \League\OAuth2\Server\Grant\AuthCodeGrant();
+                $Grant = new \OAuth2\Server\Grant\AuthCodeGrant();
                 $this->authorization_server->addGrantType($Grant,$grant);
                 break;
 			default:
@@ -111,7 +114,6 @@ class Server {
 		if (!is_object($this->authorization_server)){
 			$this->initAuthServer();
 		}
-		\Log::debug("You are here");
 		$this->setDefaultScopes();
 		$this->sanitizeScopes();
         return $this->authorization_server->issueAccessToken();
@@ -209,11 +211,17 @@ class Server {
 		}
 		$this->resource_server->setRefreshTokenStorage($this->refreshTokenStorage);
 		$refreshToken = $this->resource_server->getRefreshTokenStorage()->get($token);
+		$accessToken = $refreshToken->getAccessToken();
+		$session = $accessToken->getSession();
+		$accessToken->expire();
 		$refreshToken->expire();
+		$this->resource_server->getSessionStorage()->delete($session->getId());
 	}
 	private function getClientType(){
-		if (isset($_POST['client_id']) && isset($_POST['client_secret'])){
-			$Client = Model\Clients::query()->where('client_id',\Input::post('client_id'))->where('secret',\Input::post('secret'))->get_one();
+		$clientID = $this->requestHandler->getParam("client_id");
+		$clientSecret = $this->requestHandler->getParam('client_secret');
+		if (!is_null($clientID) && !is_null($clientSecret)){
+			$Client = Model\Clients::query()->where('client_id',$clientID)->where('secret',$clientSecret)->get_one();
 			if ($Client!==null){
 				return $Client->type;
 			}

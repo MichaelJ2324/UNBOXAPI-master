@@ -35,7 +35,7 @@ class Scopes extends \Model\Auth {
                 'model_to' => 'OAuth\\Model\\AccessTokens',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             ),
             'authCodes' => array(
                 'key_from' => 'id',
@@ -45,7 +45,7 @@ class Scopes extends \Model\Auth {
                 'model_to' => 'OAuth\\Model\\AuthCodes',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             ),
             'sessions' => array(
                 'key_from' => 'id',
@@ -55,7 +55,7 @@ class Scopes extends \Model\Auth {
                 'model_to' => 'OAuth\\Model\\Sessions',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             ),
         )
     );

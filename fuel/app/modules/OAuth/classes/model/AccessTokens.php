@@ -51,7 +51,7 @@ class AccessTokens extends \Model\Auth {
                 'model_to' => 'OAuth\\Model\\Sessions',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             ),
         ),
         'has_many' => array(),
@@ -64,7 +64,7 @@ class AccessTokens extends \Model\Auth {
                 'model_to' => 'OAuth\\Model\\Scopes',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             )
         )
     );

@@ -23,7 +23,6 @@ class Rest extends \Controller_Rest {
 				$token = \OAuth\Client::getCookie();
 				if ($token !== false) {
 					if ($this->oauth_client->validateAuth($token,$this->scope)) {
-						\Log::debug("Authorized!");
 						$this->authorized = TRUE;
 					}
 				}else{
@@ -52,7 +51,7 @@ class Rest extends \Controller_Rest {
                 return TRUE;
             }
         }catch(\Exception $ex){
-            \Log::debug("Exception:".$ex->getMessage());
+            \Log::debug("Authorization Exception: ".$ex->getMessage());
             if ($this->auth_required == false){
                 return true;
             }

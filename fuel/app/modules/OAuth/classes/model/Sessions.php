@@ -43,7 +43,7 @@ class Sessions extends \Model\Auth {
     );
     protected static $_relationships = array(
         'belongs_to' => array(
-            'accessToken' => array(
+            'access_token' => array(
                 'key_from' => 'id',
                 'model_to' => 'OAuth\\Model\\AccessTokens',
                 'key_to' => 'session_id',
@@ -76,7 +76,7 @@ class Sessions extends \Model\Auth {
                 'model_to' => 'OAuth\\Model\\Scopes',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             )
         )
     );

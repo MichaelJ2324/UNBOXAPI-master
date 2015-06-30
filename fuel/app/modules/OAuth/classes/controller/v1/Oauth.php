@@ -30,18 +30,6 @@ class OAuth extends \Controller_Rest{
     }
     public function action_token($client_id="",$client_secret="",$grant_type="",$scope=""){
         try {
-			if (!isset($_POST['grant_type'])) {
-				$_POST['grant_type'] = $grant_type;
-			}
-			if (!isset($_POST['client_id'])) {
-				$_POST['client_id'] = $client_id;
-			}
-			if (!isset($_POST['client_secret'])) {
-				$_POST['client_secret'] = $client_secret;
-			}
-			if (!isset($_POST['scopes'])) {
-				$_POST['scope'] = $scope;
-			}
 			$this->server->setupGrant($grant_type);
 			$response           = $this->server->issueAccessToken();
 			return $this->response(
@@ -56,28 +44,8 @@ class OAuth extends \Controller_Rest{
     }
     public function action_refresh($client_id="",$client_secret="",$grant_type="",$scope="",$refresh_token=""){
         try {
-			if (!isset($_POST['client_id'])) {
-				$_POST['client_id'] = $client_id;
-			}
-			if (!isset($_POST['client_secret'])) {
-				$_POST['client_secret'] = $client_secret;
-			}
-			if (!isset($_POST['scope'])) {
-				$_POST['scope'] = $scope;
-			}
-			if (!isset($_POST['grant_type'])) {
-				$_POST['grant_type'] = $grant_type;
-			}
-			$grant_type = $_POST['grant_type'];
-			if (!isset($_POST['refresh_token'])) {
-				$_POST['refresh_token'] = $refresh_token;
-			}
-			if ($grant_type=='refresh_token'){
-				$this->server->setupGrant($grant_type);
-				$response = $this->server->issueAccessToken();
-			}else{
-				throw new \Exception("Invalid grant type for Refresh request.");
-			}
+			$this->server->setupGrant($grant_type);
+			$response = $this->server->issueAccessToken();
             return $this->response(
                 $response
             );
@@ -90,16 +58,10 @@ class OAuth extends \Controller_Rest{
     }
     public function action_auth(){
 		try {
-			if (isset($_POST['client_id'])&&
-				isset($_POST['client_secret'])
-			){
-				$this->server->setupGrant('auth_code');
-				$authParams = $this->server->getGrantType('authorization_code')->checkAuthorizeParams();
+			$this->server->setupGrant('auth_code');
+			$authParams = $this->server->getGrantType('authorization_code')->checkAuthorizeParams();
 
-				return \Response::redirect('login');
-			}else{
-				throw new \Exception("Missing all required parameters for authorization.");
-			}
+			return \Response::redirect('login');
 		} catch (\Exception $e) {
 			return $this->response(
 				"Error: " . $e->getMessage() . "\n",

@@ -2,10 +2,10 @@
 
 namespace OAuth\Storage;
 
-use League\OAuth2\Server\Entity\AccessTokenEntity;
-use League\OAuth2\Server\Entity\ScopeEntity;
-use League\OAuth2\Server\Storage\AbstractStorage;
-use League\OAuth2\Server\Storage\AccessTokenInterface;
+use OAuth2\Server\Entity\AccessTokenEntity;
+use OAuth2\Server\Entity\ScopeEntity;
+use OAuth2\Server\Storage\AbstractStorage;
+use OAuth2\Server\Storage\AccessTokenInterface;
 
 class AccessToken extends AbstractStorage implements AccessTokenInterface
 {
@@ -79,7 +79,9 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function delete(AccessTokenEntity $token)
     {
-        $access_token = \OAuth\Model\AccessTokens::query()->where('access_token',$token->getId())->get_one();
-        $access_token->delete();
+        $access_token = \OAuth\Model\AccessTokens::query()->where('access_token',$token->getId())->related(array('scopes'))->get_one();
+		$access_token->scopes = null;
+        $access_token->deleted = 1;
+		$access_token->save();
     }
 }

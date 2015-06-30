@@ -2,12 +2,12 @@
 
 namespace OAuth\Storage;
 
-use League\OAuth2\Server\Entity\AccessTokenEntity;
-use League\OAuth2\Server\Entity\AuthCodeEntity;
-use League\OAuth2\Server\Entity\ScopeEntity;
-use League\OAuth2\Server\Entity\SessionEntity;
-use League\OAuth2\Server\Storage\AbstractStorage;
-use League\OAuth2\Server\Storage\SessionInterface;
+use OAuth2\Server\Entity\AccessTokenEntity;
+use OAuth2\Server\Entity\AuthCodeEntity;
+use OAuth2\Server\Entity\ScopeEntity;
+use OAuth2\Server\Entity\SessionEntity;
+use OAuth2\Server\Storage\AbstractStorage;
+use OAuth2\Server\Storage\SessionInterface;
 
 class Session extends AbstractStorage implements SessionInterface
 {
@@ -62,17 +62,15 @@ class Session extends AbstractStorage implements SessionInterface
     public function getScopes(SessionEntity $session)
     {
         $Scopes = array();
-        $session = \OAuth\Model\Sessions::query()->where('id',$session->getId())->related('scopes')->get_one();
-        if (isset($session)&&$session!==null) {
-            if (property_exists($session, "scopes")) {
-                $scopes = $session->scopes;
-                foreach ($scopes as $scope) {
-                    $Scopes[] = (new ScopeEntity($this->server))->hydrate([
-                        'id' => $scope->scope,
-                        'description' => $scope->description,
-                    ]);
-                }
-            }
+        $session = \OAuth\Model\Sessions::find($session->getId(),array('related'=>array('scopes')));
+        if (isset($session)) {
+			$scopes = $session->scopes;
+			foreach ($scopes as $scope) {
+				$Scopes[] = (new ScopeEntity($this->server))->hydrate([
+					'id' => $scope->scope,
+					'description' => $scope->description,
+				]);
+			}
         }
         return $Scopes;
     }
@@ -110,7 +108,9 @@ class Session extends AbstractStorage implements SessionInterface
     }
 
 	public function delete($sessionID){
-		$session = \OAuth\Model\Sessions::find($sessionID);
-		$session->delete();
+		$session = \OAuth\Model\Sessions::find($sessionID,array('related' => array('scopes')));
+		$session->scopes = null;
+		$session->deleted = 1;
+		$session->save();
 	}
 }

@@ -48,10 +48,10 @@ class AuthCodes extends \Model\Auth {
         'has_one' => array(
             'session' => array(
                 'key_from' => 'session_id',
-                'model_to' => 'Oauth\\Model\\Sessions',
+                'model_to' => 'OAuth\\Model\\Sessions',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             )
         ),
         'many_many' => array(
@@ -63,7 +63,7 @@ class AuthCodes extends \Model\Auth {
                 'model_to' => 'Oauth\\Model\\Scopes',
                 'key_to' => 'id',
                 'cascade_save' => false,
-                'cascade_delete' => true,
+                'cascade_delete' => false,
             )
         )
     );

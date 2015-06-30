@@ -2,10 +2,10 @@
 
 namespace Oauth\Storage;
 
-use League\OAuth2\Server\Entity\AuthCodeEntity;
-use League\OAuth2\Server\Entity\ScopeEntity;
-use League\OAuth2\Server\Storage\AbstractStorage;
-use League\OAuth2\Server\Storage\AuthCodeInterface;
+use OAuth2\Server\Entity\AuthCodeEntity;
+use OAuth2\Server\Entity\ScopeEntity;
+use OAuth2\Server\Storage\AbstractStorage;
+use OAuth2\Server\Storage\AuthCodeInterface;
 
 class AuthCode extends AbstractStorage implements AuthCodeInterface
 {
@@ -76,6 +76,8 @@ class AuthCode extends AbstractStorage implements AuthCodeInterface
      */
     public function delete(AuthCodeEntity $token)
     {
-        \Oauth\Model\AuthCodes::find($token->getId())->delete();
+        $authCode = \Oauth\Model\AuthCodes::find($token->getId());
+		$authCode->deleted = 1;
+		$authCode->save();
     }
 }

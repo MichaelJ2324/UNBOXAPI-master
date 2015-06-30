@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/17/15
- * Time: 12:40 AM
- */
 
 namespace Model;
-
 
 class Auth extends \Orm\Model{
 
@@ -43,7 +36,23 @@ class Auth extends \Orm\Model{
                 'disabled' => 'disabled'
             ),
         ),
+		'deleted' => array(
+			'data_type' => 'tinyint',
+			'label' => 'Deleted',
+			'default' => 0,
+			'null' => false,
+			'validation' => array(
+				'required' => true,
+				'max_length' => 1
+			),
+			'form' => false
+		)
     );
+	protected static $_conditions = array(
+		'where' => array(
+			array('deleted', '=', 0)
+		),
+	);
     protected static $_properties = array();
 
     //Some relatioships require extra properties on the table
