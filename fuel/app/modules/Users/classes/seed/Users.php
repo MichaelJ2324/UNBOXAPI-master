@@ -12,6 +12,7 @@ namespace Users\Seed;
 class Users extends \UNBOXAPI\Data\Seed\Seeder{
 
     protected static $_module = 'Users';
+	protected static $_eav = true;
 
     protected static $_records = array(
         array(
@@ -19,7 +20,7 @@ class Users extends \UNBOXAPI\Data\Seed\Seeder{
             'first_name' => 'Unbox',
             'last_name' => 'Demo',
             'username' => 'unbox_demo',
-            'email' => 'demo@unboxapi.com'
+            'primary_email' => 'demo@unboxapi.com'
         )
     );
 }

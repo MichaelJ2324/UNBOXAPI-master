@@ -1,17 +1,11 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/8/15
- * Time: 3:03 PM
- */
 
 namespace Users\Model;
-
 
 class Users extends \Orm\Model{
 
     protected static $_table_name = 'user';
+	protected static $_to_array_exclude = array('verified');
     protected static $_properties = array(
         'id' => array(
             'data_type' => 'varchar',
@@ -23,10 +17,22 @@ class Users extends \Orm\Model{
             ),
             'form' => false
         ),
+		'date_created' => array(
+			'data_type' => 'datetime',
+			'label' => 'Date Created',
+			'validation' => array(),
+			'form' => false,
+		),
+		'date_modified' => array(
+			'data_type' => 'datetime',
+			'label' => 'Date Modified',
+			'validation' => array(),
+			'form' => false,
+		),
     );
 	protected static $_eav = array(
-		'statistics' => array(
-			  'model_to' => '\\Users\\Model\\Preferences',
+		'preferences' => array(
+			  'model_to' => 'Users\\Model\\Preferences',
 			  'attribute' => 'attribute',		// the key column in the related table contains the attribute
 			  'value' => 'value',			// the value column in the related table contains the value
 		)
@@ -124,11 +130,30 @@ class Users extends \Orm\Model{
 			'key_to' => 'modified_by',
 			'cascade_save' => true,
 			'cascade_delete' => false,
+		),
+		'verification_codes' => array(
+			'key_from' => 'id',
+			'model_to' => '\\Users\\Model\\VerificationCodes',
+			'key_to' => 'modified_by',
+			'cascade_save' => true,
+			'cascade_delete' => false,
 		)
     );
 	protected static $_observers = array(
 		'\\UNBOXAPI\\Observer_Guid' => array(
 			'events' => array('before_insert'),
+		),
+		'Orm\\Observer_CreatedAt' => array(
+			'events' => array('before_insert'),
+			'mysql_timestamp' => true,
+			'property' => 'date_created',
+			'overwrite' => true,
+		),
+		'Orm\\Observer_UpdatedAt' => array(
+			'events' => array('before_save'),
+			'mysql_timestamp' => true,
+			'property' => 'date_modified',
+			'overwrite' => true
 		),
 	);
 

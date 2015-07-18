@@ -13,5 +13,9 @@ return array(
 	),
 	'auth' => array(
 		'host' => 'localhost',
+	),
+	'cache' => array(
+		'type' => 'file',
+		'server' => 'localhost'
 	)
 );

@@ -91,6 +91,7 @@ return array(
 	'always_load'  => array(
 		'packages'  => array(
 			'orm',
+			'email'
 		),
 		'modules'  => array(
             //User Stuff first

@@ -615,10 +615,13 @@ abstract class Module {
     }
     //TODO::Build out Save function for module objects
     public function save(){
-        if ($this->model->is_new()){
+		$isNew = $this->model->is_new();
+        if ($this->model->save()){
+			if ($isNew){
+				$this->id = $this->model->id;
+			}
+		}
 
-        }
-        $this->model->save();
     }
 
     /**
@@ -702,4 +705,37 @@ abstract class Module {
         }
         return false;
     }
+
+	public function setProperties(array $properties){
+		foreach($properties as $property => $value){
+			$this->setProperty($property,$value);
+		}
+		return $this;
+	}
+	public function setProperty($property,$value){
+		$set = FALSE;
+		$Relationship = $this->model->relations($property);
+		if ($Relationship!==false){
+			\Log::debug("Cannot set relationships with SetProperty. Use attach method.");
+			return false;
+		}
+		if (property_exists($this->model, '_eav')){
+			$properties = static::fields();
+			if (array_key_exists($property,$properties)){
+				$set = TRUE;
+				$this->$property = $value;
+				$this->model->$property = $value;
+			}
+		}
+		if (property_exists($this,$property)&&$set===FALSE){
+			$this->$property = $value;
+			$this->model->$property = $value;
+		}
+		return $this;
+	}
+	public function getProperty($property){
+		if (property_exists($this,$property)){
+			return $this->$property;
+		}
+	}
 } 

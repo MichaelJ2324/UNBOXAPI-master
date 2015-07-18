@@ -15,12 +15,13 @@ class Preferences extends \Orm\Model{
 	// list of properties for this model
 	protected static $_properties = array(
 		'id' => array(
-			'data_type' => 'varchar',
+			'data_type' => 'int',
 			'label' => 'ID',
 			'null' => false,
+			'auto_inc' => true,
 			'validation' => array(
 				'required' => true,
-				'max_length' => 50
+				'max_length' => 11
 			),
 			'form' => false
 		),
@@ -53,7 +54,7 @@ class Preferences extends \Orm\Model{
 				'max_length' => 2048
 			),
 			'form' => false
-		),
+		)
 	);
 
 	protected static $_belongs_to = array(
@@ -64,10 +65,5 @@ class Preferences extends \Orm\Model{
 			'cascade_save' => true,
 			'cascade_delete' => true,
 		)
-	);
-	protected static $_observers = array(
-		'\\UNBOXAPI\\Observer_Guid' => array(
-			'events' => array('before_insert'),
-		),
 	);
 }

@@ -115,12 +115,13 @@ class Installer {
     }
     private function setup_config(){
         $unboxConfig = \Config::get('unbox');
-        //TODO::Client ID and Secret generation during Installation. Currently using md5'd GUIDS.
 		$unboxConfig['oauth']['server']['host'] = $this->config['auth']['host'];
-        $unboxConfig['oauth']['client']['id'] = md5(\UNBOXAPI\Data\Util\Guid::make());
-        $unboxConfig['oauth']['client']['secret'] = md5(\UNBOXAPI\Data\Util\Guid::make());
+        $unboxConfig['oauth']['client']['id'] = \OAuth2\Server\Util\SecureKey::generate();
+        $unboxConfig['oauth']['client']['secret'] = \OAuth2\Server\Util\SecureKey::generate();
 		$unboxConfig['oauth']['client']['name'] = "Unbox API Web Application";
         \Config::save('unbox.php',$unboxConfig);
+
+		$cacheConfig = \Config::get('cache');
     }
     private function setDatabaseConfig($dbConfig){
 		$config_locations = array(

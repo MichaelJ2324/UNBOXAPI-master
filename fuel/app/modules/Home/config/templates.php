@@ -39,19 +39,15 @@ return array(
             <div class='panel-body'>
                 <div class='col-lg-12'>
                     <form class='form-register'>
-                        <label for='first_name'>First Name</label>
-                        <input type='text' id='first_name' name='first_name' class='form-control' placeholder='First Name' required='true' autofocus='true'>
-                        <label for='last_name'>Last Name</label>
-                        <input type='text' id='last_name' name='last_name' class='form-control' placeholder='Last Name' required='true' autofocus='true'>
                         <label for='email'>Email</label>
                         <input type='text' id='email' name='email' class='form-control' placeholder='email@example.com' required='true' autofocus='true'>
                         <label for='username'>Username</label>
                         <input type='text' id='username' name='username' class='form-control' placeholder='Username' required='true' autofocus='true'>
-                        <label for='password'>Password</label>
-                        <input type='password' id='password' name='password' class='form-control' placeholder='Password' required='true'>
+                        <br/>
                         <div>
                             <div id='captcha'></div>
                         </div>
+                        <br/>
                         <button class='btn btn-primary' type='button' id='Register'>Submit</button>
                   </form>
               </div>

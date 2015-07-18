@@ -3,6 +3,8 @@
 namespace Users;
 
 
+use UNBOXAPI\Data\Util\Guid;
+
 class User extends \UNBOXAPI\Module{
     protected static $_name = "Users";
     protected static $_label = "User";
@@ -10,13 +12,13 @@ class User extends \UNBOXAPI\Module{
 
 	protected static $_models = array(
 		'Users',
-		'Preferences'
+		'Preferences',
+		'VerificationCodes'
 	);
 
-	protected static $_available_attributes = array(
-		'first_name',
-		'last_name',
-	);
+	public static function fields(){
+		return \Config::get('Users::eav_properties');
+	}
 	public $preferences;
 
 	public function __construct(){
@@ -26,20 +28,68 @@ class User extends \UNBOXAPI\Module{
 		unset($this->created_by);
 		unset($this->date_modified);
 		unset($this->modified_by);
+		parent::__construct();
+	}
+
+	public static function registered($username,$email){
+		$model = static::model(true);
+		$User = $model::query()->where("username",strtolower($username))->get_one();
+		if (count($User) > 0){
+			throw new \Exception("Username is already registered. \n", 400);
+		}else{
+			$User = $model::query()->where("primary_email",strtolower($email))->or_where("secondary_email",strtolower($email))->get_one();
+			if (count($User) > 0){
+				throw new \Exception("Email is already registered. \n", 400);
+			}
+		}
+		return false;
 	}
 
     public static function register(){
-        $User = new User();
-        $User->first_name = \Input::json('first_name');
-        $User->last_name = \Input::json('last_name');
-        $User->name = $User->first_name." ".$User->last_name;
-        $User->username = \Input::json('username');
-        $User->email = \Input::json('email');
-        $password = \Input::json('password');
-        $password = base64_decode($password);
-        $User->password = \Crypt::encode($password);
+		$username = \Input::json('username');
+		$email = \Input::json('email');
+		if (!static::registered($username,$email)) {
+			$User = new static();
+			$User->setProperty("username", strtolower($username));
+			if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+				$User->setProperty("primary_email", strtolower($email));
+			}else{
+				throw new \Exception("Invalid email address. Please enter a valid email address.",400);
+			}
+			$User->setProperty("verified",0);
+			$User->id = Guid::make();
+			$expire = time() + 86400;
+			$VerificationCode = Model\VerificationCodes::forge(
+				array(
+					'code' => Guid::make(),
+					'user_id' => $User->id,
+					'expire_time' => $expire
+				)
+			);
 
-        return static::create($User);
+			$Email = \Email::forge();
+			$Email->to($email);
+			$Email->subject("Verify UNBOX API Account");
+			$Email->priority(\Email::P_HIGH);
+			$Body = \View::forge("email/verification",array(
+				'code' => $VerificationCode->code
+			))->render();
+			$Email->html_body($Body);
+			try{
+				$Email->send();
+				$User->save();
+				$VerificationCode->save();
+			}
+			catch(\EmailValidationFailedException $e)
+			{
+				throw new \Exception("Invalid email address. Please enter a valid email address.",400);
+			}
+			catch(\EmailSendingFailedException $e)
+			{
+				\Log::fatal("Verificaiton Email failed: ".$e->getMessage());
+				throw new \Exception("An internal error occurred. Please contact system administrator.",500);
+			}
+		}
     }
     public static function me($userId){
         $model = static::model(true);

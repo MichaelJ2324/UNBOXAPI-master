@@ -101,7 +101,8 @@
       "fuel/parser": "1.7.2",
       "monolog/monolog": "1.5.*",
       "google/recaptcha": "~1.1",
-      "michaelj2324/oauth2-server": "0.9.8"
+      "michaelj2324/oauth2-server": "0.9.8",
+      "mailgun/mailgun-php": "1.6"
     },
     "suggest": {
     },

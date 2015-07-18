@@ -13,6 +13,7 @@ abstract class Seeder {
 
     protected static $_module;
     protected static $_model;
+	protected static $_eav = false;
     /**
      * @var = array(
      *      'model_field' => 'value'
@@ -33,6 +34,7 @@ abstract class Seeder {
 
     private $module;
     private $Model;
+	private $eav;
 
     protected static function records(){
         return static::$_records;
@@ -47,6 +49,7 @@ abstract class Seeder {
     public function __construct(){
         $this->module = static::$_module;
         $this->Model = static::model();
+		$this->eav = static::$_eav;
     }
     public function seed($relationships=false,$relationshipsOnly=false){
         if (!$relationshipsOnly) {
@@ -58,10 +61,13 @@ abstract class Seeder {
     }
     public function insert($model){
         $records = static::records();
-        foreach ($records as $record => $values){
-            $Record = $model::forge($values);
-            $Record->save();
-        }
+		$class = \UNBOXAPI\Data\Util\Module::classify($this->module);
+		$Module = $this->module."\\".$class;
+		foreach ($records as $record => $values){
+			$Record = new $Module();
+			$Record->setProperties($values);
+			$Record->save();
+		}
     }
     public function relate(){
         $relationships = static::relationships();
