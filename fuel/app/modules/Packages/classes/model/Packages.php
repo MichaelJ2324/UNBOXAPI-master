@@ -2,7 +2,7 @@
 
 namespace Packages\Model;
 
-class Packages extends \Model\Module {
+class Packages extends \UNBOXAPI\Canister\Module {
 
 	protected static $_table_name = 'packages';
 	protected static $_relationships = array(

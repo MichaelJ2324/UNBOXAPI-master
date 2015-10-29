@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 5/4/15
- * Time: 9:51 PM
- */
 
 namespace ParameterTypes\Model;
-
 
 class ApiTypes extends ParameterTypes {
 

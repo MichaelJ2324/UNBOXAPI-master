@@ -1,20 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 11/2/14
- * Time: 9:03 AM
- */
 
 namespace Logins;
 
-class Login extends \UNBOXAPI\Module{
+use UNBOXAPI\Box\Module;
 
-    protected static $_name = "Logins";
-    protected static $_label = "Login";
-    protected static $_label_plural = "Logins";
+class Login extends Module{
 
-    protected static $_models = array(
+    protected static $_canisters = array(
         'Logins',
         'Settings'
     );

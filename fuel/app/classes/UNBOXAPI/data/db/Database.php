@@ -1,4 +1,5 @@
 <?php
+
 namespace UNBOXAPI\Data\DB;
 
 class Database {

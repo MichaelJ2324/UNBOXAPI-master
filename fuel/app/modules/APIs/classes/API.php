@@ -1,19 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 6/17/14
- * Time: 11:45 PM
- */
 
 namespace Apis;
 
-class Api extends \UNBOXApi\Module{
+use UNBOXAPI\Box\Module;
 
-    protected static $_name = "Apis";
-    protected static $_label = "API";
-    protected static $_label_plural = "APIs";
-    protected static $_models = array(
+class Api extends Module{
+
+    protected static $_canisters = array(
         'Apis',
         'Entrypoints',
         'Logins'
@@ -22,9 +15,6 @@ class Api extends \UNBOXApi\Module{
     public $version;
     public $web_address;
     public $login_required;
-
-    private $response;
-    private $request;
 
     public static function methods($id=""){
         $api = new Model\Apis();

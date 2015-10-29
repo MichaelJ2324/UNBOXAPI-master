@@ -2,8 +2,7 @@
 
 namespace OAuth\Model;
 
-
-class Users extends \Model\Auth{
+class Users extends \UNBOXAPI\Canister\Auth {
 
     protected static $_table_name = 'users';
     protected static $_to_array_exclude = array('password');

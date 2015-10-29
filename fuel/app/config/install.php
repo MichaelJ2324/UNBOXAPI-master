@@ -8,7 +8,7 @@ return array(
 			'port' => '3306',
 			'database' => 'UNBOXAPI',
 			'username' => 'root',
-			'password' => '',
+			'password' => 'password',
 		)
 	),
 	'auth' => array(

@@ -2,14 +2,11 @@
 
 namespace Packages;
 
+use \UNBOXAPI\Box\Module;
 
-class Package extends \UNBOXAPI\Module {
+class Package extends Module {
 
-	protected static $_name = 'Packages';
-	protected static $_label = 'Package';
-	protected static $_label_plural = 'Packages';
-
-	protected static $_models = array(
+	protected static $_canisters = array(
 		'Packages',
 		'Applications',
 		'Apis'

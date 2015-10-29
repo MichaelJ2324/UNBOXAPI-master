@@ -83,7 +83,7 @@ class Server {
                 $Grant = new \OAuth2\Server\Grant\PasswordGrant();
                 $Grant->setVerifyCredentialsCallback(function ($username, $password) {
                     $password = base64_decode($password);
-                    $user = \OAuth\User::authenticate($username,$password);
+                    $user = \OAuth\OAuth::authenticate($username,$password);
                     if ($user===false){
                         return $user;
                     }else{

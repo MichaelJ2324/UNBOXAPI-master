@@ -2,7 +2,7 @@
 
 namespace Users\Model;
 
-class VerificationCodes extends \Orm\Model {
+class VerificationCodes extends \UNBOXAPI\Canister\Hard {
 
 	protected static $_table_name = 'verification_codes';
 	protected static $_fields = array(

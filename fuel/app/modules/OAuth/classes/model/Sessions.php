@@ -2,7 +2,7 @@
 
 namespace OAuth\Model;
 
-class Sessions extends \Model\Auth {
+class Sessions extends \UNBOXAPI\Canister\Auth {
 
     protected static $_table_name = 'sessions';
     protected static $_fields = array(

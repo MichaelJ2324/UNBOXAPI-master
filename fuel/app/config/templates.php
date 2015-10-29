@@ -53,29 +53,36 @@ return array(
                     ><%= (value||input.escape('value')) %></textarea>",
     'mainNav' => "
             <li id='homeLi' class='dropdown active'>
-            <a href='<%= current.get('link') %>' style='float: left;'>
-            <%= current.get('icon') %>
-            <%= current.escape('label') %>
-            </a>
-            <% if (modules.length>1){ %>
-            <a href='#' class='dropdown-toggle' data-toggle='dropdown' style='float: right; padding-left: 0px;'>
-                <span class='caret'></span>
-            </a>
-            <ul class='dropdown-menu ' role='menu'>
-                <% _.each(modules,function(module){
-                if (module.get('name')!==current.get('name')){
+                <a href='<%= links[0].link %>' style='float: left;'>
+                    <%= links[0].icon %>
+                    <%= _.escape(links[0].label) %>
+                </a>
+            <% if (layouts.length>2){ %>
+                <a href='#' class='dropdown-toggle' data-toggle='dropdown' style='float: right; padding-left: 0px;'>
+                    <span class='caret'></span>
+                </a>
+                <ul class='dropdown-menu ' role='menu'>
+                <% _.each(layouts,function(layout){
+                        if (layout.get('name')!==current){
+                            var llinks = layout.get('links');
                 %>
-                <li><a href='<%= module.get('link') %>'><%= module.get('icon') %><%= module.escape('name') %></a></li>
-                <%      }
-                }) %>
-            </ul>
+                    <li><a href='<%= llinks[0].link %>'><%= llinks[0].icon %><%= llinks[0].label %></a></li>
+                <%        }
+                    })
+                %>
+                </ul>
             <% } %>
             </li>
-            <% _.each(links,function(link){ %>
+            <%
+                if (links.length > 1 ){
+                    _.each(links,function(link){
+            %>
             <li>
-                <a href='<%= link.link %>'><%= link.icon %><%= _.escape(link.name) %></a>
+                <a href='<%= link.link %>'><%= link.icon %><%= _.escape(link.label) %></a>
             </li>
-            <% }) %>",
+            <%      })
+                }
+            %>",
     'rightNav' => "
             <li class='dropdown'>
                 <% if (user.loggedIn()){ %>

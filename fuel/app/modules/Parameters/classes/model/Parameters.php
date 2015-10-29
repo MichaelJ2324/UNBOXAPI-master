@@ -1,14 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 7/4/14
- * Time: 10:04 PM
- */
 
 namespace Parameters\Model;
 
-class Parameters extends \Model\Module{
+class Parameters extends \UNBOXAPI\Canister\Module {
 
     protected static $_table_name = 'parameters';
     protected static $_fields = array(

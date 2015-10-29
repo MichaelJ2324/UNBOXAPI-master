@@ -1,21 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 5/11/15
- * Time: 12:39 AM
- */
 
 namespace Tests;
 
+use \UNBOXAPI\Box\Module;
 
-class Test extends \UNBOXAPI\Module {
+class Test extends Module {
 
-    protected static $_name = "Tests";
-    protected static $_label = "Test";
-    protected static $_label_plural = "Tests";
-
-    protected static $_models = array(
+    protected static $_canisters = array(
         'Tests',
         'Settings'
     );

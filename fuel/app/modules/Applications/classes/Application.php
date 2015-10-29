@@ -1,21 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 11/2/14
- * Time: 8:24 AM
- */
 
 namespace Applications;
 
+use UNBOXAPI\Box\Module;
 
-use UNBOXAPI\Module;
+class Application extends Module{
 
-class Application extends \UNBOXAPI\Module{
-    protected static $_name = "Applications";
-    protected static $_label = "Application";
-    protected static $_label_plural = "Applications";
-    protected static $_models = array(
+    protected static $_canisters = array(
         'Applications',
         'Apis'
     );

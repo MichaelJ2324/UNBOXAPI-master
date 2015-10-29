@@ -1,15 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/17/15
- * Time: 10:08 AM
- */
 
 namespace Versions\Model;
 
-
-class Applications extends \Model\Versions{
+class Applications extends \UNBOXAPI\Canister\Versions {
 
     protected static $_table_name = 'application_versions';
     protected static $_relationships = array(

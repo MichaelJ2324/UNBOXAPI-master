@@ -1,13 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 7/4/14
- * Time: 10:03 PM
- */
+
 namespace Entrypoints\Model;
 
-class Entrypoints extends \Model\Module{
+class Entrypoints extends \UNBOXAPI\Canister\Module {
 
     protected static $_table_name = 'entry_points';
     protected static $_fields = array(
@@ -118,70 +113,4 @@ class Entrypoints extends \Model\Module{
         ),
     );
 
-    public function filterEntrypoints($data=""){
-        $query = \DB::select('EP.id','EP.name','EP.url','EP.method',array('HM.method','method_name'),'EP.description',array(\DB::expr("CONCAT(EP.name,' [',EP.url,']')"),"value"))->from(array('applications','A'));
-        $query->join(array('application_apis','AA'),'INNER')->on('AA.application_id','=','A.id');
-        $query->join(array('apis','API'),'INNER')->on('AA.api_id','=','API.id');
-        $query->join(array("api_entrypoints","AEP"),"INNER")->on("API.id","=","AEP.api_id");
-        $query->join(array("entry_points","EP"),"INNER")->on("EP.id","=","AEP.entry_point_id");
-        $query->join(array('http_methods','HM'),'INNER')->on('EP.method','=','HM.id');
-        $query->distinct();
-        $query->where("EP.id","!=","");
-        foreach($data as $parameter=>$value){
-            if (array_key_exists($parameter,$this->columns)){
-                if ($this->columns[$parameter]['type']=='varchar') {
-                    $query->and_where("EP." . $parameter, "LIKE", $value . "%");
-                }else{
-                    $query->and_where("EP." . $parameter,$value);
-                }
-            }else{
-                if ($parameter=="api"){
-                    $query->and_where("API.id",$value);
-                }else if ($parameter=="application"){
-                    $query->and_where("A.id",$value);
-                }
-            }
-        }
-        if (\Input::param("limit")) {
-            $query->limit(\Input::param("limit"));
-        }
-        if (\Input::param("offset")){
-            $query->offset(\Input::param("offset"));
-        }
-        return $query->execute(self::$_connection)->as_array();
-    }
-    public function getEntrypoint($id=""){
-        $query = \DB::select('EP.id','EP.name','EP.url','EP.method',array('HM.method','method_name'),'EP.description')->from(array('entry_points','EP'));
-        $query->join(array('http_methods','HM'),'INNER')->on('EP.method','=','HM.id');
-        if ($id!=""){
-            $query->where('EP.id',$id);
-        }
-        if (\Input::param("limit")) {
-            $query->limit(\Input::param("limit"));
-        }
-        if (\Input::param("offset")){
-            $query->offset(\Input::param("offset"));
-        }
-        return $query->execute(self::$_connection)->as_array();
-    }
-    public static function getParameters($id){
-        $query = \DB::select('P.id',array('PTD.name','data_type_name'),array('PTA.name','api_type_name'),'P.name','P.description','P.url_param','EPP.required','EPP.order','EPP.login_pane')->from(array('parameters','P'));
-        $query->join(array('entrypoint_parameters','EPP'),'INNER')->on('P.id','=','EPP.parameter_id');
-        $query->join(array('parameter_types','PTD'),'INNER')->on('P.data_type','=','PTD.id');
-        $query->join(array('parameter_types','PTA'),'LEFT OUTER')->on('P.api_type','=','PTA.id');
-        $query->where('EPP.entrypoint_id',$id);
-        if (\Input::param("limit")) {
-            $query->limit(\Input::param("limit"));
-        }
-        if (\Input::param("offset")){
-            $query->offset(\Input::param("offset"));
-        }
-        return $query->execute(self::$_connection)->as_array();
-    }
-    public function getEntrypointAPIs($id){
-        $query = \DB::select('AEP.api_id')->from(array('entry_points','EP'));
-        $query->join(array('api_entrypoints','AEP'),'INNER')->on('EP.id','=','AEP.entrypoint_id');
-        $query->where('EP.id',$id);
-        return $query->execute(self::$_connection)->as_array();
-    }
 } 

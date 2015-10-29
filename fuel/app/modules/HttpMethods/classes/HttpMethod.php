@@ -1,19 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 11/3/14
- * Time: 1:45 AM
- */
 
 namespace HttpMethods;
 
+use UNBOXAPI\Box\Module;
 
-class HttpMethod extends \UNBOXAPI\Module{
+class HttpMethod extends Module {
 
-    protected static $_name = "HttpMethods";
-    protected static $_label = "Http Method";
-    protected static $_label_plural = "Http Methods";
+	protected static $_canisters = array(
+		'HttpMethods'
+	);
 
     protected static $_available_methods = array(
         'GET',
@@ -28,13 +23,14 @@ class HttpMethod extends \UNBOXAPI\Module{
 
     public $method;
 
-    function __construct(){
+    function __construct($args){
         unset($this->date_created);
         unset($this->date_modified);
         unset($this->created_by);
         unset($this->modified_by);
         unset($this->name);
         unset($this->deleted);
+        parent::__construct();
     }
 
     public static function get($id=""){

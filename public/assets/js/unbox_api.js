@@ -377,8 +377,8 @@ UNBOXAPI.Views = {
         },
         render: function(){
             this.html = _.template(this.template,{
-                current: this.model,
-                modules: this.collection.models,
+                current: this.model.get('name'),
+                layouts: this.collection.models,
                 links: this.model.get("links")
             });
             this.$el.html(this.html);

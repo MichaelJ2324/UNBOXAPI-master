@@ -1,15 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 7/4/14
- * Time: 11:32 PM
- */
 
 namespace Apis\Model;
 
-class Apis extends \Model\Module{
-    private $db_conn = 'default';
+class Apis extends \UNBOXAPI\Canister\Module {
+
     protected static $_table_name = 'apis';
     protected static $_fields = array(
         'url' => array(
@@ -109,58 +103,4 @@ class Apis extends \Model\Module{
             ),
         )
     );
-
-    public function getApi($id=""){
-        $query = \DB::select('A.id','A.name','A.version',array(\DB::expr("CONCAT(A.name,' - (v',A.version,')')"),"value"),"A.url","A.login_required")->from(array('apis','A'));
-        if ($id!==""){
-            $query->where('A.id',$id);
-        }
-        return $query->execute($this->db_conn)->as_array();
-    }
-    public function getHttpMethods($id="")
-    {
-        $query = \DB::select('HM.id','HM.method',array("HM.method","value"))->from(array('http_methods','HM'));
-        if ($id!=="") {
-            $query->join(array("api_httpMethods", "AHM"), "INNER")->on("HM.id", "=", "AHM.method");
-            $query->where('AHM.api_version', $id);
-        }
-        if (\Input::param("limit")) {
-            $query->limit(\Input::param("limit"));
-        }
-        if (\Input::param("offset")){
-            $query->offset(\Input::param("offset"));
-        }
-        return $query->execute($this->db_conn)->as_array();
-    }
-    public function getEntrypoints($id,$httpMethod="")
-    {
-        $query = \DB::select('EP.id','EP.name','EP.description','EP.method',array('HM.method','method_name'),'EP.url',array(\DB::expr("CONCAT(EP.name,' [',EP.url,']')"),"value"))->from(array('entry_points','EP'));
-        $query->join(array("api_entrypoints","AEP"),"INNER")->on("EP.id","=","AEP.entrypoint_id");
-        $query->join(array('http_methods','HM'),'INNER')->on('EP.method','=','HM.id');
-        $query->where('AEP.api_id',$id);
-        if ($httpMethod!=""){
-            $query->and_where('EP.method',$httpMethod);
-        }
-        if (\Input::param("limit")) {
-            $query->limit(\Input::param("limit"));
-        }
-        if (\Input::param("offset")){
-            $query->offset(\Input::param("offset"));
-        }
-        return $query->execute($this->db_conn)->as_array();
-    }
-    public function getLogins($id)
-    {
-        //array(\DB::expr("CONCAT(L.name,' [',L.url,']')"),"value")
-        $query = \DB::select('L.id','L.name','L.login_entrypoint_id','L.logout_entrypoint_id',array("L.name","value"))->from(array('logins','L'));
-        $query->join(array("api_logins","AL"),"INNER")->on("AL.login_id","=","L.id");
-        $query->where('AL.api_id',$id);
-        if (\Input::param("limit")) {
-            $query->limit(\Input::param("limit"));
-        }
-        if (\Input::param("offset")){
-            $query->offset(\Input::param("offset"));
-        }
-        return $query->execute($this->db_conn)->as_array();
-    }
 } 

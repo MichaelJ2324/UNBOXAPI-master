@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/15/15
- * Time: 11:19 AM
- */
 
 namespace UNBOXAPI\Data\DB;
-
 
 class RelateTable extends Table{
 

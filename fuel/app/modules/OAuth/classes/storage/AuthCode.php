@@ -51,10 +51,13 @@ class AuthCode extends AbstractStorage implements AuthCodeInterface
 
         if (count($scopes) > 0) {
             foreach ($scopes as $scope) {
-                $Scope = (new ScopeEntity($this->server))->hydrate([
-                    'id'            =>  $scope->id,
-                    'description'   =>  $scope->description,
-                ]);
+                $Scope = new ScopeEntity($this->server);
+                $Scope->hydrate(
+                    array(
+                        'id'            =>  $scope->id,
+                        'description'   =>  $scope->description,
+                    )
+                );
                 $response[] = $Scope;
             }
         }

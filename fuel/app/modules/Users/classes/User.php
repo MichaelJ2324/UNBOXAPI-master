@@ -2,24 +2,16 @@
 
 namespace Users;
 
+use \UNBOXAPI\Box\Module;
+use \UNBOXAPI\Data\Util\Guid;
 
-use UNBOXAPI\Data\Util\Guid;
+class User extends Module {
 
-class User extends \UNBOXAPI\Module{
-    protected static $_name = "Users";
-    protected static $_label = "User";
-    protected static $_label_plural = "Users";
-
-	protected static $_models = array(
+	protected static $_canisters = array(
 		'Users',
 		'Preferences',
 		'VerificationCodes'
 	);
-
-	public static function fields(){
-		return \Config::get('Users::eav_properties');
-	}
-	public $preferences;
 
 	public function __construct(){
 		unset($this->name);

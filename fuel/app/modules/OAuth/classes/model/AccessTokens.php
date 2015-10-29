@@ -1,8 +1,8 @@
 <?php
 
-namespace Oauth\Model;
+namespace OAuth\Model;
 
-class AccessTokens extends \Model\Auth {
+class AccessTokens extends \UNBOXAPI\Canister\Auth {
 
     protected static $_table_name = 'access_tokens';
     protected static $_fields = array(
@@ -54,7 +54,6 @@ class AccessTokens extends \Model\Auth {
                 'cascade_delete' => false,
             ),
         ),
-        'has_many' => array(),
         'many_many' => array(
             'scopes' => array(
                 'key_from' => 'id',

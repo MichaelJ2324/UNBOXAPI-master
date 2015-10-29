@@ -1,19 +1,16 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 1/26/15
- * Time: 9:06 AM
- */
 
 namespace ParameterTypes;
 
+use \UNBOXAPI\Box\Module;
 
-class ParameterType extends \UNBOXAPI\Module{
+class ParameterType extends Module{
 
-    protected static $_name = "ParameterTypes";
-    protected static $_label = "Parameter Type";
-    protected static $_label_plural = "Parameter Types";
+	protected static $_canisters = array(
+		'ParameterTypes',
+		'ApiTypes',
+		'DataTypes'
+	);
 
     private $defaults = array();
     private $data_types = array();
@@ -28,14 +25,15 @@ class ParameterType extends \UNBOXAPI\Module{
     public $template;
 
 
-    function __construct($type=""){
-        if ($type!=="") {
+    function __construct($args){
+        if ($args['type']!=="") {
             $this->defaults = $this->getDefaults();
             $this->loadDataTypes();
             $this->loadApiTypes();
             $this->loadTemplates();
-            $this->set_type($type);
+            $this->set_type($args['type']);
         }
+		parent::__construct();
     }
     public static function get($type=""){
         $pt = Model\ParameterTypes::types($type);

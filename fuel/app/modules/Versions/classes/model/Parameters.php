@@ -1,17 +1,11 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/17/15
- * Time: 10:08 AM
- */
 
 namespace Versions\Model;
 
-
-class Parameters extends \Model\Versions{
+class Parameters extends \UNBOXAPI\Canister\Versions {
 
     protected static $_table_name = 'parameter_versions';
+
     protected static $_relationships = array(
         'belongs_to' => array(
             'application' => array(

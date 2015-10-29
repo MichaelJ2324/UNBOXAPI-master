@@ -66,10 +66,15 @@ class Session extends AbstractStorage implements SessionInterface
         if (isset($session)) {
 			$scopes = $session->scopes;
 			foreach ($scopes as $scope) {
-				$Scopes[] = (new ScopeEntity($this->server))->hydrate([
-					'id' => $scope->scope,
-					'description' => $scope->description,
-				]);
+				$scope = new ScopeEntity($this->server);
+                $scope->hydrate(
+                    array(
+                        'id' => $scope->scope,
+                        'description' => $scope->description,
+                    )
+				);
+                $Scopes[] = $scope;
+                unset($scope);
 			}
         }
         return $Scopes;

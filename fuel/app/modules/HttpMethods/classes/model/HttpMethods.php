@@ -1,18 +1,11 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 11/3/14
- * Time: 1:45 AM
- */
 
 namespace HttpMethods\Model;
 
-
-class HttpMethods extends \Model\Module{
+class HttpMethods extends \UNBOXAPI\Canister\Hard {
 
     protected static $_table_name = 'http_methods';
-    protected static $_properties = array(
+    protected static $_fields = array(
         'id' => array(
             'data_type' => 'tinyint',
             'label' => 'HTTP Method ID',
@@ -35,30 +28,15 @@ class HttpMethods extends \Model\Module{
             'form' => array('type'=>'select'),
         ),
     );
-    protected static $_relationship_properties = array(
-        'apis' => array(
-            'method_id' => array(
-                'data_type' => 'tinyint',
-                'label' => 'Order',
-                'validation' => array(
-                    'required' => true,
-                    'max_length' => 1
-                ),
-            ),
+    protected static $_relationships = array(
+        'belongs_to' => array(
+            'entrypoints' => array(
+                'key_from' => 'id',
+                'model_to' => 'Entrypoints\\Model\\Entrypoints',
+                'key_to' => 'method',
+                'cascade_save' => true,
+                'cascade_delete' => false,
+            )
         )
     );
-    protected static $_belongs_to = array(
-        'entrypoints' => array(
-            'key_from' => 'id',
-            'model_to' => 'Entrypoints\\Model\\Entrypoints',
-            'key_to' => 'method',
-            'cascade_save' => true,
-            'cascade_delete' => false,
-        )
-    );
-    protected static $_has_one = array();
-    protected static $_has_many = array();
-    protected static $_many_many = array();
-    protected static $_observers = array();
-    protected static $_conditions = array();
 } 

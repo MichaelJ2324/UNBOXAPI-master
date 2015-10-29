@@ -19,9 +19,13 @@ class Scope extends AbstractStorage implements ScopeInterface
             return;
         }
 
-        return (new ScopeEntity($this->server))->hydrate([
-            'id'            =>  $scope->scope,
-            'description'   =>  $scope->description,
-        ]);
+        $Scope = new ScopeEntity($this->server);
+        $Scope->hydrate(
+            array(
+                'id'            =>  $scope->scope,
+                'description'   =>  $scope->description,
+            )
+        );
+        return $Scope;
     }
 }

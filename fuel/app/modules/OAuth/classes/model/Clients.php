@@ -1,8 +1,8 @@
 <?php
 
-namespace Oauth\Model;
+namespace OAuth\Model;
 
-class Clients extends \Model\Auth {
+class Clients extends \UNBOXAPI\Canister\Auth {
 
     protected static $_table_name = 'clients';
     protected static $_fields = array(

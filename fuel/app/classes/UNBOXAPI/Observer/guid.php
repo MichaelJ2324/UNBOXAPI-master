@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/1/15
- * Time: 4:19 PM
- */
 
 namespace UNBOXAPI;
 

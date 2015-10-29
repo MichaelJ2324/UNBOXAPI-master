@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/15/15
- * Time: 10:16 AM
- */
 
 namespace UNBOXAPI\Data\DB;
-
 
 class Helper {
 

@@ -1,19 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 5/31/15
- * Time: 2:31 PM
- */
 
-namespace Users\model;
+namespace Users\Model;
 
-
-class Preferences extends \Orm\Model{
+class Preferences extends \UNBOXAPI\Canister\Hard {
 
 	protected static $_table_name = 'user_preferences';
 	// list of properties for this model
-	protected static $_properties = array(
+	protected static $_fields = array(
 		'id' => array(
 			'data_type' => 'int',
 			'label' => 'ID',
@@ -57,13 +50,15 @@ class Preferences extends \Orm\Model{
 		)
 	);
 
-	protected static $_belongs_to = array(
-		'user' => array(
-			'key_from' => 'user_id',
-			'model_to' => 'Users\\Model\\Users',
-			'key_to' => 'id',
-			'cascade_save' => true,
-			'cascade_delete' => true,
+	protected static $_relationships = array(
+		'belongs_to' => array(
+			'user' => array(
+				'key_from' => 'user_id',
+				'model_to' => 'Users\\Model\\Users',
+				'key_to' => 'id',
+				'cascade_save' => true,
+				'cascade_delete' => true,
+			)
 		)
 	);
 }

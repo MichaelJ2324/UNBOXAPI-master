@@ -1,8 +1,8 @@
 <?php
 
-namespace Oauth\Model;
+namespace OAuth\Model;
 
-class RedirectUris extends \Model\Auth {
+class RedirectUris extends \UNBOXAPI\Canister\Auth {
 
     protected static $_table_name = 'client_redirect_uris';
     protected static $_fields = array(

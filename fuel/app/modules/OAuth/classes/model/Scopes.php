@@ -1,8 +1,8 @@
 <?php
 
-namespace Oauth\Model;
+namespace OAuth\Model;
 
-class Scopes extends \Model\Auth {
+class Scopes extends \UNBOXAPI\Canister\Auth {
 
     protected static $_table_name = 'scopes';
     protected static $_fields = array(

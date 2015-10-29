@@ -1,15 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 11/2/14
- * Time: 9:03 AM
- */
 
 namespace Tests\Model;
 
-
-class Tests extends \Model\Module{
+class Tests extends \UNBOXAPI\Canister\Module{
 
     protected static $_table_name = 'tests';
     protected static $_fields = array(

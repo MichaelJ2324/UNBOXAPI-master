@@ -1,19 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 6/14/14
- * Time: 12:09 AM
- */
 
 namespace Entrypoints;
 
+use UNBOXAPI\Box\Module;
 
-class Entrypoint extends \UNBOXAPI\Module{
-    protected static $_name = "Entrypoints";
-    protected static $_label = "Entry Point";
-    protected static $_label_plural = "Entry Points";
-    protected static $_models = array(
+class Entrypoint extends Module{
+
+    protected static $_canisters = array(
         'Entrypoints',
         'Parameters'
     );
@@ -27,7 +20,6 @@ class Entrypoint extends \UNBOXAPI\Module{
 
     private $urlParams = array();
     private $requestParams = array();
-
 
     public static function getParams($id){
         $ep = new Entrypoint($id);

@@ -1,18 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 7/8/14
- * Time: 12:31 AM
- */
 
 namespace Parameters;
 
-class Parameter extends \UNBOXAPI\Module{
+use \UNBOXAPI\Box\Module;
 
-    protected static $_name = "Parameters";
-    protected static $_label = "Parameter";
-    protected static $_label_plural = "Parameters";
+class Parameter extends Module {
+
+    protected static $_canisters = array(
+        'Parameters'
+    );
 
     public $data_type;
     public $api_type;

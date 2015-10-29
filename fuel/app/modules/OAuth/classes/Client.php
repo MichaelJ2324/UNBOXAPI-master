@@ -107,7 +107,8 @@ class Client {
 				$valid = FALSE;
 			}
 		}
-		\Log::debug($valid);
+		//Hack::MetadataManager needs to know if current process is authorized or not, so I added it here for simplicity sake
+		\UNBOXAPI\Data\Metadata\Manager::loggedIn($valid);
         return $valid;
     }
     private function validateToken($token){

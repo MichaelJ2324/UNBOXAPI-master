@@ -1,8 +1,8 @@
 <?php
 
-namespace Oauth\Model;
+namespace OAuth\Model;
 
-class RefreshTokens extends \Model\Auth {
+class RefreshTokens extends \UNBOXAPI\Canister\Auth {
 
     protected static $_table_name = 'refresh_tokens';
     protected static $_fields = array(
@@ -36,7 +36,6 @@ class RefreshTokens extends \Model\Auth {
         ),
     );
     protected static $_relationships = array(
-        'belongs_to' => array(),
         'has_one' => array(
             'access_token' => array(
                 'key_from' => 'access_token_id',
@@ -45,8 +44,6 @@ class RefreshTokens extends \Model\Auth {
                 'cascade_save' => false,
                 'cascade_delete' => false,
             )
-        ),
-        'has_many' => array(),
-        'many_many' => array()
+        )
     );
 }

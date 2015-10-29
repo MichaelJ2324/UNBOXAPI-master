@@ -1,13 +1,14 @@
 <?php
 namespace Fuel\Tasks;
 
+use \UNBOXAPI\Data\Installer;
 
 class Unbox
 {
 
     public static function install(){
         try{
-            $Installer = new \UNBOXAPI\Installer(true);
+            $Installer = new Installer(true);
             return \Cli::color($Installer->message,"green");
         }catch(\Exception $ex){
             return \Cli::color("Error Install Failed: ".$ex->getMessage(),"red");
@@ -17,7 +18,7 @@ class Unbox
         $installConfig = \Config::load('install');
         if ($installConfig['locked']==true){
             print \Cli::color("Setting up Foreign Keys on Database.\n","blue");
-            \UNBOXAPI\Installer::installForeignKeys();
+            Installer::installForeignKeys();
         }
     }
     public static function seed($module='all',$model=null,$relationships=false,$relationshipsOnly=false){
@@ -33,7 +34,7 @@ class Unbox
         }
         if ($installConfig['locked']==true){
             print \Cli::color("Seeding Database.\n","blue");
-            \UNBOXAPI\Installer::installSeedData($module,$relationships,$model,$relationshipsOnly);
+            Installer::installSeedData($module,$relationships,$model,$relationshipsOnly);
         }
     }
 }

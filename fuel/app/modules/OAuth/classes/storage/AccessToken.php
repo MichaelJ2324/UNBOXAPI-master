@@ -17,10 +17,9 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
         $access_token = \OAuth\Model\AccessTokens::query()->where('access_token',$token)->get_one();
 
         if (count($access_token) === 1) {
-            $token = (new AccessTokenEntity($this->server))
-                        ->setId($access_token->access_token)
-                        ->setExpireTime($access_token->expire_time);
-
+            $token = new AccessTokenEntity($this->server);
+            $token->setId($access_token->access_token)
+                  ->setExpireTime($access_token->expire_time);
             return $token;
         }
 
@@ -38,10 +37,13 @@ class AccessToken extends AbstractStorage implements AccessTokenInterface
             $scopes = $accessToken->scopes;
             if (count($scopes) > 0) {
                 foreach ($scopes as $scope) {
-                    $Scope = (new ScopeEntity($this->server))->hydrate([
-                        'id'            =>  $scope->scope,
-                        'description'   =>  $scope->description,
-                    ]);
+                    $Scope = new ScopeEntity($this->server);
+                    $Scope->hydrate(
+                        array(
+                            'id'            =>  $scope->scope,
+                            'description'   =>  $scope->description,
+                        )
+                    );
                     $response[] = $Scope;
                 }
             }

@@ -1,15 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 5/4/15
- * Time: 9:27 PM
- */
 
 namespace Applications\Model;
 
 
-class Apis extends \Model\Relationship{
+class Apis extends \UNBOXAPI\Canister\Relationship {
 
     protected static $_table_name = 'application_apis';
     protected static $_fields = array(

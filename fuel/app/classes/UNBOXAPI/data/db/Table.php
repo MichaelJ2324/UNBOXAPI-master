@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/1/15
- * Time: 5:09 PM
- */
 namespace UNBOXAPI\Data\DB;
 
 class Table {
@@ -16,7 +10,6 @@ class Table {
 
     private $model;
     private $relationships;
-    private $relationship_properties;
     private $relatedTables;
 
     public $name;
@@ -52,8 +45,18 @@ class Table {
         try{
             if (!(is_object($table))) {
                 $tableName = $table;
-                \Log::info("Creating Table ".$tableName);
-                \DBUtil::create_table($table, $attributes['fields'], $attributes['primary_keys'], self::$if_not_exists, self::$engine, self::$charset, $attributes['foreign_keys'], static::$db);
+                \Log::debug("Creating Table ".$tableName);
+				if (!\DBUtil::table_exists($tableName,static::$db)) {
+					\DBUtil::create_table($table,
+										  $attributes['fields'],
+										  $attributes['primary_keys'],
+										  self::$if_not_exists,
+										  self::$engine,
+										  self::$charset,
+										  $attributes['foreign_keys'],
+										  static::$db
+					);
+				}
             }else{
                 $tableName = $table->name;
                 $foreignKeys = array();
@@ -69,10 +72,20 @@ class Table {
                         }
                     }
                 }
-                \Log::info("Creating Table ".$tableName);
-                \DBUtil::create_table($table->name, $table->fields, $table->primaryKeys, self::$if_not_exists, self::$engine, self::$charset, $foreignKeys, static::$db);
+                \Log::debug("Creating Table ".$tableName);
+				if (!\DBUtil::table_exists($tableName,static::$db)) {
+					\DBUtil::create_table($table->name,
+										  $table->fields,
+										  $table->primaryKeys,
+										  self::$if_not_exists,
+										  self::$engine,
+										  self::$charset,
+										  $foreignKeys,
+										  static::$db
+					);
+				}
             }
-            return \DBUtil::table_exists($tableName,self::$db);
+            return \DBUtil::table_exists($tableName,static::$db);
         }catch(\Database_Exception $ex){
             \Log::error("Failed to create table. Exception: (".$ex->getCode().") ".$ex->getMessage());
             return false;
@@ -81,7 +94,6 @@ class Table {
     public static function addField($table,array $fields){
         foreach($fields as $field => $definition){
             \DBUtil::add_field($table,$definition,self::$db);
-            sleep(1);
         }
     }
     public static function addForeignKey($table,array $foreignKey){
@@ -92,7 +104,6 @@ class Table {
             }else{
                 \Log::info("Key [" . $foreignKey['key'] . "] not added. Field does not exist on " . $table . ".");
             }
-            sleep(1);
             return true;
         }catch(\Database_Exception $ex){
             \Log::error("Foreign key [".$foreignKey['key']."] not added to $table. Exception: (".$ex->getCode().") ".$ex->getMessage());

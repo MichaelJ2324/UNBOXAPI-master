@@ -2,6 +2,7 @@
 
 namespace Controller\V1;
 
+use \UNBOXAPI\Box\Factory as BoxFactory;
 
 class Rest extends \Controller_Rest {
 
@@ -66,8 +67,7 @@ class Rest extends \Controller_Rest {
                 $module = explode("\\",$module);
                 $this->module = end($module);
             }
-            $class = \UNBOXAPI\Data\Util\Module::classify($this->module);
-            $class = "\\" . $this->module . "\\" . $class;
+            $class = BoxFactory::classify($this->module);
             if (class_exists($class)) {
                 $this->class = $class;
             }

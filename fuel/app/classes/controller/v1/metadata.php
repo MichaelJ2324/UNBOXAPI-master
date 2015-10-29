@@ -2,6 +2,7 @@
 
 namespace Controller\V1;
 
+use UNBOXAPI\Data\Metadata\Manager as MetadataManager;
 
 class Metadata extends Rest{
 
@@ -9,7 +10,14 @@ class Metadata extends Rest{
 
     public function get_index($module="",$action="",$related_module="",$related_id=""){
         try {
-			$response = \UNBOXAPI\Metadata::get_metaData($this->authorized);
+			$metadata = MetadataManager::systemMetadata();
+			$response = array();
+			foreach($metadata as $key => $value){
+			    $response[] = array(
+			        'key' => $key,
+			        'value' => $value
+                );
+			}
             return $this->response(
                 $response
             );

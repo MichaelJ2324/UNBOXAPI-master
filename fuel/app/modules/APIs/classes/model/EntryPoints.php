@@ -1,15 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 5/4/15
- * Time: 9:29 PM
- */
 
 namespace Apis\Model;
 
-
-class Entrypoints extends \Model\Relationship {
+class Entrypoints extends \UNBOXAPI\Canister\Relationship {
 
     protected static $_table_name = 'api_entrypoints';
     protected static $_fields = array(

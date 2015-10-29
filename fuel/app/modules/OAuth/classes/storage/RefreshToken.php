@@ -16,10 +16,10 @@ class RefreshToken extends AbstractStorage implements RefreshTokenInterface
     {
 		$RefreshToken = \OAuth\Model\RefreshTokens::query()->where('refresh_token',$token)->related('access_token')->get_one();
         if (count($RefreshToken) === 1) {
-            $token = (new RefreshTokenEntity($this->server))
-                        ->setId($RefreshToken->refresh_token)
-                        ->setExpireTime($RefreshToken->expire_time)
-                        ->setAccessTokenId($RefreshToken->access_token->access_token);
+            $token = new RefreshTokenEntity($this->server);
+			$token->setId($RefreshToken->refresh_token)
+				  ->setExpireTime($RefreshToken->expire_time)
+				  ->setAccessTokenId($RefreshToken->access_token->access_token);
             return $token;
         }
 
@@ -31,10 +31,10 @@ class RefreshToken extends AbstractStorage implements RefreshTokenInterface
 		$AccessToken = \OAuth\Model\AccessTokens::query()->where('access_token',$token->getId())->get_one();
 		$RefreshToken = \OAuth\Model\RefreshTokens::query()->where('access_token_id',$AccessToken->id)->get_one();
 		if (count($RefreshToken) === 1) {
-			$token = (new RefreshTokenEntity($this->server))
-				->setId($RefreshToken->refresh_token)
-				->setExpireTime($RefreshToken->expire_time)
-				->setAccessTokenId($token->getId());
+			$token = new RefreshTokenEntity($this->server);
+			$token->setId($RefreshToken->refresh_token)
+				  ->setExpireTime($RefreshToken->expire_time)
+				  ->setAccessTokenId($token->getId());
 			return $token;
 		}
 
