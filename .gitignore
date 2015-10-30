@@ -1,5 +1,8 @@
 /.idea
+.idea/*
+.idea/workspace.xml
+
 _site
 .sass-cache
 
-.idea/workspace.xml
+
