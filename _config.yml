@@ -3,7 +3,6 @@ title: UNBOX API
 email: unboxapi@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
   UNBOX API allows developers to quickly document and test their REST and SOAP Apis. Users and developers can utilize UNBOX API to easily understand APIs and integrations with software with an intuitive interface.
-baseurl: "/_site/" # the subpath of your site, e.g. /blog/
 url: "http://unboxapi.com" # the base hostname & protocol for your site
 twitter_username: unboxapi
 github_username:  MichaelJ2324
