@@ -1,13 +1,2 @@
-fuel/app/logs/*/*/*
-fuel/app/cache/*/*
-.idea
-fuel/app/vendor/autoload.php
-fuel/app/vendor/symfony
-fuel/app/vendor/composer
-fuel/app/vendor/google
-fuel/app/vendor/league
-fuel/vendor
-fuel/core
-fuel/packages
-fuel/.htaccess
-fuel/LICENSE
+_site
+.sass-cache

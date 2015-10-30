@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/APIs/classes" isTestSource="false" packagePrefix="Apis" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/Versions/classes" isTestSource="false" packagePrefix="Versions" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/HttpMethods/classes" isTestSource="false" packagePrefix="HttpMethods" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/Applications/classes" isTestSource="false" packagePrefix="Applications" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/Logins/classes" isTestSource="false" packagePrefix="Logins" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/Tests/classes" isTestSource="false" packagePrefix="Tests" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/OAuth/classes" isTestSource="false" packagePrefix="Oauth" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/ParameterTypes/classes" isTestSource="false" packagePrefix="ParameterTypes" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/Entrypoints/classes" isTestSource="false" packagePrefix="Entrypoints" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/Users/classes" isTestSource="false" packagePrefix="Users" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/OAuth/classes" isTestSource="false" packagePrefix="OAuth" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/Parameters/classes" isTestSource="false" packagePrefix="Parameters" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/classes/UNBOXAPI" isTestSource="false" packagePrefix="UNBOXAPI" />
+      <sourceFolder url="file://$MODULE_DIR$/fuel/app/modules/Packages/classes" isTestSource="false" packagePrefix="Packages" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
