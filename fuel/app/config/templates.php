@@ -55,7 +55,7 @@ return array(
             <li id='homeLi' class='dropdown active'>
                 <a href='<%= links[0].link %>' style='float: left;'>
                     <%= links[0].icon %>
-                    <%= _.escape(links[0].label) %>
+                    <%= UNBOX.Translator.translate(links[0].label) %>
                 </a>
             <% if (layouts.length>2){ %>
                 <a href='#' class='dropdown-toggle' data-toggle='dropdown' style='float: right; padding-left: 0px;'>
@@ -66,7 +66,7 @@ return array(
                         if (layout.get('name')!==current){
                             var llinks = layout.get('links');
                 %>
-                    <li><a href='<%= llinks[0].link %>'><%= llinks[0].icon %><%= llinks[0].label %></a></li>
+                    <li><a href='<%= llinks[0].link %>'><%= llinks[0].icon %><%= UNBOX.Translator.translate(llinks[0].label,layout) %></a></li>
                 <%        }
                     })
                 %>
@@ -76,11 +76,12 @@ return array(
             <%
                 if (links.length > 1 ){
                     _.each(links,function(link){
+                        if (link.label !== 'LBL_MODULE'){
             %>
             <li>
-                <a href='<%= link.link %>'><%= link.icon %><%= _.escape(link.label) %></a>
+                <a href='<%= link.link %>'><%= link.icon %><%= UNBOX.Translator.translate(link.label) %></a>
             </li>
-            <%      })
+            <%      }})
                 }
             %>",
     'rightNav' => "

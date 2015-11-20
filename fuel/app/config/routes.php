@@ -19,7 +19,7 @@ return array(
     'api/metadata' => 'v1/metadata',
     'rest/v(:num)/metadata' => 'v$1/metadata',
     //Standard Rest Routes
-    'api/(:segment)/' => '$1/v1/$1/',
+    'api/(:segment)' => '$1/v1/$1/',
     'api/(:segment)/(:any)' => '$1/v1/$1/index/$2',
     'rest/v(:num)/(:segment)' => '$2/v$1/$2',
     'rest/v(:num)/(:segment)/(:any)' => '$2/v$1/$2/$3',

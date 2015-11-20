@@ -9,20 +9,20 @@ return array(
                 <div class='panel-heading'>
                     <h4 class='panel-title'>
                         <a data-toggle='collapse' data-parent='#admin_actions_accordion' href='#<%= module.get('name') %>_actions'>
-                            <%= module.escape('label_plural') %>
+                            <%= UNBOX.Translator.translate('LBL_MODULE',module) %>
                         </a>
                     </h4>
                 </div>
                 <div class='panel-collapse collapse <%= (module.get('name')==current ? 'in' :'') %>' id='<%= module.get('name') %>_actions'>
                     <div class='panel-body'>
                         <div class='col-xs-4 text-center'>
-                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/list' >List <span class='glyphicon glyphicon-th-list'></span></a>
+                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/list' ><%= UNBOX.Translator.translate('LBL_LIST') %> <span class='glyphicon glyphicon-th-list'></span></a>
                         </div>
                         <div class='col-xs-4 text-center'>
-                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/create' >Create <span class='glyphicon glyphicon-plus'></span></a>
+                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/create' ><%= UNBOX.Translator.translate('LBL_CREATE') %> <span class='glyphicon glyphicon-plus'></span></a>
                         </div>
                         <div class='col-xs-4 text-center'>
-                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/import' >Import <span class='glyphicon glyphicon-upload'></span></a>
+                            <a class='btn btn-primary ' href='#manage/<%= module.get('name') %>/import' ><%= UNBOX.Translator.translate('LBL_IMPORT') %><span class='glyphicon glyphicon-upload'></span></a>
                         </div>
                     </div>
                 </div>

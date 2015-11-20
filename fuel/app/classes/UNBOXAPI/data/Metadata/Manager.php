@@ -18,7 +18,6 @@ class Manager {
 	protected static function setupConfig(){
 		if (empty(static::$_config)) {
 			$config = \Config::load("meta");
-			\Log::debug(print_r($config,true));
 			if ($config == FALSE) {
 				$config = \Config::get("meta");
 			}
@@ -26,9 +25,15 @@ class Manager {
 		}
 		return static::$_config;
 	}
+	protected static function setupLang(){
+		$lang = \Cookie::get('lang','en');
+		\Config::set('language',$lang);
+		\Cookie::set('lang',$lang,null,"/",null,false,false);
+		return static::$_lang = $lang;
+	}
 	protected static function setupCaching(){
 		static::$_caching = static::$_config['caching'];
-		static::$_cache_name = static::$_config['cache_name'];
+		static::$_cache_name = static::$_config['cache_name'].".".static::$_lang;
 	}
 	public static function loggedIn($loggedIn = null){
 		if ($loggedIn !== null) {
@@ -49,6 +54,7 @@ class Manager {
 
 	protected function __construct(){
 		static::setupConfig();
+		static::setupLang();
 		static::setupCaching();
 	}
 	private function __clone()
@@ -93,10 +99,10 @@ class Manager {
 								unset($boxMeta[$meta]);
 							}
 						}
-						//if (($boxMeta['config']['login']===true && static::$_logged_in===true) || ($boxMeta['config']['login']===false)) {
+						if (($boxMeta['config']['login']===true && static::$_logged_in===true) || ($boxMeta['config']['login']===false)) {
 							$boxMeta['name'] = $box_name;
 							$MetadataManager->metadata['modules'][] = $boxMeta;
-						//}
+						}
 					} else if ($type === 'Layout') {
 						$LayoutMetaConfig = static::getBoxMetaConfig($type);
 						foreach($LayoutMetaConfig as $meta => $properties){
@@ -104,10 +110,10 @@ class Manager {
 								unset($boxMeta[$meta]);
 							}
 						}
-						//if (($boxMeta['config']['login']===true && static::$_logged_in===true) || ($boxMeta['config']['login']===false)) {
+						if (($boxMeta['config']['login']===true && static::$_logged_in===true) || ($boxMeta['config']['login']===false)) {
 							$boxMeta['name'] = $box_name;
 							$MetadataManager->metadata['layouts'][] = $boxMeta;
-						//}
+						}
 					}
 				}
 			}
@@ -130,7 +136,7 @@ class Manager {
 	public static function boxMetadata($box_name) {
 		if (static::cacheEnabled()){
 			try{
-				$cache_name = static::$_cache_name.".modules.".$box_name;
+				$cache_name = static::$_cache_name.".modules".".$box_name";
 				$box_meta = \Cache::get($cache_name);
 			}catch(\CacheNotFoundException $e){
 				\Log::error("Metadata cache for $box_name not found.");
@@ -175,19 +181,19 @@ class Manager {
 	}
 
 	public static function labels($box_name){
-		$lang = \Lang::get_lang();
+		$lang = static::$_lang;
 		if (strtolower($box_name) !== 'system'){
 			if (\Module::exists($box_name)){
-				$langDefs = \Config::load(APPPATH."modules\\$box_name\\lang\\$lang\\labels.php");
+				$langDefs = \Config::load(APPPATH."modules/$box_name/lang/$lang/labels.php","$box_name.labels");
 				if ($langDefs == FALSE) {
-					$langDefs = \Config::get(APPPATH."modules\\$box_name\\lang\\$lang\\labels.php");
+					$langDefs = \Config::get(APPPATH."modules/$box_name/lang/$lang/labels.php","$box_name.labels");
 				}
 				return $langDefs;
 			}
 		}else{
-			$langDefs = \Config::load(APPPATH."lang\\$lang\\labels.php");
+			$langDefs = \Config::load(APPPATH."lang/$lang/labels.php");
 			if ($langDefs == FALSE) {
-				$langDefs = \Config::get(APPPATH."lang\\$lang\\labels.php");
+				$langDefs = \Config::get(APPPATH."lang/$lang/labels.php");
 			}
 			return $langDefs;
 		}

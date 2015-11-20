@@ -1,112 +1,5 @@
-Backbone.View.prototype.close = function(){
-    this.$el.html("");
-    this.unbind();
-}
-
 var UNBOXAPI = UNBOXAPI || {};
 
-UNBOXAPI.Global = {
-    ajaxURL: "api/",
-    Utils: {
-        Queue: function(functions,callback){
-            var running = false;
-            var queue = functions;
-            var callback = callback;
-            var queued = queue.length;
-            this.process = function(){
-                running = true;
-                for(x=0;x<queued;x++){
-                    queue[x].f(queue[x].p).always(this.down);
-                }
-            }
-            this.down = function(){
-                queued--;
-                if (queued==0){
-                    running = false;
-                    callback();
-                }
-            }
-        },
-        Loading: {
-            start: function (data) {
-                var notice = new UNBOXAPI.Models.Notices;
-                notice.set({
-                    type: "loading",
-                    level: "info",
-                    show: true,
-                    message: data
-                });
-                UNBOX.collections.notices.log(notice);
-                return notice;
-            },
-            done: function (model){
-                var notice = UNBOX.collections.notices.done(model);
-                $("body").css("cursor", "auto");
-            }
-        },
-        log: function(response){
-            var notice = new UNBOXAPI.Models.Notices;
-            notice.set({
-                type: "warning",
-                level: "debug",
-                show: true,
-                message: response.status + ": " + response.statusText
-            });
-            UNBOX.collections.notices.log(notice);
-        },
-        notice: function(message,type){
-            var notice = new UNBOXAPI.Models.Notices;
-            notice.set({
-                type: type,
-                level: "info",
-                show: true,
-                message: message
-            });
-            UNBOX.collections.notices.log(notice);
-        }
-    },
-    Login: {
-        Google: {
-            loginButton: function(authResult) {
-                if (typeof gapi !== 'undefined') {
-                    if (typeof authResult == 'undefined') {
-                        var params = {
-                            'theme': 'light',
-                        };
-                        gapi.signin.render('gLogin', params);
-                    } else {
-                        if (authResult['status']['signed_in']) {
-                            document.getElementById('gLoginWrapper').setAttribute('style', 'display: none');
-                            gapi.client.load('plus', 'v1', UNBOXAPI.Global.Login.Google.apiClientLoaded);
-                        } else {
-                            console.log(authResult);
-                        }
-                    }
-                }
-            },
-            apiClientLoaded: function () {
-                var request = gapi.client.plus.people.get({
-                    'userId': 'me'
-                });
-                request.execute(UNBOXAPI.Global.Login.Google.handleProfile);
-            },
-            handleProfile: function (resp) {
-                console.log(resp);
-                console.log('Retrieved profile for:' + resp.displayName);
-            },
-            ReCaptcha: {
-                render: function(element) {
-                    if (typeof grecaptcha !== 'undefined') {
-                        return grecaptcha.render(element, {
-                            'sitekey': '6Ldh2QMTAAAAAIYd2mUJBSek7MaBWc3X8yYPv6bE',
-                            'theme': 'light'
-                        });
-                    }
-                }
-            }
-        }
-    }
-}
 UNBOXAPI.App = Backbone.Router.extend({
     routes: {
         "help": "help",
@@ -139,13 +32,11 @@ UNBOXAPI.App = Backbone.Router.extend({
         }
         this.view = null;
         this.layout = null;
-
-        console.log(this.loggedIn);
-        console.log(this.user);
         _.bindAll(this,"start","setupView","userStateChange");
         this.user.on("change:id",this.userStateChange);
     },
     start: function(){
+        this.setupLang();
         var functions = [
             {
                 f: this.metadata.fetchAll,
@@ -158,18 +49,27 @@ UNBOXAPI.App = Backbone.Router.extend({
                 }
             },
         ];
-        var queue = new UNBOXAPI.Global.Utils.Queue(functions,function(){
+        var queue = new UNBOXAPI.Queue(functions,function(){
             Backbone.history.start({
                 root: window.location.pathname
             });
         });
         queue.process();
     },
+    setupLang: function(){
+        var lang = UNBOXAPI.Global.Cookie.get('lang');
+        if (lang==null){
+            lang = 'en';
+            UNBOXAPI.Global.Cookie.set('lang',lang,null);
+        }
+        UNBOX.Translator.setLang(lang);
+    },
     setupView: function(layout) {
         var ready = false;
-        var oldLayout = this.metadata.layouts.current.get("name");
+        var oldLayout = this.metadata.layouts.current;
         if (this.metadata.layouts.setCurrent(layout) == true) {
-            if ((this.metadata.layouts.current.config.getValue("login") == true && this.user.loggedIn() == true) || (this.metadata.layouts.current.config.getValue('login') == false)) {
+            var layoutObj = this.metadata.layouts.findWhere({name: layout});
+            if ((layoutObj.config.getValue("login") == true && this.user.loggedIn() == true) || (layoutObj.config.getValue('login') == false)) {
                 if (this.view == null) {
                     this.view = new UNBOXAPI.Views.AppView({
                         el: $("body"),
@@ -222,11 +122,11 @@ UNBOXAPI.App = Backbone.Router.extend({
         }
     },
     quickRecord: function(module,action,id){
-        if (this.metadata.layouts.current.get('name') !== "Manager") {
+        if (this.metadata.layouts.current !== "Manager") {
             this.manager(module);
         }
         if (!(module == "" || typeof module == 'undefined' || module == null)) {
-            if (this.metadata.modules.current.get("name") !== module) {
+            if (this.metadata.modules.current !== module) {
                 this.metadata.modules.setCurrent(module);
             }
             if (!(action == "" || typeof action == 'undefined' || action == null)) {
@@ -247,7 +147,7 @@ UNBOXAPI.App = Backbone.Router.extend({
         this.setupView("Tester");
     },
     login: function(){
-        if (this.metadata.layouts.current.get('name') !== "Home") {
+        if (this.metadata.layouts.current !== "Home") {
             if (this.setupView("Home")){
                 return false;
             }
@@ -269,7 +169,7 @@ UNBOXAPI.App = Backbone.Router.extend({
         }
     },
     register: function(){
-        if (this.metadata.layouts.current.get('name') !== "Home") {
+        if (this.metadata.layouts.current !== "Home") {
             if (!this.setupView("Home")){
                 return false;
             }
@@ -282,7 +182,7 @@ UNBOXAPI.App = Backbone.Router.extend({
         }
     },
     profile: function(){
-        if (this.metadata.layouts.current.get('name') !== "Home") {
+        if (this.metadata.layouts.current !== "Home") {
             if (!this.setupView("Home")){
                 return false;
             }
@@ -322,7 +222,7 @@ UNBOXAPI.Views = {
             this.mainNav = new UNBOXAPI.Views.MainNav({
                 el: this.$mainNav,
                 collection: this.metadata.layouts,
-                model: this.metadata.layouts.current,
+                model: this.metadata.layouts.findWhere({ name: this.metadata.layouts.current }),
                 template: this.metadata.templates.getTemplate("mainNav")
             });
             this.rightNav = new UNBOXAPI.Views.RightNav({
@@ -346,12 +246,12 @@ UNBOXAPI.Views = {
             return this;
         },
         setupLayout: function(){
-            var layoutName = this.metadata.layouts.current.get("name");
+            var layoutName = this.metadata.layouts.current;
             var Layout = UNBOXAPI.Views[layoutName];
             this.layout = new Layout.Layout({
                 el: this.$layout,
                 templates: this.metadata.templates,
-                metadata: this.metadata.layouts.current,
+                metadata: this.metadata.layouts.findWhere({name: layoutName }),
                 modules: this.metadata.modules,
                 user: this.user
             });
@@ -376,6 +276,7 @@ UNBOXAPI.Views = {
             this.render();
         },
         render: function(){
+            UNBOX.Translator.setContext(this.model);
             this.html = _.template(this.template,{
                 current: this.model.get('name'),
                 layouts: this.collection.models,
@@ -478,7 +379,7 @@ UNBOXAPI.Views = {
                     }
                 }
             }
-            var queue = new UNBOXAPI.Global.Utils.Queue(functions,callback);
+            var queue = new UNBOXAPI.Queue(functions,callback);
             return queue.process();
         },
         render: function(){
@@ -899,6 +800,8 @@ UNBOXAPI.Views.Home = {
             this.options = options || {};
             this.template = this.options.template;
 
+            this.$username = null;
+            this.$password = null;
             this.model = this.model || new UNBOXAPI.Models.User;
 
             this.username = null;
@@ -912,10 +815,20 @@ UNBOXAPI.Views.Home = {
             return this;
         },
         setup: function(){
+            this.$username = $("#username");
+            this.$password = $("#password");
             //setup Google+ button
             //UNBOXAPI.Global.Login.Google.loginButton();
         },
         login: function(){
+            var p = this.model.get("password");
+            var u = this.model.get("username");
+            if ((typeof p == 'undefined' || typeof u == 'undefined')||(p == '' || u == '')||(p == null || u == null)){
+                this.model.set({
+                    usernmane: this.$username.val(),
+                    password: btoa(this.$password.val())
+                });
+            }
             this.model.login();
         },
         keyPressHandler : function(e){
@@ -1638,6 +1551,7 @@ UNBOXAPI.Views.Manager = {
                 1,
                 UNBOXAPI.Views.Manager.Menu,
                 {
+                    model: this.metadata,
                     collection: this.modules,
                     template: this.metadata.templates.getTemplate("Menu"),
                     module: module
@@ -1674,7 +1588,8 @@ UNBOXAPI.Views.Manager = {
                     modules: this.modules,
                     model: this.models.current,
                     templates: this.metadata.templates,
-                    gTemplates: this.gTemplates
+                    gTemplates: this.gTemplates,
+                    panel: 2
                 },
                 'open'
             );
@@ -1687,7 +1602,8 @@ UNBOXAPI.Views.Manager = {
                     related: true,
                     modules: this.modules,
                     model: this.models.current,
-                    templates: this.metadata.templates
+                    templates: this.metadata.templates,
+                    panel: 3
                 }
             );
         },
@@ -1706,6 +1622,7 @@ UNBOXAPI.Views.Manager = {
             this.module = this.options.module || false;
         },
         render: function(){
+            UNBOX.Translator.setContext(this.model);
             this.html = _.template(this.template,{
                 modules: this.collection.models,
                 current: this.module
@@ -1720,18 +1637,14 @@ UNBOXAPI.Views.Manager = {
     Record: {
         Panel: Backbone.View.extend({
             initialize: function(options){
-                console.dir(options);
                 this.options = options || {};
-                this.panel = this.options.panel || {};
                 this.templates = this.options.templates;
                 this.gTemplates = this.options.gTemplates;
                 this.modules = this.options.modules;
+                this.module = this.modules.findWhere({name: this.modules.current});
                 this.related = this.options.related || false;
 
-                this.module = this.modules.current.clone();
-                this.module.templates = this.gTemplates;
-                this.module.setup();
-                this.number = this.panel.get('number');
+                this.number = this.options.panel;
 
                 this.relate = {};
                 this.detail = {};
@@ -1778,6 +1691,7 @@ UNBOXAPI.Views.Manager = {
                     this.detail = new UNBOXAPI.Views.Manager.Record.Detail({
                         el: this.$detail,
                         model: this.model,
+                        module: this.module,
                         modules: this.modules,
                         number: this.number,
                         template: this.templates.getTemplate("RecordDetail")
@@ -1812,6 +1726,7 @@ UNBOXAPI.Views.Manager = {
             },
             initialize: function(options){
                 this.options = options || {};
+                this.module = this.options.module || {};
                 this.modules = this.options.modules || null;
                 this.template = this.options.template || {};
                 this.number = this.options.number || 2;
@@ -1820,8 +1735,10 @@ UNBOXAPI.Views.Manager = {
                 this.model.on("clear",this.clearForm);
                 this.model.on("sync",this.render);
 
-                if ((!(this.model.get('id')==""||this.model.get('id')==null||typeof this.model.get('id')=='undefined'))
-                    &&(typeof this.model.get('name')=='undefined'||this.model.get('name')==null||this.model.get('name')=="")){
+                var modelID = this.model.get('id');
+                var modelName = this.model.get('name');
+                if ((!(modelID==""||modelID==null||typeof modelID=='undefined'))
+                    &&(typeof modelName=='undefined'||modelName==null||modelName=="")){
                     UNBOXAPI.Models.Utils.fetch({
                         model: this.model
                     })
@@ -1830,9 +1747,10 @@ UNBOXAPI.Views.Manager = {
                 }
             },
             render: function(){
+                console.log(this.module);
                 this.html = _.template(this.template, {
                     model: this.model,
-                    fields: this.modules.current.fields.models,
+                    fields: this.module.fields.models,
                     number: this.number
                 });
                 this.$el.html(this.html);
@@ -2210,11 +2128,13 @@ UNBOXAPI.Models = {
             this.config = new UNBOXAPI.Collections.Config;
             this.fields = new UNBOXAPI.Collections.Fields;
             this.relationships = new UNBOXAPI.Collections.Relationships;
+            this.labels = new UNBOXAPI.Collections.Labels;
 
-            _.bindAll(this,"setup","setupConfig","setupFields");
+            _.bindAll(this,"setup","setupConfig","setupFields","setupRelationships","setupLabels");
             this.on("change:fields",this.setupConfig);
             this.on("change:config",this.setupTemplates);
             this.on("change:relationships",this.setupRelationships);
+            this.on("change:labels",this.setupLabels);
         },
         urlRoot: UNBOXAPI.Global.ajaxURL+"metadata/",
         default:{
@@ -2229,6 +2149,7 @@ UNBOXAPI.Models = {
             this.setupConfig();
             this.setupFields();
             this.setupRelationships();
+            this.setupLabels();
         },
         setupFields: function(){
             var fields = this.get('fields');
@@ -2248,16 +2169,21 @@ UNBOXAPI.Models = {
         },
         setupRelationships: function(){
             this.relationships.reset(this.get('relationships'));
+        },
+        setupLabels: function(){
+            this.labels.refresh(this.get('labels'));
         }
     }),
     Layouts: Backbone.Model.extend({
         initialize: function(){
             this.templates = new UNBOXAPI.Collections.Templates;
             this.config = new UNBOXAPI.Collections.Config;
+            this.labels = new UNBOXAPI.Collections.Labels;
 
-            _.bindAll(this,"setup","setupTemplates","setupConfig");
+            _.bindAll(this,"setup","setupTemplates","setupConfig","setupLabels");
             this.on("change:config",this.setupConfig);
             this.on("change:templates",this.setupTemplates);
+            this.on("change:labels",this.setupLabels)
 
             this.setup();
         },
@@ -2276,12 +2202,16 @@ UNBOXAPI.Models = {
         setup: function(){
             this.setupTemplates();
             this.setupConfig();
+            this.setupLabels();
         },
         setupTemplates: function(){
             this.templates.refresh(this.get('templates'));
         },
         setupConfig: function(){
             this.config.refresh(this.get('config'));
+        },
+        setupLabels: function(){
+            this.labels.refresh(this.get('labels'));
         }
     }),
     //User Model
@@ -2298,7 +2228,7 @@ UNBOXAPI.Models = {
             first_name: "",
             last_name: "",
             email: "",
-            password: null
+            password: ""
         },
         getValue: function(){
             return this.get('first_name')+" "+this.get('last_name');
@@ -2569,7 +2499,7 @@ UNBOXAPI.Collections = {
             if (model==null||typeof model=='undefined'){
                 return false;
             }
-            this.current.set(model.toJSON());
+            this.current = layout;
             return true;
         }
     }),
@@ -2585,7 +2515,7 @@ UNBOXAPI.Collections = {
             if (model==null||typeof model=='undefined'){
                 return false;
             }
-            this.current.set(model.toJSON());
+            this.current = module;
             return true;
         }
     }),
@@ -2624,6 +2554,9 @@ UNBOXAPI.Collections = {
         }
     })
 }
+UNBOXAPI.Collections.Labels = UNBOXAPI.Collections.Config.extend({
+    url: UNBOXAPI.Global.ajaxURL + "metadata/labels",
+});
 
 
 

@@ -2,11 +2,14 @@
 
 namespace OAuth;
 
+use \UNBOXAPI\Data\Metadata\Manager as MetadataManager;
 
 class Client {
 
     protected static $_name = 'OAuth';
     protected static $_config;
+	protected static $_token;
+	protected static $_user_info;
 
     protected $_server;
     protected $_id;
@@ -16,9 +19,6 @@ class Client {
 	protected $_scope = array(
 		'api'
 	);
-
-    protected $_token;
-    protected $_user_info;
 
     public $payload;
 
@@ -75,11 +75,15 @@ class Client {
 	{
 	}
 
-	public function getToken(){
-		return $this->_token;
+	public static function token(){
+		return static::$_token;
 	}
-	public function getUserInfo(){
-		return $this->_user_info;
+	public static function user($val=null){
+		\Log::debug(print_r(static::$_user_info,true));
+		if (($val=='id'||$val=='scopes')&&!empty(static::$_user_info)){
+			return static::$_user_info[$val];
+		}
+		return static::$_user_info;
 	}
     public function setGrantType($grant){
         if (in_array($grant,$this->config['grant_types'])){
@@ -94,7 +98,7 @@ class Client {
 			if ($auto_refresh){
 				if (isset($this->_id) && isset($this->_secret)) {
 					if ($this->refreshToken($token['refresh_token']) !== NULL) {
-						static::makeCookie($this->_token);
+						static::makeCookie(static::$_token);
 						$valid = TRUE;
 					}
 				}
@@ -103,12 +107,13 @@ class Client {
 			$valid = TRUE;
 		}
 		if ($valid === TRUE){
+			$this->getCachedUser(static::$_token['refresh_token']);
 			if (!$this->validateScope($requiredScope)){
 				$valid = FALSE;
 			}
 		}
 		//Hack::MetadataManager needs to know if current process is authorized or not, so I added it here for simplicity sake
-		\UNBOXAPI\Data\Metadata\Manager::loggedIn($valid);
+		MetadataManager::loggedIn($valid);
         return $valid;
     }
     private function validateToken($token){
@@ -117,7 +122,7 @@ class Client {
 		if ($cachedToken !== FALSE){
 			if ($token['refresh_token']==$cachedToken['refresh_token']){
 				\Log::debug("Token is valid");
-				$this->_token = $token;
+				static::$_token = $token;
 				$valid = TRUE;
 			}
 		}
@@ -125,16 +130,13 @@ class Client {
     }
 	private function validateScope($requiredScope){
 		$valid = FALSE;
-		$cachedUser = $this->getCachedUser();
-		if ($cachedUser !== FALSE){
-			$this->_user_info = $cachedUser;
-			if (is_array($this->_user_info['scopes'])) {
-				\Log::debug("Required Scope: $requiredScope");
-				\Log::debug("Current scopes: ".serialize($this->_user_info['scopes']));
-				if (in_array($requiredScope, $this->_user_info['scopes'])) {
-					\Log::debug("Scope is valid");
-					$valid = TRUE;
-				}
+		$scopes = static::user('scopes');
+		if (is_array($scopes)) {
+			\Log::debug("Required Scope: $requiredScope");
+			\Log::debug("Current scopes: ".serialize($scopes));
+			if (in_array($requiredScope, $scopes)) {
+				\Log::debug("Scope is valid");
+				$valid = TRUE;
 			}
 		}
 		return $valid;
@@ -142,11 +144,16 @@ class Client {
 	public function refreshToken($refresh_token=null){
 		$this->setGrantType("refresh_token");
 		if ($refresh_token==null){
-			$refresh_token = $this->_token['refresh_token'];
+			$refresh_token = static::$_token['refresh_token'];
+		}
+		if (empty(static::$_user_info)){
+			$this->getCachedUser($refresh_token);
 		}
 		$this->payload = array(
-			'refresh_token' => $refresh_token
+			'refresh_token' => $refresh_token,
+			'scopes' => implode(',',static::user('scopes'))
 		);
+
 		$token = $this->issueAccessToken();
 		return $token;
 	}
@@ -157,19 +164,18 @@ class Client {
 			$Response = $this->request->execute($this->payload)->response();
 			$response = json_decode($Response->body(), TRUE);
 			if ($Response->status == '200') {
-				$this->_token = $response;
-				$this->cacheToken($this->_token);
+				static::$_token = $response;
+				$this->cacheToken(static::$_token);
 				$this->setupRequest("user");
-				$userResponse = $this->request->execute(array('token' => $this->_token['access_token']))->response();
+				$userResponse = $this->request->execute(array('token' => static::$_token['access_token']))->response();
 				if ($userResponse->status == '200') {
 					$userInfo         = json_decode($userResponse->body(), TRUE);
-					$this->_user_info = $userInfo;
+					static::$_user_info = $userInfo;
 					$this->cacheUser($userInfo);
 				}
-				return $this->_token;
+				return static::$_token;
 			}else{
 				if (strpos($response,"invalid")!== FALSE && $this->_grant_type == 'refresh_token'){
-					\Log::debug($this->payload['refresh_token']);
 					$this->deleteUserCache($this->payload['refresh_token']);
 					static::deleteCookie();
 				}
@@ -180,9 +186,9 @@ class Client {
 		}
     }
 	public function revokeToken() {
-		$this->deleteCache($this->_token);
+		$this->deleteCache(static::$_token);
 		$this->payload = array(
-			'token' => $this->_token['refresh_token']
+			'token' => static::$_token['refresh_token']
 		);
 		$this->setupRequest('revoke');
 		return $this->request->execute($this->payload)->response();
@@ -221,20 +227,21 @@ class Client {
 			return false;
 		}
 	}
-	private function getCachedUser(){
+	private function getCachedUser($refresh_token=null){
 		try
 		{
-			\Log::debug("Looking for: {$this->_token['refresh_token']}");
-			$cachedUser = \Cache::get("users.{$this->_token['refresh_token']}");
+			if ($refresh_token==null){
+				$refresh_token = static::$_token['refresh_token'];
+			}
+			\Log::debug("Looking for: $refresh_token");
+			$cachedUser = \Cache::get("users.$refresh_token");
 			$cachedUser = \Crypt::decode($cachedUser);
 			\Log::debug($cachedUser);
-			$cachedUser = unserialize($cachedUser);
-
-			return $cachedUser;
+			static::$_user_info = unserialize($cachedUser);
 		}
 		catch (\CacheNotFoundException $e) {
 			\Log::debug("User not found in cache.");
-			return false;
+			static::$_user_info = null;
 		}
 	}
 	private function cacheToken($token){
@@ -253,7 +260,7 @@ class Client {
 	}
 	private function cacheUser($userInfo){
 		$cryptUser = \Crypt::encode(serialize($userInfo));
-		\Cache::set("users.{$this->_token['refresh_token']}",$cryptUser,86400);
+		\Cache::set("users.".static::$_token['refresh_token'],$cryptUser,86400);
 	}
     private function setupPayload(){
         $clientAttributes = array(

@@ -61,23 +61,23 @@ class Session extends AbstractStorage implements SessionInterface
      */
     public function getScopes(SessionEntity $session)
     {
-        $Scopes = array();
+        $response = array();
         $session = \OAuth\Model\Sessions::find($session->getId(),array('related'=>array('scopes')));
         if (isset($session)) {
 			$scopes = $session->scopes;
 			foreach ($scopes as $scope) {
-				$scope = new ScopeEntity($this->server);
-                $scope->hydrate(
+				$Scope = new ScopeEntity($this->server);
+                $Scope->hydrate(
                     array(
                         'id' => $scope->scope,
                         'description' => $scope->description,
                     )
 				);
-                $Scopes[] = $scope;
-                unset($scope);
+                $response[] = $Scope;
+                unset($Scope);
 			}
         }
-        return $Scopes;
+        return $response;
     }
 
     /**

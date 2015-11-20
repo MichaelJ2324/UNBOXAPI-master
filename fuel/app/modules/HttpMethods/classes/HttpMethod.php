@@ -53,17 +53,16 @@ class HttpMethod extends Module {
         return $methods;
     }
     public static function filter(array $filters = array(),$relationship="",$related_id=""){
+		static::metadata();
         if (count($filters)==0){
             $filters = \Input::param("filters");
         }
         $methods = static::get();
         $name = "";
-        foreach($filters as $field => $value){
-            if ($field=="name"){
-                $name = $value;
-                break;
-            }
+        if (isset($filters['name'])){
+            $name = $filters['name'];
         }
+        str_replace(array('%','*'),"",$name);
         if ($name!==""){
             $filteredMethods = array();
             foreach($methods as $key => $record){

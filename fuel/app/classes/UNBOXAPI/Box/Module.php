@@ -21,13 +21,16 @@ abstract class Module {
     protected $_model; //Name of model
     protected $_available_fields;
 
+	protected static $_meta;
     protected static $_canisters = array();
 
     public static function metadata(){
-        $metadata = array();
-        $box_name = BoxFactory::modulify(get_called_class());
-        $metadata = MetadataManager::boxMetadata($box_name);
-        return $metadata;
+		if (empty(self::$_meta)) {
+			$metadata    = array();
+			$box_name    = BoxFactory::modulify(get_called_class());
+			self::$_meta = MetadataManager::boxMetadata($box_name);
+		}
+        return self::$_meta;
     }
     /**
      * Get the models for this module
@@ -86,33 +89,36 @@ abstract class Module {
         }
         $newResult = array();
         if (isset($view)){
-            $viewConfig = MetadataManager::views($view);
-            $c = 0;
-            \Log::debug("Results:". serialize($results));
-            foreach($results as $key => $model){
-                if (is_object($model)){
-                    $modelArray = $model->to_array();
-                }else{
-                    $modelArray = $model;
-                }
-                $newResult[] = array();
-                foreach($viewConfig as $returnKey => $modelKey){
-                    $value = "";
-                    if (is_array($modelKey)){
-                        foreach($modelKey as $arrayKey => $key){
-                            if (array_key_exists($key,$modelArray)){
-                                $value .= $modelArray[$key];
-                            }else{
-                                $value .= $key;
-                            }
-                        }
-                    }else {
-                        $value = $modelArray[$modelKey];
-                    }
-                    $newResult[$c][$returnKey] = $value;
-                }
-                $c++;
-            }
+            $views = self::$_meta['views'];
+			if (isset($views[$view])) {
+				$viewConfig = $views[$view];
+				$c = 0;
+				\Log::debug("Results:".serialize($results));
+				foreach ($results as $key => $model) {
+					if (is_object($model)) {
+						$modelArray = $model->to_array();
+					} else {
+						$modelArray = $model;
+					}
+					$newResult[] = array();
+					foreach ($viewConfig as $returnKey => $modelKey) {
+						$value = "";
+						if (is_array($modelKey)) {
+							foreach ($modelKey as $arrayKey => $key) {
+								if (array_key_exists(strval($key), $modelArray)) {
+									$value .= $modelArray[$key];
+								} else {
+									$value .= $key;
+								}
+							}
+						} else {
+							$value = $modelArray[$modelKey];
+						}
+						$newResult[$c][$returnKey] = $value;
+					}
+					$c++;
+				}
+			}
         }else{
             if (is_array($results)) {
                 foreach ($results as $key => $model) {
@@ -264,7 +270,8 @@ abstract class Module {
             'records' => array(),
             'page' => 1
         );
-        $fields = static::fields();
+        $metadata = static::metadata();
+        $fields = $metadata['fields'];
 
         if (count($filters)===0){
             $filters = \Input::param("filters");
@@ -397,9 +404,8 @@ abstract class Module {
              *  - Get Related Module
              *  - static::getByRelated
              * */
-            $class = \UNBOXAPI\Data\Util\Module::classify($relationship);
-            $Class = $relationship."\\".$class;
-            return $Class::getByRelated(strtolower(static::$_name),$record_id,$related_id);
+            $Class = BoxFactory::classify($relationship);
+            return $Class::getByRelated(strtolower(BoxFactory::modulify(get_called_class())),$record_id,$related_id);
         }else{
             \Log::error("Invalid relationship [$relationship] passed to Module::Relate");
         }
@@ -427,9 +433,8 @@ abstract class Module {
              *  - Get Related Module
              *  - static::filter
              * */
-            $class = \UNBOXAPI\Data\Util\Module::classify($relationship);
-            $Class = $relationship."\\".$class;
-            return $Class::filter(array(),strtolower(static::$_name),$record_id);
+            $Class = BoxFactory::classify($relationship);
+            return $Class::filter(array(),strtolower(BoxFactory::modulify(get_called_class())),$record_id);
         }else{
             \Log::error("Invalid relationship [$relationship] passed to Module::Relate");
         }

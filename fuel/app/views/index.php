@@ -61,13 +61,15 @@
 <?php echo Asset::js('select2.min.js'); ?>
 <script src="https://www.google.com/recaptcha/api.js?&render=explicit" async defer></script>
 <!--<script src="https://plus.google.com/js/client:platform.js" async defer></script>-->
-<?php echo Asset::js('unbox_api.js'); ?>
+<?php echo Asset::js('unboxapi_utils.js'); ?>
+<?php echo Asset::js('unboxapi.js'); ?>
 
 <script type="text/javascript">
     UNBOX = new UNBOXAPI.App({
 		//id: <?php //echo $session; ?>,
         user: <?php echo ($user===null?"null":"'$user'"); ?>
     });
+    UNBOX.Translator = new UNBOXAPI.Translator();
     UNBOX.start();
 
 </script>

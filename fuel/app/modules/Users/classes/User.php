@@ -2,6 +2,7 @@
 
 namespace Users;
 
+use OAuth\Client as OAuthClient;
 use \UNBOXAPI\Box\Module;
 use \UNBOXAPI\Data\Util\Guid;
 
@@ -83,9 +84,14 @@ class User extends Module {
 			}
 		}
     }
-    public static function me($userId){
-        $model = static::model(true);
-        $user = $model::find($userId);
-        return $user->to_array();
+    public static function me(){
+		$userId = OAuthClient::user('id');
+		if (!empty($userId)) {
+			$model = static::model(TRUE);
+			$user  = $model::find($userId);
+			return $user->to_array();
+		}else{
+			throw new \Exception("User is not found.");
+		}
     }
 }

@@ -91,7 +91,7 @@ class OAuth extends \Controller_Rest{
 			if ($this->server->validateToken($token)){
 				return $this->response(
 					array(
-						'user_id' => $this->server->getTokenUser(),
+						'id' => $this->server->getTokenUser(),
 						'scopes' => $this->server->getTokenScopes()
 					)
 				);

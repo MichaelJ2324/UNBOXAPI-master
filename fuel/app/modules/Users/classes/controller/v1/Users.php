@@ -92,12 +92,7 @@ class Users extends RestV1{
     public function get_me($user_id=null){
         try {
             if ($this->authorized===TRUE){
-				$userInfo = $this->oauth_client->getUserInfo();
-                if (is_array($userInfo)) {
-                    $response = \Users\User::me($userInfo['user_id']);
-                }else{
-                    throw new \Exception("No user associated with current token.");
-                }
+                $response = \Users\User::me();
             }else {
                 throw new \Exception("Access denied.");
             }
@@ -160,8 +155,7 @@ class Users extends RestV1{
             $response = "";
             if ($this->authorized){
                 if ($action==""||!isset($action)){
-					$userInfo = $this->oauth_client->getUserInfo();
-					$response = \Users\User::update($userInfo['user_id']);
+					$response = \Users\User::update();
                 }else{
                     switch ($action) {
                         default:
@@ -191,8 +185,7 @@ class Users extends RestV1{
             $response = "";
             if ($this->authorized) {
                 if ($action == "" || !isset($action)) {
-					$userInfo = $this->oauth_client->getUserInfo();
-                    $response = \Users\User::delete($userInfo['user_id']);
+                    $response = \Users\User::delete();
                 } else {
                     switch ($action) {
                         default:

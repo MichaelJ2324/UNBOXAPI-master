@@ -1,13 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: mrussell
- * Date: 3/12/15
- * Time: 11:14 AM
- */
 
 namespace UNBOXAPI;
 
+use \OAuth\Client as OAuthClient;
 
 class Observer_ModifiedBy extends \Orm\Observer{
 
@@ -49,7 +44,7 @@ class Observer_ModifiedBy extends \Orm\Observer{
     {
         if ($this->_overwrite or empty($model->{$this->_property}))
         {
-            $model->{$this->_property} = $_SESSION['user_id'];
+            $model->{$this->_property} = OAuthClient::user('id');
         }
     }
 }

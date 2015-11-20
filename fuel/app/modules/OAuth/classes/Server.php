@@ -21,6 +21,7 @@ class Server {
 
 	public static function config(){
 		static::$_config = \Config::load(APPPATH."modules/".static::$_name."/config/module.php");
+		//static::$_config = \Config::load(static::$_name."::module");
 		return static::$_config;
 	}
 
