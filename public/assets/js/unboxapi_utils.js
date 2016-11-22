@@ -149,5 +149,140 @@ UNBOXAPI.Global = {
             }
             return null;
         }
+    },
+};
+UNBOXAPI.Views = {};
+UNBOXAPI.Views.RelateField = Backbone.View.extend({
+    initialize: function(options){
+        this.options = options || {};
+        this.url = this.options.url || null;
+        this.defaultDisabled = this.options.disable || false;
+        this.filters = this.options.filters || {};
+        this.fetchOnSelect = this.options.fetchOnSelect || false;
+        if (this.url==null){
+            this.url = this.model.url()+"/filter";
+        }
+        _.bindAll(this, 'disable','updateModel','resultsHandler','dataHandler');
+        if (this.initDependent()){
+            this.render();
+        }
+    },
+    initDependent: function(){
+        return true;
+    },
+    render: function(){
+        this.$el.select2({
+            ajax: {
+                url: this.url,
+                dataType: 'json',
+                quietMillis: 250,
+                delay: 500,
+                data: this.dataHandler,
+                results: this.resultsHandler,
+                cache: true
+            },
+            disabled: this.defaultDisabled,
+            minimumInputLength: 1
+        });
+        this.$el.on("change",this.updateModel);
+        return this;
+    },
+    dataHandler: function(term, page){
+        var filters = {
+            name: term
+        };
+        for (var key in this.filters) {
+            if (this.filters.hasOwnProperty(key)) {
+                var obj = this.filters[key];
+                if (typeof obj == 'object'){
+                    filters[key] = obj.get('id');
+                }else{
+                    filters[key] = obj;
+                }
+            }
+        }
+        return {
+            filters: filters,
+            view: "select2",
+            offset: (page-1)*20
+        };
+    },
+    resultsHandler: function(data,page){
+        //TODO: Adding in pagination and auto-scroll
+        return {
+            results: data.records
+        };
+    },
+    disable: function(disable) {
+        if (typeof disable == 'undefined' || disable==null || disable==true){
+            disable = 'disabled';
+            $(this.el).attr('disabled', disable);
+        }else{
+            $(this.el).removeAttr('disabled');
+        }
+    },
+    updateModel: function(e){
+        var value = $(e.currentTarget).val();
+        this.model.set({
+            id: value
+        });
+        if (this.fetchOnSelect && !(value==null || typeof value=='undefined')){
+            UNBOXAPI.Models.Utils.fetch({
+                model: this.model
+            });
+        }
     }
-}
+});
+UNBOXAPI.Views.DependentRelateField = UNBOXAPI.Views.Global.RelateField.extend({
+    initDependent: function(){
+        this.parent = this.options.parent || null;
+        _.bindAll(this,"updateURL");
+        if (this.parent == null){
+            console.log("No parent provided for Depedent Relate Field");
+            return false;
+        }else{
+            this.parent.on("change:id",this.updateURL)
+        }
+        this.defaultDisabled = this.options.disable || true;
+        return true;
+    },
+    updateURL: function(){
+        var id = this.parent.get('id');
+        this.url = UNBOXAPI.Global.ajaxURL + this.parent.name + "/"+id+"/related/" + this.model.name + "/filter";
+        this.defaultDisabled = false;
+        $(this.el).select2("destroy");
+        this.render();
+    }
+});
+UNBOXAPI.Views.Form = Backbone.View.extend({
+    events: {
+        "focusout input": "updateModel",
+        "focusout textarea": "updateModel",
+        "change select": "updateModel",
+        "change .select2": "updateModel",
+        "click .save": "save",
+        "click .clear": "clear"
+    },
+    initialize: function(options){
+
+    },
+    syncForm: function(){
+        var inputs = this.$el.find(":input");
+        for(var x=0;x<inputs.length;x++) {
+            var $input = $(inputs[x]);
+            if ($input.attr('id').indexOf("autogen")==-1) {
+                console.log($input.val());
+            }
+        }
+
+    },
+    updateModel: function(e) {
+        var changed = e.currentTarget;
+        var value = $(e.currentTarget).val();
+        var obj = {};
+        if (changed.name!=="") {
+            obj[changed.name] = value;
+            this.model.set(obj);
+        }
+    }
+});

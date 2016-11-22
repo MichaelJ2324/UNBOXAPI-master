@@ -474,7 +474,6 @@ UNBOXAPI.Views = {
                 previousContent.close();
             }
             var view = this.model.get("content");
-            console.log(this.$content);
             view.el = this.$content;
             view.setElement(this.$content);
             view.render();
@@ -629,111 +628,6 @@ UNBOXAPI.Views = {
         }
     })
 }
-UNBOXAPI.Views.Global = {
-    RelateField: Backbone.View.extend({
-        initialize: function(options){
-            this.options = options || {};
-            this.url = this.options.url || null;
-            this.defaultDisabled = this.options.disable || false;
-            this.filters = this.options.filters || {};
-            this.fetchOnSelect = this.options.fetchOnSelect || false;
-            if (this.url==null){
-                this.url = this.model.url()+"/filter";
-            }
-            _.bindAll(this, 'disable','updateModel','resultsHandler','dataHandler');
-            if (this.initDependent()){
-                this.render();
-            }
-        },
-        initDependent: function(){
-            return true;
-        },
-        render: function(){
-            this.$el.select2({
-                ajax: {
-                    url: this.url,
-                    dataType: 'json',
-                    delay: 500,
-                    data: this.dataHandler,
-                    results: this.resultsHandler,
-                    cache: true
-                },
-                disabled: this.defaultDisabled,
-                minimumInputLength: 1
-            });
-            this.$el.on("change",this.updateModel);
-            return this;
-        },
-        dataHandler: function(term, page){
-            var filters = {
-                name: term
-            };
-            for (var key in this.filters) {
-                if (this.filters.hasOwnProperty(key)) {
-                    var obj = this.filters[key];
-                    if (typeof obj == 'object'){
-                        filters[key] = obj.get('id');
-                    }else{
-                        filters[key] = obj;
-                    }
-                }
-            }
-            return {
-                filters: filters,
-                view: "select2",
-                offset: (page-1)*20
-            };
-        },
-        resultsHandler: function(data,page){
-            //TODO: Adding in pagination and auto-scroll
-            return {
-                results: data.records
-            };
-        },
-        disable: function(disable) {
-            if (typeof disable == 'undefined' || disable==null || disable==true){
-                disable = 'disabled';
-                $(this.el).attr('disabled', disable);
-            }else{
-                $(this.el).removeAttr('disabled');
-            }
-        },
-        updateModel: function(e){
-            var value = $(e.currentTarget).val();
-            this.model.set({
-                id: value
-            });
-            if (this.fetchOnSelect && !(value==null || typeof value=='undefined')){
-                UNBOXAPI.Models.Utils.fetch({
-                    model: this.model
-                });
-            }
-        }
-    })
-}
-UNBOXAPI.Views.Global.DependentRelateField = UNBOXAPI.Views.Global.RelateField.extend({
-    initDependent: function(){
-        this.parent = this.options.parent || null;
-        _.bindAll(this,"updateURL");
-        if (this.parent == null){
-            console.log("No parent provided for Depedent Relate Field");
-            return false;
-        }else{
-            this.parent.on("change:id",this.updateURL)
-        }
-        this.defaultDisabled = this.options.disable || true;
-        return true;
-    },
-    updateURL: function(){
-        console.log("Updating URL");
-        console.log(this.parent);
-        var id = this.parent.get('id');
-        this.url = UNBOXAPI.Global.ajaxURL + this.parent.name + "/"+id+"/related/" + this.model.name + "/filter";
-        this.defaultDisabled = false;
-        $(this.el).select2("destroy");
-        this.render();
-    }
-});
 UNBOXAPI.Views.Home = {
     Layout: UNBOXAPI.Views.Layout.extend({
         setup: function(){
@@ -1581,6 +1475,7 @@ UNBOXAPI.Views.Manager = {
                     module: this.modules.findWhere({ name: module })
                 });
             }
+            console.log("Test");
             this.setContent(
                 2,
                 UNBOXAPI.Views.Manager.Record.Panel,
@@ -1652,11 +1547,8 @@ UNBOXAPI.Views.Manager = {
 
                 this.template = this.templates.getTemplate("Record");
 
-                _.bindAll(this,"setup","setupDOMPointers","render","save");
+                _.bindAll(this,"setup","setupDOMPointers","render");
                 this.module.on("reset",this.setup)
-                this.model.on("save",this.save);
-
-                this.render();
             },
             render: function() {
                 this.html = _.template(this.template,{
@@ -1697,24 +1589,6 @@ UNBOXAPI.Views.Manager = {
                         template: this.templates.getTemplate("RecordDetail")
                     });
                 }
-            },
-            save: function(e){
-                if (typeof this.model.get("id")=='undefined'||this.model.get('id')==""||this.model.get("id")==null){
-                    UNBOXAPI.Models.Utils.save({
-                        model: this.model,
-                        options: {
-                            module: this.module
-                        },
-                        success: function(model,response,options){
-                            //TODO: Remove cyclic reference
-                            UNBOX.navigate("#manage/"+options.module.get('name')+"/view/"+model.get('id'));
-                        }
-                    });
-                }else{
-                    UNBOXAPI.Models.Utils.save({
-                        model: this.model
-                    });
-                }
             }
         }),
         Detail: Backbone.View.extend({
@@ -1726,12 +1600,16 @@ UNBOXAPI.Views.Manager = {
             },
             initialize: function(options){
                 this.options = options || {};
+                console.log("Init Detail");
                 this.module = this.options.module || {};
                 this.modules = this.options.modules || null;
                 this.template = this.options.template || {};
                 this.number = this.options.number || 2;
 
-                _.bindAll(this,"render","setupDOMPointers","clearForm","updateModel");
+                this.$form = null;
+
+                _.bindAll(this,"render","clearForm","updateModel","syncForm");
+                this.model.on("save",this.syncForm);
                 this.model.on("clear",this.clearForm);
                 this.model.on("sync",this.render);
 
@@ -1747,7 +1625,6 @@ UNBOXAPI.Views.Manager = {
                 }
             },
             render: function(){
-                console.log(this.module);
                 this.html = _.template(this.template, {
                     model: this.model,
                     fields: this.module.fields.models,
@@ -1759,10 +1636,10 @@ UNBOXAPI.Views.Manager = {
                 return this;
             },
             setupDOMPointers: function(){
-                this.$record = $("#recordDetail_"+this.number);
+                this.$form = $("#recordDetail_2");
             },
             setupRelateFields: function(){
-                var relateFields = this.$record.find(".select2.relate");
+                var relateFields = this.$el.find(".select2.relate");
                 if (!(relateFields==null||typeof relateFields=='undefined'||relateFields.length==0)) {
                     for(var x=0;x<relateFields.length;x++){
                         var moduleName = $(relateFields[x]).data("module");
@@ -1777,8 +1654,19 @@ UNBOXAPI.Views.Manager = {
                 }
             },
             clearForm: function(){
-                this.$record.trigger('reset');
+                this.$el.trigger('reset');
                 this.model.clear();
+            },
+            syncForm: function(){
+                var inputs = this.$form.find(":input");
+                for(var x=0;x<inputs.length;x++) {
+                    var $input = $(inputs[x]);
+                    console.log($input);
+                    if ($input.attr('id').indexOf("autogen")==-1) {
+                        console.log($input.val());
+                    }
+                }
+
             },
             updateModel: function(e) {
                 var changed = e.currentTarget;
